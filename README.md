@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/src/Gui/Icons/freecad.svg" height="120px" width="120px" alt="FusionCAD Logo">
+  <img src="/fusioncad_icon.png" height="120px" width="120px" alt="FusionCAD Logo">
 </p>
 
 <h1 align="center">FusionCAD by UNITRONIX</h1>
@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="/.github/images/partdesign.png" width="800" alt="FusionCAD PartDesign workbench screenshot"/>
+  <img src="/fusioncad_splash.png" width="800" alt="FusionCAD interface"/>
 </p>
 
 ## What is FusionCAD?
