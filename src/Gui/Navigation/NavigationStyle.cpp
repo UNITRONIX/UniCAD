@@ -57,6 +57,8 @@
 #include "Navigation/NavigationAnimator.h"
 #include "Navigation/NavigationAnimation.h"
 #include "View3DInventorViewer.h"
+#include "FusionUIManager.h"
+#include "FusionMarkingMenu.h"
 
 using namespace Gui;
 
@@ -2042,6 +2044,16 @@ SbBool NavigationStyle::isPopupMenuEnabled() const
 
 void NavigationStyle::openPopupMenu(const SbVec2s& position)
 {
+    // Fusion 360-style marking menu override
+    if (FusionUIManager::instance()->isEnabled()) {
+        FusionMarkingMenu* markingMenu = FusionUIManager::instance()->markingMenu();
+        if (markingMenu) {
+            markingMenu->setRadialItems(FusionMarkingMenu::defaultViewItems());
+            markingMenu->showAt(QCursor::pos());
+            return;
+        }
+    }
+
     // store the right-click position for potential use by Clarify Selection
     rightClickPosition = position;
 

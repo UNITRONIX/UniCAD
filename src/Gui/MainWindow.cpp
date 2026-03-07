@@ -111,6 +111,7 @@
 #include "WaitCursor.h"
 #include "WorkbenchManager.h"
 #include "Workbench.h"
+#include "FusionUIManager.h"
 
 #include "MergeDocuments.h"
 #include "ViewProviderExtern.h"
@@ -494,11 +495,15 @@ MainWindow::MainWindow(QWidget* parent, Qt::WindowFlags f)
     // accept drops on the window, get handled in dropEvent, dragEnterEvent
     setAcceptDrops(true);
 
+    // Initialize Fusion 360-style UI (tab toolbar, timeline, nav bar, marking menu)
+    FusionUIManager::instance()->initialize(this);
+
     statusBar()->showMessage(tr("Ready"), 2001);
 }
 
 MainWindow::~MainWindow()
 {
+    FusionUIManager::destroy();
     delete d->status;
     delete d;
     instance = nullptr;

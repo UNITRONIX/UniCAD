@@ -61,6 +61,24 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderExtrude.h
     ViewProviderPad.cpp
     ViewProviderPad.h
+    ViewProviderUnifiedExtrude.cpp
+    ViewProviderUnifiedExtrude.h
+    ViewProviderUnifiedRevolve.cpp
+    ViewProviderUnifiedRevolve.h
+    ViewProviderUnifiedSweep.cpp
+    ViewProviderUnifiedSweep.h
+    ViewProviderUnifiedLoft.cpp
+    ViewProviderUnifiedLoft.h
+    ViewProviderOffsetFace.cpp
+    ViewProviderOffsetFace.h
+    ViewProviderDeleteFace.cpp
+    ViewProviderDeleteFace.h
+    ViewProviderReplaceFace.cpp
+    ViewProviderReplaceFace.h
+    ViewProviderSplitFace.cpp
+    ViewProviderSplitFace.h
+    ViewProviderMoveFace.cpp
+    ViewProviderMoveFace.h
     ViewProviderHole.cpp
     ViewProviderHole.h
     ViewProviderPocket.cpp
@@ -135,6 +153,24 @@ SET(PartDesignGuiTaskDlgs_SRCS
     TaskPadParameters.h
     TaskPocketParameters.cpp
     TaskPocketParameters.h
+    TaskUnifiedExtrudeParameters.cpp
+    TaskUnifiedExtrudeParameters.h
+    TaskUnifiedRevolveParameters.cpp
+    TaskUnifiedRevolveParameters.h
+    TaskUnifiedSweepParameters.cpp
+    TaskUnifiedSweepParameters.h
+    TaskUnifiedLoftParameters.cpp
+    TaskUnifiedLoftParameters.h
+    TaskOffsetFaceParameters.cpp
+    TaskOffsetFaceParameters.h
+    TaskDeleteFaceParameters.cpp
+    TaskDeleteFaceParameters.h
+    TaskReplaceFaceParameters.cpp
+    TaskReplaceFaceParameters.h
+    TaskSplitFaceParameters.cpp
+    TaskSplitFaceParameters.h
+    TaskMoveFaceParameters.cpp
+    TaskMoveFaceParameters.h
     TaskChamferParameters.ui
     TaskChamferParameters.cpp
     TaskChamferParameters.h

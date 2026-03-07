@@ -24,14 +24,23 @@
 
 #include <boost/bind/bind.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <TopExp_Explorer.hxx>
+#include <BRep_Builder.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Wire.hxx>
 #include <Inventor/SbBox3f.h>
 #include <Inventor/SbLine.h>
 #include <Inventor/SbTime.h>
 #include <Inventor/SoPickedPoint.h>
 #include <Inventor/actions/SoGetBoundingBoxAction.h>
+#include <Inventor/details/SoFaceDetail.h>
 #include <Inventor/details/SoPointDetail.h>
 #include <Inventor/events/SoKeyboardEvent.h>
 #include <Inventor/nodes/SoCamera.h>
+#include <Inventor/nodes/SoShapeHints.h>
+#include <Inventor/nodes/SoTranslation.h>
+#include <Gui/FusionLog.h>
 
 #include <QApplication>
 #include <QFontMetricsF>
@@ -66,6 +75,7 @@
 #include <Gui/View3DInventor.h>
 #include <Gui/View3DInventorViewer.h>
 #include <Mod/Part/App/Geometry.h>
+#include <Mod/Part/App/TopoShape.h>
 #include <Mod/Sketcher/App/GeoList.h>
 #include <Mod/Sketcher/App/GeometryFacade.h>
 #include <Mod/Sketcher/App/SketchObject.h>
@@ -424,7 +434,7 @@ void ViewProviderSketch::ParameterObserver::initParameters()
 
     // unsubscribed parameters which update a property on just once upon construction (and before
     // restore if properties are being restored from a file)
-    updateBoolProperty("ShowGrid", &Client.ShowGrid, false);
+    updateBoolProperty("ShowGrid", &Client.ShowGrid, true);
     updateBoolProperty("GridAuto", &Client.GridAuto, true);
     updateGridSize("GridSize", &Client.GridSize);
 }
@@ -502,9 +512,18 @@ SO_NODE_SOURCE(SoSketchFaces);
 SoSketchFaces::SoSketchFaces(){
     SO_NODE_CONSTRUCTOR(SoSketchFaces);
 
-    SO_NODE_ADD_FIELD(color, (SbColor(1.0f, 1.0f, 1.0f)));
-    SO_NODE_ADD_FIELD(transparency, (0.8));
-    //
+    // FusionCAD: Fusion 360-style face appearance
+    // Blue-tinted, semi-transparent for sketch faces on body
+    SO_NODE_ADD_FIELD(color, (SbColor(0.3f, 0.5f, 0.8f)));
+    SO_NODE_ADD_FIELD(transparency, (0.25));
+
+    // FusionCAD: SoShapeHints for proper two-sided face rendering.
+    // Without this, faces viewed from behind are culled (invisible).
+    auto* hints = new SoShapeHints;
+    hints->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
+    hints->shapeType = SoShapeHints::UNKNOWN_SHAPE_TYPE;  // enables two-sided lighting
+    SoSeparator::addChild(hints);
+
     auto* material = new SoMaterial;
     material->diffuseColor.connectFrom(&color);
     material->transparency.connectFrom(&transparency);
@@ -1033,6 +1052,11 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                         setSketchMode(STATUS_SELECT_Constraint);
                         done = true;
                     }
+                    // FusionCAD: Handle face preselection click
+                    else if (preselection.isPreselectFaceValid()) {
+                        setSketchMode(STATUS_SELECT_Face);
+                        done = true;
+                    }
 
                     // Double click events variables
                     float dci = (float)QApplication::doubleClickInterval() / 1000.0F;
@@ -1136,6 +1160,17 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
 
                             preselectToSelection(ss, pp, true);
                         }
+                    }
+                    setSketchMode(STATUS_NONE);
+                    return true;
+                }
+                // FusionCAD: Handle face selection on click release
+                case STATUS_SELECT_Face: {
+                    if (pp && preselection.isPreselectFaceValid()) {
+                        std::stringstream ss;
+                        ss << SketchObject::internalPrefix()
+                           << "Face" << preselection.getPreselectionFaceIndex();
+                        preselectToSelection(ss, pp, true);
                     }
                     setSketchMode(STATUS_NONE);
                     return true;
@@ -2469,6 +2504,42 @@ bool ViewProviderSketch::detectAndShowPreselection(SoPickedPoint* Point)
     };
 
     if (Point) {
+        // FusionCAD: Check for face preselection first (internal shape faces)
+        SoPath* path = Point->getPath();
+        if (path->containsNode(pcSketchFaces)) {
+            // Get face detail from the picked point
+            const SoDetail* detail = Point->getDetail(pcSketchFaces->faceset);
+            if (detail && detail->getTypeId() == SoFaceDetail::getClassTypeId()) {
+                int faceIndex = static_cast<const SoFaceDetail*>(detail)->getPartIndex();
+                
+                if (faceIndex != preselection.PreselectFace) {
+                    // FusionCAD: Build subname with internal prefix for face selection
+                    std::stringstream ss;
+                    ss << SketchObject::internalPrefix() << "Face" << (faceIndex + 1);
+                    
+                    bool accepted = setPreselect(
+                        ss.str(), Point->getPoint()[0], Point->getPoint()[1], Point->getPoint()[2]) != 0;
+                    
+                    preselection.blockedPreselection = !accepted;
+                    if (accepted) {
+                        resetPreselectPoint();
+                        preselection.PreselectCurve = Preselection::InvalidCurve;
+                        preselection.PreselectCross = Preselection::Axes::None;
+                        preselection.PreselectConstraintSet.clear();
+                        preselection.PreselectFace = faceIndex;
+                        updateToolTip();
+                        return true;
+                    }
+                }
+                // Even if same face is preselected, we handled it
+                return false;
+            }
+        }
+        
+        // FusionCAD: Reset face preselection when not hovering over a face
+        if (preselection.isPreselectFaceValid()) {
+            preselection.PreselectFace = Preselection::InvalidPoint;
+        }
 
         EditModeCoinManager::PreselectionResult result = editCoinManager->detectPreselection(Point);
 
@@ -3277,6 +3348,17 @@ void ViewProviderSketch::drawEditMarkers(const std::vector<Base::Vector2d>& Edit
     editCoinManager->drawEditMarkers(EditMarkers, augmentationlevel);
 }
 
+void ViewProviderSketch::drawSnapIndicator(const Base::Vector2d& snapPos, int snapType)
+{
+    editCoinManager->drawSnapIndicator(snapPos,
+        static_cast<EditModeCoinManager::SnapIndicatorType>(snapType));
+}
+
+void ViewProviderSketch::clearSnapIndicator()
+{
+    editCoinManager->clearSnapIndicator();
+}
+
 void ViewProviderSketch::updateData(const App::Property* prop) {
     if (std::string(prop->getName()) != "ShapeMaterial") {
         // We don't want material to override the colors of sketches.
@@ -3284,11 +3366,67 @@ void ViewProviderSketch::updateData(const App::Property* prop) {
     }
 
     if (prop == &getSketchObject()->InternalShape) {
-        const auto& shape = getSketchObject()->InternalShape.getValue();
-        setupCoinGeometry(shape,
-                pcSketchFaces,
-                Deviation.getValue(),
-                AngularDeflection.getValue());
+        const auto& internalOCC = getSketchObject()->InternalShape.getValue();
+        int faceCount = 0;
+        if (!internalOCC.IsNull()) {
+            for (TopExp_Explorer ex(internalOCC, TopAbs_FACE); ex.More(); ex.Next()) { faceCount++; }
+        }
+
+        // FusionCAD: Only update Coin3D geometry if InternalShape actually has faces.
+        // If it's null/empty, DON'T wipe existing geometry (the Shape handler may have set it).
+        if (faceCount > 0) {
+            setupCoinGeometry(internalOCC,
+                    pcSketchFaces,
+                    Deviation.getValue(),
+                    AngularDeflection.getValue());
+        }
+
+        // Ensure sketch faces are always visible when MakeInternals is on
+        if (getSketchObject()->MakeInternals.getValue()) {
+            pcSketchFacesToggle->on = true;
+        }
+    }
+
+    // FusionCAD: Build faces from Shape wires as fallback
+    if (prop == &getSketchObject()->Shape) {
+        // Always rebuild from Shape wires — this is the reliable path
+        // since InternalShape/buildInternals is not producing faces
+        const auto& sketchOCC = getSketchObject()->Shape.getValue();
+        if (!sketchOCC.IsNull()) {
+            // FusionCAD: Strip the OCC Location from the shape before extracting wires.
+            // Shape.getValue() may carry the sketch's Placement as a Location.
+            // Since pcTransform already applies the Placement to the scene graph,
+            // we must use local coordinates (identity location) to avoid double-transformation.
+            TopoDS_Shape localShape = sketchOCC;
+            localShape.Location(TopLoc_Location());
+
+            // Collect all wires and build faces
+            BRep_Builder builder;
+            TopoDS_Compound compound;
+            builder.MakeCompound(compound);
+            int builtFaces = 0;
+
+            for (TopExp_Explorer ex(localShape, TopAbs_WIRE); ex.More(); ex.Next()) {
+                TopoDS_Wire wire = TopoDS::Wire(ex.Current());
+                try {
+                    BRepBuilderAPI_MakeFace mkFace(wire, /*onlyPlane=*/true);
+                    if (mkFace.IsDone()) {
+                        builder.Add(compound, mkFace.Face());
+                        builtFaces++;
+                    }
+                } catch (...) {
+                    // Silently skip wires that can't form a face
+                }
+            }
+
+            if (builtFaces > 0) {
+                setupCoinGeometry(compound,
+                        pcSketchFaces,
+                        Deviation.getValue(),
+                        AngularDeflection.getValue());
+                pcSketchFacesToggle->on = true;
+            }
+        }
     }
 
     if (prop != &getSketchObject()->Constraints) {
@@ -3359,6 +3497,10 @@ void ViewProviderSketch::onChanged(const App::Property* prop)
     }
 
     if (prop == &Visibility) {
+        // FusionCAD: Sketch faces follow sketch visibility directly.
+        // When a Pad hides the sketch, pcSketchFaces must also hide so that
+        // clicking on the Pad body picks the Pad's own individual faces
+        // (not the sketch's face group which covers all faces at once).
         pcSketchFacesToggle->on = Visibility.getValue();
         return;
     }
@@ -3429,7 +3571,21 @@ void SketcherGui::ViewProviderSketch::finishRestoring()
 // clang-format on
 bool ViewProviderSketch::getElementPicked(const SoPickedPoint* pp, std::string& subname) const
 {
+    FLOG_DEBUG("Pick", "VPSketch::getElementPicked: containsSketchFaces={}, isEditMode={}\n",
+        pp->getPath()->containsNode(pcSketchFaces) ? 1 : 0, isInEditMode() ? 1 : 0);
+    // FusionCAD: Face picking only outside edit mode.
+    // In edit mode the user works with sketch geometry (lines, arcs, constraints).
+    // Outside edit mode, clicking on sketch faces selects them for Extrude/Pad.
     if (pp->getPath()->containsNode(pcSketchFaces) && !isInEditMode()) {
+        // FusionCAD: Extract individual face detail from pcSketchFaces
+        const SoDetail* detail = pp->getDetail(pcSketchFaces->faceset);
+        if (detail && detail->isOfType(SoFaceDetail::getClassTypeId())) {
+            int faceIndex = static_cast<const SoFaceDetail*>(detail)->getPartIndex();
+            subname = std::string(SketchObject::internalPrefix()) + "Face" + std::to_string(faceIndex + 1);
+            return true;
+        }
+
+        // Fallback to edge/vertex
         if (ViewProvider2DObject::getElementPicked(pp, subname)) {
             subname = SketchObject::internalPrefix() + subname;
             auto& elementMap = getSketchObject()->getInternalElementMap();
@@ -3458,18 +3614,44 @@ bool ViewProviderSketch::getDetailPath(
         return realName ? realName + 1 : subname;
     };
 
+    // FusionCAD: Face detail path only outside edit mode.
+    // In edit mode, sketch geometry elements are handled by the edit coin manager.
     if (!isInEditMode() && subname) {
         const char* realName = getLastPartOfName(subname);
 
-        realName = SketchObject::convertInternalName(realName);
-        if (realName) {
+        const char* internalName = SketchObject::convertInternalName(realName);
+        if (internalName) {
+            // FusionCAD: For internal faces, build path to pcSketchFaces->faceset
+            // so that SoBrepFaceSet gets SoFaceDetail and highlights single face
+            auto type = Part::TopoShape::getElementTypeAndIndex(internalName);
+            if (type.first == "Face" && type.second > 0) {
+                if (append) {
+                    pPath->append(pcRoot);
+                }
+                // FusionCAD: Navigate through pcRoot -> pcSketchFacesGroup -> pcSketchFacesToggle
+                // -> pcSketchFaces -> faceset. This matches the actual scene graph hierarchy
+                // created in attach().
+                if (pcSketchFacesGroup) {
+                    pPath->append(pcSketchFacesGroup);
+                    pPath->append(pcSketchFacesToggle);
+                    pPath->append(pcSketchFaces);
+                    pPath->append(pcSketchFaces->faceset);
+                }
+                // Create SoFaceDetail with the correct index
+                SoFaceDetail* faceDetail = new SoFaceDetail();
+                faceDetail->setPartIndex(type.second - 1);
+                det = faceDetail;
+                return true;
+            }
+
+            // Non-face internal elements (edges, vertices)
             auto len = pPath->getLength();
             if (append) {
                 pPath->append(pcRoot);
                 pPath->append(pcModeSwitch);
             }
 
-            if (!ViewProvider2DObject::getDetailPath(realName, pPath, false, det)) {
+            if (!ViewProvider2DObject::getDetailPath(internalName, pPath, false, det)) {
                 pPath->truncate(len);
                 return false;
             }
@@ -3485,7 +3667,19 @@ void ViewProviderSketch::attach(App::DocumentObject* pcFeat)
 {
     ViewProvider2DObject::attach(pcFeat);
 
-    getAnnotation()->addChild(pcSketchFacesToggle);
+    // FusionCAD: Add sketch faces directly to pcRoot (not annotation) with a micro Z-offset.
+    // This ensures SoRayPickAction hits sketch faces BEFORE the coplanar Pad face,
+    // enabling Fusion 360-style individual face selection.
+    pcSketchFacesGroup = new SoSeparator;
+    pcSketchFacesGroup->setName("SketchFacesGroup");
+    auto* faceOffset = new SoTranslation;
+    faceOffset->translation.setValue(0, 0, 0.01f); // 0.01mm offset along sketch normal
+    pcSketchFacesGroup->addChild(faceOffset);
+    pcSketchFacesGroup->addChild(pcSketchFacesToggle);
+    pcRoot->addChild(pcSketchFacesGroup);
+
+    FLOG_INFO("Sketch", "Attached sketch faces group to pcRoot for VP={}\n",
+        pcFeat ? pcFeat->getNameInDocument() : "?");
 }
 
 void ViewProviderSketch::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)

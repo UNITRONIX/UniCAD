@@ -976,7 +976,8 @@ void prepareProfileBased(
             }
         }
         else {
-            // Always use the subs
+            // FusionCAD: Pass sub-elements through (including InternalFace) — 
+            // SketchObject::getSubObject resolves InternalFaceN dynamically from Shape wires.
             runProfileCmdWithSubs();
         }
 
@@ -1275,6 +1276,250 @@ bool CmdPartDesignPocket::isActive()
 }
 
 //===========================================================================
+// FusionCAD: PartDesign_Extrude — Unified Extrude (Join/Cut/Intersect)
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignExtrude)
+
+CmdPartDesignExtrude::CmdPartDesignExtrude()
+    : Command("PartDesign_Extrude")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Extrude");
+    sToolTipText = QT_TR_NOOP("Extrude the selected sketch or profile (Join, Cut, Intersect, or New Body)");
+    sWhatsThis = "PartDesign_Extrude";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Pad";
+    sAccel = "E";
+}
+
+void CmdPartDesignExtrude::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    prepareProfileBased(this, "Extrude", 10.0);
+}
+
+bool CmdPartDesignExtrude::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_Revolve — Unified revolve (Join/Cut/Intersect/NewBody)
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignRevolve)
+
+CmdPartDesignRevolve::CmdPartDesignRevolve()
+    : Command("PartDesign_Revolve")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Revolve");
+    sToolTipText = QT_TR_NOOP("Revolve the selected sketch (Join, Cut, Intersect, or New Body)");
+    sWhatsThis = "PartDesign_Revolve";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Revolution";
+    sAccel = "R";
+}
+
+void CmdPartDesignRevolve::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    if (!pcActiveBody) {
+        return;
+    }
+
+    Gui::Command* cmd = this;
+    auto worker = [cmd, &pcActiveBody](Part::Feature* sketch, App::DocumentObject* Feat) {
+        if (!Feat) {
+            return;
+        }
+
+        if (sketch->isDerivedFrom<Part::Part2DObject>()) {
+            FCMD_OBJ_CMD(Feat, "ReferenceAxis = (" << getObjectCmd(sketch) << ",['V_Axis'])");
+        }
+        else {
+            FCMD_OBJ_CMD(
+                Feat,
+                "ReferenceAxis = (" << getObjectCmd(pcActiveBody->getOrigin()->getY()) << ",[''])"
+            );
+        }
+
+        FCMD_OBJ_CMD(Feat, "Angle = 360.0");
+        PartDesign::Revolution* pcRevolution = dynamic_cast<PartDesign::Revolution*>(Feat);
+        if (pcRevolution && pcRevolution->suggestReversed()) {
+            FCMD_OBJ_CMD(Feat, "Reversed = 1");
+        }
+
+        finishProfileBased(cmd, sketch, Feat);
+    };
+
+    prepareProfileBased(pcActiveBody, this, "UnifiedRevolve", worker);
+}
+
+bool CmdPartDesignRevolve::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_Sweep — Unified sweep (Join/Cut/Intersect/NewBody)
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignSweep)
+
+CmdPartDesignSweep::CmdPartDesignSweep()
+    : Command("PartDesign_Sweep")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Sweep");
+    sToolTipText = QT_TR_NOOP("Sweep the selected sketch along a path (Join, Cut, Intersect, or New Body)");
+    sWhatsThis = "PartDesign_Sweep";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_AdditivePipe";
+}
+
+void CmdPartDesignSweep::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    if (!pcActiveBody) {
+        return;
+    }
+
+    Gui::Command* cmd = this;
+    auto worker = [cmd](Part::Feature* sketch, App::DocumentObject* Feat) {
+        if (!Feat) {
+            return;
+        }
+        finishProfileBased(cmd, sketch, Feat);
+    };
+
+    prepareProfileBased(pcActiveBody, this, "UnifiedSweep", worker);
+}
+
+bool CmdPartDesignSweep::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_Loft — Unified loft (Join/Cut/Intersect/NewBody)
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignLoft)
+
+CmdPartDesignLoft::CmdPartDesignLoft()
+    : Command("PartDesign_Loft")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Loft");
+    sToolTipText = QT_TR_NOOP("Loft the selected profiles (Join, Cut, Intersect, or New Body)");
+    sWhatsThis = "PartDesign_Loft";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_AdditiveLoft";
+}
+
+void CmdPartDesignLoft::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    if (!pcActiveBody) {
+        return;
+    }
+
+    Gui::Command* cmd = this;
+    auto worker = [cmd](Part::Feature* sketch, App::DocumentObject* Feat) {
+        if (!Feat) {
+            return;
+        }
+        finishProfileBased(cmd, sketch, Feat);
+    };
+
+    prepareProfileBased(pcActiveBody, this, "UnifiedLoft", worker);
+}
+
+bool CmdPartDesignLoft::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_PressPull — Adaptive meta-command
+// Dispatches based on selection:
+//   Sketch/Profile → Extrude
+//   Edge           → Fillet
+//   Face           → OffsetFace
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignPressPull)
+
+CmdPartDesignPressPull::CmdPartDesignPressPull()
+    : Command("PartDesign_PressPull")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Press Pull");
+    sToolTipText = QT_TR_NOOP("Adaptive command: Extrude profiles, Fillet edges, or Offset faces");
+    sWhatsThis = "PartDesign_PressPull";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Pad";
+    sAccel = "Q";
+}
+
+void CmdPartDesignPressPull::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+
+    // Detect selection type and dispatch to appropriate command
+    std::vector<Gui::SelectionObject> selection = getSelection().getSelectionEx();
+
+    if (selection.empty()) {
+        // No selection — default to Extrude (user picks sketch)
+        runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Extrude')");
+        return;
+    }
+
+    // Check if a sketch is selected (with or without InternalFace sub-element)
+    if (selection[0].getObject()
+        && selection[0].getObject()->isDerivedFrom(Sketcher::SketchObject::getClassTypeId())) {
+        // FusionCAD: Keep InternalFace sub-selection intact so Extrude can
+        // extrude only the selected face (not the whole sketch).
+        // SketchObject::getSubObject now resolves InternalFaceN dynamically.
+        runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Extrude')");
+        return;
+    }
+
+    // Check sub-element selection (edges or faces on a solid body)
+    if (!selection[0].getSubNames().empty()) {
+        const std::string& subName = selection[0].getSubNames()[0];
+
+        if (subName.rfind("Edge", 0) == 0) {
+            // Edge selected → Fillet
+            runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Fillet')");
+            return;
+        }
+
+        if (subName.rfind("Face", 0) == 0) {
+            // Face on solid selected → Offset Face (Fusion 360 Press Pull behavior)
+            runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_OffsetFace')");
+            return;
+        }
+    }
+
+    // Fallback: Extrude
+    runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Extrude')");
+}
+
+bool CmdPartDesignPressPull::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // PartDesign_Hole
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignHole)
@@ -1290,6 +1535,7 @@ CmdPartDesignHole::CmdPartDesignHole()
     sWhatsThis = "PartDesign_Hole";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Hole";
+    sAccel = "H";
 }
 
 void CmdPartDesignHole::activated(int iMsg)
@@ -1964,6 +2210,7 @@ CmdPartDesignFillet::CmdPartDesignFillet()
     sWhatsThis = "PartDesign_Fillet";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Fillet";
+    sAccel = "F";
 }
 
 void CmdPartDesignFillet::activated(int iMsg)
@@ -1992,6 +2239,7 @@ CmdPartDesignChamfer::CmdPartDesignChamfer()
     sWhatsThis = "PartDesign_Chamfer";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Chamfer";
+    sAccel = "Shift+F";
 }
 
 void CmdPartDesignChamfer::activated(int iMsg)
@@ -2091,6 +2339,7 @@ CmdPartDesignThickness::CmdPartDesignThickness()
     sWhatsThis = "PartDesign_Thickness";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Thickness";
+    sAccel = "Shift+H";
 }
 
 void CmdPartDesignThickness::activated(int iMsg)
@@ -2130,6 +2379,284 @@ void CmdPartDesignThickness::activated(int iMsg)
 }
 
 bool CmdPartDesignThickness::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_OffsetFace — Offset selected faces
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignOffsetFace)
+
+CmdPartDesignOffsetFace::CmdPartDesignOffsetFace()
+    : Command("PartDesign_OffsetFace")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Offset Face");
+    sToolTipText = QT_TR_NOOP("Offset the selected faces along their normals");
+    sWhatsThis = "PartDesign_OffsetFace";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+}
+
+void CmdPartDesignOffsetFace::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    Gui::SelectionObject selected;
+    bool useAllEdges = false;
+    bool noSelection = false;
+    if (!dressupGetSelected(this, "OffsetFace", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            if (SubNames.at(i).compare(0, 4, "Face") != 0) {
+                SubNames.erase(SubNames.begin() + i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    finishDressupFeature(this, "OffsetFace", base, SubNames, useAllEdges);
+}
+
+bool CmdPartDesignOffsetFace::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_DeleteFace — Delete + heal selected faces
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignDeleteFace)
+
+CmdPartDesignDeleteFace::CmdPartDesignDeleteFace()
+    : Command("PartDesign_DeleteFace")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Delete Face");
+    sToolTipText = QT_TR_NOOP("Remove selected faces from the solid and heal the gaps");
+    sWhatsThis = "PartDesign_DeleteFace";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+    sAccel = "Shift+D";
+}
+
+void CmdPartDesignDeleteFace::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    Gui::SelectionObject selected;
+    bool useAllEdges = false;
+    bool noSelection = false;
+    if (!dressupGetSelected(this, "DeleteFace", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            if (SubNames.at(i).compare(0, 4, "Face") != 0) {
+                SubNames.erase(SubNames.begin() + i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    finishDressupFeature(this, "DeleteFace", base, SubNames, useAllEdges);
+}
+
+bool CmdPartDesignDeleteFace::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_ReplaceFace — Replace selected faces with target surface
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignReplaceFace)
+
+CmdPartDesignReplaceFace::CmdPartDesignReplaceFace()
+    : Command("PartDesign_ReplaceFace")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Replace Face");
+    sToolTipText = QT_TR_NOOP("Replace selected faces with a target surface");
+    sWhatsThis = "PartDesign_ReplaceFace";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+    sAccel = "Shift+R";
+}
+
+void CmdPartDesignReplaceFace::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    Gui::SelectionObject selected;
+    bool useAllEdges = false;
+    bool noSelection = false;
+    if (!dressupGetSelected(this, "ReplaceFace", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            if (SubNames.at(i).compare(0, 4, "Face") != 0) {
+                SubNames.erase(SubNames.begin() + i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    finishDressupFeature(this, "ReplaceFace", base, SubNames, useAllEdges);
+}
+
+bool CmdPartDesignReplaceFace::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_SplitFace — Split selected faces with a tool shape
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignSplitFace)
+
+CmdPartDesignSplitFace::CmdPartDesignSplitFace()
+    : Command("PartDesign_SplitFace")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Split Face");
+    sToolTipText = QT_TR_NOOP("Split selected faces using a sketch, plane, or face");
+    sWhatsThis = "PartDesign_SplitFace";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+    sAccel = "Shift+S";
+}
+
+void CmdPartDesignSplitFace::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    Gui::SelectionObject selected;
+    bool useAllEdges = false;
+    bool noSelection = false;
+    if (!dressupGetSelected(this, "SplitFace", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            if (SubNames.at(i).compare(0, 4, "Face") != 0) {
+                SubNames.erase(SubNames.begin() + i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    finishDressupFeature(this, "SplitFace", base, SubNames, useAllEdges);
+}
+
+bool CmdPartDesignSplitFace::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// FusionCAD: PartDesign_MoveFace — Move selected faces
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignMoveFace)
+
+CmdPartDesignMoveFace::CmdPartDesignMoveFace()
+    : Command("PartDesign_MoveFace")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Move Face");
+    sToolTipText = QT_TR_NOOP("Move the selected faces by a distance along their normals");
+    sWhatsThis = "PartDesign_MoveFace";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+}
+
+void CmdPartDesignMoveFace::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    Gui::SelectionObject selected;
+    bool useAllEdges = false;
+    bool noSelection = false;
+    if (!dressupGetSelected(this, "MoveFace", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            if (SubNames.at(i).compare(0, 4, "Face") != 0) {
+                SubNames.erase(SubNames.begin() + i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    finishDressupFeature(this, "MoveFace", base, SubNames, useAllEdges);
+}
+
+bool CmdPartDesignMoveFace::isActive()
 {
     return hasActiveDocument();
 }
@@ -2219,6 +2746,7 @@ CmdPartDesignMirrored::CmdPartDesignMirrored()
     sWhatsThis = "PartDesign_Mirrored";
     sStatusTip = sToolTipText;
     sPixmap = "PartDesign_Mirrored";
+    sAccel = "M";
 }
 
 void CmdPartDesignMirrored::activated(int iMsg)
@@ -2723,6 +3251,11 @@ void CreatePartDesignCommands()
 
     rcCmdMgr.addCommand(new CmdPartDesignPad());
     rcCmdMgr.addCommand(new CmdPartDesignPocket());
+    rcCmdMgr.addCommand(new CmdPartDesignExtrude());
+    rcCmdMgr.addCommand(new CmdPartDesignPressPull());
+    rcCmdMgr.addCommand(new CmdPartDesignRevolve());
+    rcCmdMgr.addCommand(new CmdPartDesignSweep());
+    rcCmdMgr.addCommand(new CmdPartDesignLoft());
     rcCmdMgr.addCommand(new CmdPartDesignHole());
     rcCmdMgr.addCommand(new CmdPartDesignRevolution());
     rcCmdMgr.addCommand(new CmdPartDesignGroove());
@@ -2737,6 +3270,11 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignDraft());
     rcCmdMgr.addCommand(new CmdPartDesignChamfer());
     rcCmdMgr.addCommand(new CmdPartDesignThickness());
+    rcCmdMgr.addCommand(new CmdPartDesignOffsetFace());
+    rcCmdMgr.addCommand(new CmdPartDesignDeleteFace());
+    rcCmdMgr.addCommand(new CmdPartDesignReplaceFace());
+    rcCmdMgr.addCommand(new CmdPartDesignSplitFace());
+    rcCmdMgr.addCommand(new CmdPartDesignMoveFace());
 
     rcCmdMgr.addCommand(new CmdPartDesignMirrored());
     rcCmdMgr.addCommand(new CmdPartDesignLinearPattern());

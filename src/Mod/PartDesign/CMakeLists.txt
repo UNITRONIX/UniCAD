@@ -19,6 +19,7 @@ if(BUILD_GUI)
           InvoluteGearFeature.ui
           SprocketFeature.py
           SprocketFeature.ui
+          FusionSketchHelpers.py
     )
 endif(BUILD_GUI)
 

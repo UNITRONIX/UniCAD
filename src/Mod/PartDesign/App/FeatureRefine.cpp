@@ -53,7 +53,8 @@ FeatureRefine::FeatureRefine()
                                              .GetGroup("BaseApp")
                                              ->GetGroup("Preferences")
                                              ->GetGroup("Mod/PartDesign");
-    this->Refine.setValue(hGrp->GetBool("RefineModel", true));
+    // FusionCAD: Default Refine to false to preserve individual face topology
+    this->Refine.setValue(hGrp->GetBool("RefineModel", false));
 }
 
 bool FeatureRefine::onlyHaveRefined()

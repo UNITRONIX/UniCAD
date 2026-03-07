@@ -56,7 +56,8 @@ void PrintInitHelp();
 
 const auto sBanner = fmt::format(
     "(C) 2001-{} FreeCAD contributors\n"
-    "FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.\n\n",
+    "FusionCAD by UNITRONIX - a fork of FreeCAD\n"
+    "Licensed under the terms of LGPL2+ license.\n\n",
     FCCopyrightYear
 );
 
@@ -188,14 +189,14 @@ int main(int argc, char** argv)
 #endif
 
     // Name and Version of the Application
-    App::Application::Config()["ExeName"] = "FreeCAD";
-    App::Application::Config()["ExeVendor"] = "FreeCAD";
+    App::Application::Config()["ExeName"] = "FusionCAD";
+    App::Application::Config()["ExeVendor"] = "UNITRONIX";
     App::Application::Config()["AppDataSkipVendor"] = "true";
-    App::Application::Config()["MaintainerUrl"] = "https://freecad.org";
+    App::Application::Config()["MaintainerUrl"] = "https://github.com/UNITRONIX/FusionCAD";
 
     // set the banner (for logging and console)
     App::Application::Config()["CopyrightInfo"] = sBanner;
-    App::Application::Config()["AppIcon"] = "freecad";
+    App::Application::Config()["AppIcon"] = "fusioncad";
     App::Application::Config()["SplashScreen"] = "freecadsplash";
     App::Application::Config()["AboutImage"] = App::Application::isDevelopmentVersion()
         ? "freecadaboutdev"
@@ -207,7 +208,7 @@ int main(int argc, char** argv)
     App::Application::Config()["SplashWarningColor"] = "#CA333B";
     App::Application::Config()["SplashInfoColor"] = "#000000";
     App::Application::Config()["SplashInfoPosition"] = "6,75";
-    App::Application::Config()["DesktopFileName"] = "org.freecad.FreeCAD";
+    App::Application::Config()["DesktopFileName"] = "org.unitronix.FusionCAD";
 
     try {
         // Init phase ===========================================================

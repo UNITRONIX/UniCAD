@@ -58,6 +58,15 @@
 #include "ViewProviderPrimitive.h"
 #include "ViewProviderRevolution.h"
 #include "ViewProviderScaled.h"
+#include "ViewProviderUnifiedExtrude.h"
+#include "ViewProviderUnifiedRevolve.h"
+#include "ViewProviderUnifiedSweep.h"
+#include "ViewProviderUnifiedLoft.h"
+#include "ViewProviderOffsetFace.h"
+#include "ViewProviderDeleteFace.h"
+#include "ViewProviderReplaceFace.h"
+#include "ViewProviderSplitFace.h"
+#include "ViewProviderMoveFace.h"
 #include "ViewProviderShapeBinder.h"
 #include "ViewProviderSketchBased.h"
 #include "ViewProviderThickness.h"
@@ -134,6 +143,7 @@ PyMOD_INIT_FUNC(PartDesignGui)
     PartDesignGui::ViewProviderPocket        ::init();
     PartDesignGui::ViewProviderHole          ::init();
     PartDesignGui::ViewProviderPad           ::init();
+    PartDesignGui::ViewProviderUnifiedExtrude::init();
     PartDesignGui::ViewProviderRevolution    ::init();
     PartDesignGui::ViewProviderDressUp       ::init();
     PartDesignGui::ViewProviderGroove        ::init();
@@ -141,6 +151,14 @@ PyMOD_INIT_FUNC(PartDesignGui)
     PartDesignGui::ViewProviderFillet        ::init();
     PartDesignGui::ViewProviderDraft         ::init();
     PartDesignGui::ViewProviderThickness     ::init();
+    PartDesignGui::ViewProviderOffsetFace    ::init();
+    PartDesignGui::ViewProviderDeleteFace    ::init();
+    PartDesignGui::ViewProviderReplaceFace   ::init();
+    PartDesignGui::ViewProviderSplitFace     ::init();
+    PartDesignGui::ViewProviderMoveFace      ::init();
+    PartDesignGui::ViewProviderUnifiedRevolve::init();
+    PartDesignGui::ViewProviderUnifiedSweep  ::init();
+    PartDesignGui::ViewProviderUnifiedLoft   ::init();
     PartDesignGui::ViewProviderTransformed   ::init();
     PartDesignGui::ViewProviderMirrored      ::init();
     PartDesignGui::ViewProviderLinearPattern ::init();

@@ -53,6 +53,7 @@
 #include "WhatsThis.h"
 #include "Workbench.h"
 #include "WorkbenchManager.h"
+#include "CommandSearchDialog.h"
 #include "App/GeoFeature.h"
 #include "App/Annotation.h"
 
@@ -1044,6 +1045,34 @@ void StdCmdAnnotationLabel::activated(int)
     commitCommand();
 }
 
+//===========================================================================
+// Std_SearchCommands
+//===========================================================================
+DEF_STD_CMD(StdCmdSearchCommands)
+
+StdCmdSearchCommands::StdCmdSearchCommands()
+    : Command("Std_SearchCommands")
+{
+    sGroup = "Tools";
+    sMenuText = QT_TR_NOOP("Search Commands");
+    sToolTipText = QT_TR_NOOP("Search and execute any command by name");
+    sWhatsThis = "Std_SearchCommands";
+    sStatusTip = sToolTipText;
+    sPixmap = "system-search";
+    sAccel = "/";
+    eType = 0;
+}
+
+void StdCmdSearchCommands::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    static QPointer<CommandSearchDialog> dlg;
+    if (!dlg) {
+        dlg = new CommandSearchDialog(getMainWindow());
+    }
+    dlg->showCentered();
+}
+
 namespace Gui
 {
 
@@ -1079,6 +1108,7 @@ void CreateStdCommands()
     // rcCmdMgr.addCommand(new StdCmdDownloadOnlineHelp());
     // rcCmdMgr.addCommand(new StdCmdDescription());
     rcCmdMgr.addCommand(new StdCmdAnnotationLabel());
+    rcCmdMgr.addCommand(new StdCmdSearchCommands());
 }
 
 }  // namespace Gui

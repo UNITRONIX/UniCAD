@@ -1576,9 +1576,23 @@ Base::Placement AttachEngine3D::_calculateAttachedPlacement(
             }
             SketchNormal = Normal.Direction();
 
-            Handle(Geom_Plane) gPlane = new Geom_Plane(plane);
-            GeomAPI_ProjectPointOnSurf projector(refOrg, gPlane);
-            SketchBasePoint = projector.NearestPoint();
+            // FusionCAD enhancement: optionally use face centroid as sketch origin
+            // instead of projecting the reference object's origin onto the plane
+            ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath(
+                "User parameter:BaseApp/Preferences/Mod/Part/Attachment"
+            );
+            bool useFaceCentroid = hGrp->GetBool("UseFaceCentroidForSketchOrigin", false);
+
+            if (useFaceCentroid && !face.IsNull()) {
+                GProp_GProps gprops;
+                BRepGProp::SurfaceProperties(face, gprops);
+                SketchBasePoint = gprops.CentreOfMass();
+            }
+            else {
+                Handle(Geom_Plane) gPlane = new Geom_Plane(plane);
+                GeomAPI_ProjectPointOnSurf projector(refOrg, gPlane);
+                SketchBasePoint = projector.NearestPoint();
+            }
 
         } break;
         case mmTangentPlane: {

@@ -538,6 +538,7 @@ SET(Command_CPP_SRCS
     ShortcutManager.cpp
     CommandCompleter.cpp
     CommandActionPy.cpp
+    CommandSearchDialog.cpp
 )
 SET(Command_SRCS
     ${Command_CPP_SRCS}
@@ -548,6 +549,7 @@ SET(Command_SRCS
     ShortcutManager.h
     CommandCompleter.h
     CommandActionPy.h
+    CommandSearchDialog.h
 )
 SOURCE_GROUP("Command" FILES ${Command_SRCS})
 
@@ -1008,6 +1010,7 @@ SET(Navigation_CPP_SRCS
     Navigation/TinkerCADNavigationStyle.cpp
     Navigation/TouchpadNavigationStyle.cpp
     Navigation/GestureNavigationStyle.cpp
+    Navigation/FusionNavigationStyle.cpp
     Navigation/NavigationAnimator.cpp
     Navigation/NavigationAnimation.cpp
 )
@@ -1236,6 +1239,11 @@ SET(Widget_CPP_SRCS
     ElideCheckBox.cpp
     FontScaledSVG.cpp
     SplitButton.cpp
+    FusionTabToolbar.cpp
+    FusionMarkingMenu.cpp
+    FusionTimeline.cpp
+    FusionNavigationBar.cpp
+    FusionUIManager.cpp
 )
 SET(Widget_HPP_SRCS
     ComboLinks.h
@@ -1262,6 +1270,11 @@ SET(Widget_HPP_SRCS
     ElideCheckBox.h
     FontScaledSVG.h
     SplitButton.h
+    FusionTabToolbar.h
+    FusionMarkingMenu.h
+    FusionTimeline.h
+    FusionNavigationBar.h
+    FusionUIManager.h
 )
 SET(Widget_SRCS
     ${Widget_CPP_SRCS}
@@ -1381,6 +1394,7 @@ SET(FreeCADGui_CPP_SRCS
     FileHandler.cpp
     FileHandler.h
     FreeCADStyle.cpp
+    FusionLog.cpp
     GuiApplication.cpp
     GuiApplicationNativeEventAware.cpp
     GuiConsole.cpp

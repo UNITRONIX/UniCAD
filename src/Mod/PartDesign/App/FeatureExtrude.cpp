@@ -343,6 +343,15 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
                                                                     : 0.0
                                           : 0.0;
 
+    // FusionCAD: Fusion 360-style negative extrusion.
+    // Negative Length on a Pad → reverse direction + Cut (drills into base).
+    // Negative Length on a Pocket → reverse direction + Fuse (adds material).
+    bool isNegativeExtrusion = false;
+    if (Sidemethod == "One side" && method == "Length" && L < 0) {
+        isNegativeExtrusion = true;
+        L = std::abs(L);  // Use positive length; direction will be reversed below
+    }
+
     if ((Sidemethod == "One side" && method == "Length")
         || (Sidemethod == "Two sides" && method == "Length" && method2 == "Length")) {
 
@@ -470,6 +479,13 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
 
         dir.Transform(invTrsf);
         if (Reversed.getValue()) {
+            dir.Reverse();
+        }
+
+        // FusionCAD: For negative extrusion, reverse the direction.
+        // L was already made positive above; reversing dir makes the prism
+        // go in the opposite direction (into the base for Pad, out for Pocket).
+        if (isNegativeExtrusion) {
             dir.Reverse();
         }
 
@@ -742,13 +758,16 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
             // Let's call algorithm computing a fuse operation:
             TopoShape result(0, getDocument()->getStringHasher());
             try {
+                // FusionCAD: Fusion 360-style negative extrusion flips the boolean op.
+                // Pad with negative Length → Cut (drills into base).
+                // Pocket with negative Length → Fuse (adds material).
                 const char* maker;
                 switch (getAddSubType()) {
                     case Subtractive:
-                        maker = Part::OpCodes::Cut;
+                        maker = isNegativeExtrusion ? Part::OpCodes::Fuse : Part::OpCodes::Cut;
                         break;
                     default:
-                        maker = Part::OpCodes::Fuse;
+                        maker = isNegativeExtrusion ? Part::OpCodes::Cut : Part::OpCodes::Fuse;
                 }
                 result.makeElementBoolean(maker, {base, prism});
             }
@@ -970,6 +989,12 @@ void FeatureExtrude::onDocumentRestored()
     else if (Midplane.getValue()) {
         Midplane.setValue(false);
         SideType.setValue("Symmetric");
+    }
+
+    // FusionCAD: Migrate old documents — disable Refine to preserve individual
+    // face topology from sketch internal faces (required for per-face selection).
+    if (Refine.getValue()) {
+        Refine.setValue(false);
     }
 
     ProfileBased::onDocumentRestored();

@@ -559,6 +559,65 @@ void EditModeCoinManager::drawEditMarkers(
     editModeScenegraphNodes.EditMarkerSet->markerIndex.finishEditing();
 }
 
+/***** FusionCAD Snap Indicator Visualization *****/
+
+void EditModeCoinManager::drawSnapIndicator(const Base::Vector2d& snapPos, SnapIndicatorType type)
+{
+    if (type == SnapIndicatorType::None) {
+        clearSnapIndicator();
+        return;
+    }
+
+    // FusionCAD: Simple snap indicator - just a colored dot
+    // Color based on snap type for visual feedback
+    SbColor indicatorColor;
+    switch (type) {
+        case SnapIndicatorType::Point:
+        case SnapIndicatorType::Origin:
+            indicatorColor.setValue(0.0f, 1.0f, 0.3f);  // Green
+            break;
+        case SnapIndicatorType::Grid:
+            indicatorColor.setValue(0.3f, 0.7f, 1.0f);  // Light blue
+            break;
+        case SnapIndicatorType::Angle:
+            indicatorColor.setValue(1.0f, 0.6f, 0.0f);  // Orange
+            break;
+        case SnapIndicatorType::Edge:
+        case SnapIndicatorType::Middle:
+            indicatorColor.setValue(1.0f, 1.0f, 0.0f);  // Yellow
+            break;
+        default:
+            indicatorColor.setValue(0.0f, 1.0f, 0.5f);  // Default green
+            break;
+    }
+
+    editModeScenegraphNodes.SnapIndicatorMaterial->diffuseColor.setValue(indicatorColor);
+
+    // Set marker position - just a single point
+    editModeScenegraphNodes.SnapIndicatorCoordinate->point.setNum(1);
+    SbVec3f* verts = editModeScenegraphNodes.SnapIndicatorCoordinate->point.startEditing();
+    verts[0].setValue(
+        static_cast<float>(snapPos.x),
+        static_cast<float>(snapPos.y),
+        ViewProviderSketchCoinAttorney::getViewOrientationFactor(viewProvider)
+            * drawingParameters.zEdit
+    );
+    editModeScenegraphNodes.SnapIndicatorCoordinate->point.finishEditing();
+
+    // Simple filled circle marker
+    editModeScenegraphNodes.SnapIndicatorMarkerSet->markerIndex
+        = Gui::Inventor::MarkerBitmaps::getMarkerIndex("CIRCLE_FILLED", drawingParameters.markerSize + 2);
+
+    // No lines needed - keep it simple
+    editModeScenegraphNodes.SnapIndicatorLineSet->numVertices.setNum(0);
+}
+
+void EditModeCoinManager::clearSnapIndicator()
+{
+    editModeScenegraphNodes.SnapIndicatorCoordinate->point.setNum(0);
+    editModeScenegraphNodes.SnapIndicatorLineSet->numVertices.setNum(0);
+}
+
 void EditModeCoinManager::drawEdit(const std::vector<Base::Vector2d>& EditCurve, GeometryCreationMode mode)
 {
     editModeScenegraphNodes.EditCurveSet->numVertices.setNum(1);
@@ -993,6 +1052,40 @@ void EditModeCoinManager::createEditModeInventorNodes()
     editModeScenegraphNodes.EditMarkerSet->markerIndex
         = Gui::Inventor::MarkerBitmaps::getMarkerIndex("CIRCLE_LINE", drawingParameters.markerSize);
     editMarkersRoot->addChild(editModeScenegraphNodes.EditMarkerSet);
+
+    // FusionCAD: Snap indicator nodes for visual feedback +++++++++++++++++++++
+    editModeScenegraphNodes.SnapIndicatorRoot = new SoSeparator;
+    editModeScenegraphNodes.SnapIndicatorRoot->setName("SnapIndicatorRoot");
+    editModeScenegraphNodes.SnapIndicatorRoot->renderCaching = SoSeparator::OFF;
+    editModeScenegraphNodes.EditRoot->addChild(editModeScenegraphNodes.SnapIndicatorRoot);
+
+    SoPickStyle* snapPickStyle = new SoPickStyle;
+    snapPickStyle->style.setValue(SoPickStyle::UNPICKABLE);
+    editModeScenegraphNodes.SnapIndicatorRoot->addChild(snapPickStyle);
+
+    editModeScenegraphNodes.SnapIndicatorMaterial = new SoMaterial;
+    editModeScenegraphNodes.SnapIndicatorMaterial->setName("SnapIndicatorMaterial");
+    editModeScenegraphNodes.SnapIndicatorMaterial->diffuseColor.setValue(0.0f, 1.0f, 0.5f);  // Bright green
+    editModeScenegraphNodes.SnapIndicatorRoot->addChild(editModeScenegraphNodes.SnapIndicatorMaterial);
+
+    editModeScenegraphNodes.SnapIndicatorCoordinate = new SoCoordinate3;
+    editModeScenegraphNodes.SnapIndicatorCoordinate->setName("SnapIndicatorCoordinate");
+    editModeScenegraphNodes.SnapIndicatorRoot->addChild(editModeScenegraphNodes.SnapIndicatorCoordinate);
+
+    editModeScenegraphNodes.SnapIndicatorDrawStyle = new SoDrawStyle;
+    editModeScenegraphNodes.SnapIndicatorDrawStyle->setName("SnapIndicatorDrawStyle");
+    editModeScenegraphNodes.SnapIndicatorDrawStyle->lineWidth = 2 * drawingParameters.pixelScalingFactor;
+    editModeScenegraphNodes.SnapIndicatorRoot->addChild(editModeScenegraphNodes.SnapIndicatorDrawStyle);
+
+    editModeScenegraphNodes.SnapIndicatorMarkerSet = new SoMarkerSet;
+    editModeScenegraphNodes.SnapIndicatorMarkerSet->setName("SnapIndicatorMarkerSet");
+    editModeScenegraphNodes.SnapIndicatorMarkerSet->markerIndex
+        = Gui::Inventor::MarkerBitmaps::getMarkerIndex("DIAMOND_FILLED", drawingParameters.markerSize + 4);
+    editModeScenegraphNodes.SnapIndicatorRoot->addChild(editModeScenegraphNodes.SnapIndicatorMarkerSet);
+
+    editModeScenegraphNodes.SnapIndicatorLineSet = new SoLineSet;
+    editModeScenegraphNodes.SnapIndicatorLineSet->setName("SnapIndicatorLineSet");
+    editModeScenegraphNodes.SnapIndicatorRoot->addChild(editModeScenegraphNodes.SnapIndicatorLineSet);
 
     // stuff for the edit coordinates ++++++++++++++++++++++++++++++++++++++
     SoSeparator* Coordsep = new SoSeparator();

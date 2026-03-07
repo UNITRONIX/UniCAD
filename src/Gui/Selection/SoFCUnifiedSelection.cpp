@@ -75,8 +75,10 @@
 #include <App/Document.h>
 #include <App/GeoFeature.h>
 #include <App/ElementNamingUtils.h>
+#include <Base/Console.h>
 #include <Base/Tools.h>
 #include <Base/UnitsApi.h>
+#include <Gui/FusionLog.h>
 
 #include "SoFCUnifiedSelection.h"
 #include "Application.h"
@@ -120,8 +122,11 @@ SoFCUnifiedSelection::SoFCUnifiedSelection()
 {
     SO_NODE_CONSTRUCTOR(SoFCUnifiedSelection);
 
-    SO_NODE_ADD_FIELD(colorHighlight, (SbColor(1.0f, 0.6f, 0.0f)));
-    SO_NODE_ADD_FIELD(colorSelection, (SbColor(0.1f, 0.8f, 0.1f)));
+    // FusionCAD: Fusion 360-style selection colors
+    // Highlight (preselect/hover): light blue (#4FC3F7 → 0.31, 0.76, 0.97)
+    // Selection: Fusion blue (#0696D7 → 0.024, 0.588, 0.843)
+    SO_NODE_ADD_FIELD(colorHighlight, (SbColor(0.31f, 0.76f, 0.97f)));
+    SO_NODE_ADD_FIELD(colorSelection, (SbColor(0.024f, 0.588f, 0.843f)));
     SO_NODE_ADD_FIELD(preselectionMode, (AUTO));
     SO_NODE_ADD_FIELD(selectionMode, (ON));
     SO_NODE_ADD_FIELD(selectionEnabled, (true));
@@ -256,6 +261,7 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
     ViewProvider* last_vp = nullptr;
     std::vector<PickedInfo> ret;
     const SoPickedPointList& points = action->getPickedPointList();
+    FLOG_DEBUG("Pick", "getPickedList: {} picked points\n", points.getLength());
     for (int i = 0, count = points.getLength(); i < count; ++i) {
         PickedInfo info;
         info.pp = points[i];
@@ -265,7 +271,14 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
         if (this->pcDocument && path && path->containsPath(action->getCurPath())) {
             vp = this->pcDocument->getViewProviderByPathFromHead(path);
             if (singlePick && last_vp && last_vp != vp) {
-                return ret;
+                // FusionCAD: Don't stop immediately - check if the next pick is at the same
+                // location and has a more specific element (e.g. sketch internal face vs body face)
+                const SbVec3f& firstPt = ret.front().pp->getPoint();
+                const SbVec3f& curPt = info.pp->getPoint();
+                if (!firstPt.equals(curPt, 0.5F)) {
+                    return ret;
+                }
+                // Same location - continue checking this candidate
             }
         }
         if (!vp || !vp->isDerivedFrom(ViewProviderDocumentObject::getClassTypeId())) {
@@ -290,8 +303,13 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
             break;
         }
         if (!info.vpd->getElementPicked(info.pp, info.element)) {
+            FLOG_DEBUG("Pick", "  [{}] VP={} getElementPicked FAILED\n", i,
+                info.vpd->getObject() ? info.vpd->getObject()->getNameInDocument() : "?");
             continue;
         }
+        FLOG_DEBUG("Pick", "  [{}] VP={} element={}\n", i,
+            info.vpd->getObject() ? info.vpd->getObject()->getNameInDocument() : "?",
+            info.element);
 
         if (singlePick) {
             last_vp = vp;
@@ -314,14 +332,32 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
     auto itPicked = ret.begin();
     for (auto it = ret.begin() + 1; it != ret.end(); ++it) {
         auto& info = *it;
-        if (last_vpd != info.vpd) {
-            break;
-        }
 
         int cur_prio = getPriority(info.pp);
         const SbVec3f& cur_pt = info.pp->getPoint();
 
-        if ((cur_prio > picked_prio) && picked_pt.equals(cur_pt, 0.2F)) {
+        // FusionCAD: Only prefer Internal face over generic face when both picks
+        // are truly at the same point (tight tolerance). This prevents sketch faces
+        // buried inside a Pad body from overriding the Pad's own face picks.
+        if (picked_pt.equals(cur_pt, 0.01F)) {
+            // Prefer internal face elements only at truly same pick point
+            bool curIsInternal = info.element.find("Internal") != std::string::npos;
+            bool pickedIsInternal = itPicked->element.find("Internal") != std::string::npos;
+            if (curIsInternal && !pickedIsInternal) {
+                itPicked = it;
+                picked_prio = cur_prio;
+                continue;
+            }
+        }
+        if (picked_pt.equals(cur_pt, 0.5F)) {
+            // Original same-VP priority logic
+            if (last_vpd == info.vpd && (cur_prio > picked_prio)) {
+                itPicked = it;
+                picked_prio = cur_prio;
+            }
+        } else if (last_vpd != info.vpd) {
+            break;
+        } else if ((cur_prio > picked_prio) && picked_pt.equals(cur_pt, 0.2F)) {
             itPicked = it;
             picked_prio = cur_prio;
         }

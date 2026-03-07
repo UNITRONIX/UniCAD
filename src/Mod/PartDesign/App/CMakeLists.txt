@@ -81,6 +81,24 @@ SET(FeaturesSketchBased_SRCS
     FeaturePad.h
     FeaturePocket.cpp
     FeaturePocket.h
+    FeatureUnifiedExtrude.cpp
+    FeatureUnifiedExtrude.h
+    FeatureUnifiedRevolve.cpp
+    FeatureUnifiedRevolve.h
+    FeatureUnifiedSweep.cpp
+    FeatureUnifiedSweep.h
+    FeatureUnifiedLoft.cpp
+    FeatureUnifiedLoft.h
+    FeatureOffsetFace.cpp
+    FeatureOffsetFace.h
+    FeatureDeleteFace.cpp
+    FeatureDeleteFace.h
+    FeatureReplaceFace.cpp
+    FeatureReplaceFace.h
+    FeatureSplitFace.cpp
+    FeatureSplitFace.h
+    FeatureMoveFace.cpp
+    FeatureMoveFace.h
     FeatureRevolution.cpp
     FeatureRevolution.h
     FeatureGroove.cpp

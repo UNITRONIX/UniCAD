@@ -70,3 +70,14 @@ files_to_translate.txt
 # pixi environments
 .pixi
 *.egg-info
+
+# FusionCAD: build artifacts and local files
+build_output.txt
+*.log
+
+# IDE / editor
+*.swp
+*.swo
+*.bak
+__pycache__/
+*.ipynb_checkpoints/

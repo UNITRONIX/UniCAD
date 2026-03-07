@@ -65,6 +65,12 @@ class PartDesignWorkbench(Workbench):
 
         FreeCADGui.addCommand("PartDesign_Sprocket", CommandSprocket())
 
+        # FusionCAD: Load sketch helper commands (face boundary projection, etc.)
+        try:
+            from PartDesign import FusionSketchHelpers
+        except ImportError:
+            FreeCAD.Console.PrintLog("FusionCAD: FusionSketchHelpers not available\n")
+
     def GetClassName(self):
         return "PartDesignGui::Workbench"
 

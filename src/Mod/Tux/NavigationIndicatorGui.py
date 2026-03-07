@@ -780,6 +780,11 @@ a12.setText("Touchpad  ")
 a12.setData("Gui::TouchpadNavigationStyle")
 a12.setObjectName("Indicator_NavigationTouchpad")
 
+a13 = QtGui.QAction(gStyle)
+a13.setText("Fusion 360  ")
+a13.setData("Gui::FusionNavigationStyle")
+a13.setObjectName("Indicator_NavigationFusion")
+
 RePopulateIcons()
 
 menu.addMenu(menuSettings)
@@ -797,6 +802,7 @@ menu.addAction(a9)
 menu.addAction(a10)
 menu.addAction(a11)
 menu.addAction(a12)
+menu.addAction(a13)
 
 pView.Attach(indicator)
 

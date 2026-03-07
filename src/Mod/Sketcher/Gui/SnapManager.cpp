@@ -24,6 +24,10 @@
 
 #include <QApplication>
 
+#include <BRepGProp.hxx>
+#include <TopoDS.hxx>
+#include <TopExp_Explorer.hxx>
+
 #include <Base/Tools.h>
 #include <Mod/Sketcher/App/SketchObject.h>
 
@@ -75,6 +79,7 @@ void SnapManager::ParameterObserver::initParameters()
         {"SnapToObjects", [this](const std::string& param) { updateSnapToObjectParameter(param); }},
         {"SnapToGrid", [this](const std::string& param) { updateSnapToGridParameter(param); }},
         {"SnapAngle", [this](const std::string& param) { updateSnapAngleParameter(param); }},
+        {"AutoAngleSnap", [this](const std::string& param) { updateAutoAngleSnapParameter(param); }},
     };
 
     for (auto& val : str2updatefunction) {
@@ -103,7 +108,16 @@ void SnapManager::ParameterObserver::updateSnapToGridParameter(const std::string
 {
     ParameterGrp::handle hGrp = getParameterGrpHandle();
 
-    client.snapToGridRequested = hGrp->GetBool(parametername.c_str(), false);
+    // FusionCAD: Default to true for automatic grid snapping
+    client.snapToGridRequested = hGrp->GetBool(parametername.c_str(), true);
+}
+
+void SnapManager::ParameterObserver::updateAutoAngleSnapParameter(const std::string& parametername)
+{
+    ParameterGrp::handle hGrp = getParameterGrpHandle();
+
+    // FusionCAD: Auto angle snap without requiring Ctrl key
+    client.autoAngleSnapEnabled = hGrp->GetBool(parametername.c_str(), true);
 }
 
 void SnapManager::ParameterObserver::updateSnapAngleParameter(const std::string& parametername)
@@ -164,8 +178,10 @@ ParameterGrp::handle SnapManager::ParameterObserver::getParameterGrpHandle()
 SnapManager::SnapManager(ViewProviderSketch& vp)
     : viewProvider(vp)
     , angleSnapRequested(false)
+    , autoAngleSnapEnabled(true)  // FusionCAD: Auto angle snap enabled by default
     , referencePoint(Base::Vector2d(0., 0.))
     , lastMouseAngle(0.0)
+    , lastSnapType(SnapIndicatorType::None)  // FusionCAD: Initialize snap type
 {
     // Create parameter observer and initialise watched parameters
     pObserver = std::make_unique<SnapManager::ParameterObserver>(*this);
@@ -177,6 +193,8 @@ SnapManager::~SnapManager()
 Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
 {
     if (!snapRequested) {
+        lastSnapType = SnapIndicatorType::None;
+        viewProvider.clearSnapIndicator();
         return inputPos;
     }
 
@@ -185,13 +203,26 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
     // In order of priority:
 
     // 1 - Snap at an angle
+    // FusionCAD: Support both Ctrl-triggered and automatic angle snap
+    bool angleSnapActive = (autoAngleSnapEnabled || QApplication::keyboardModifiers() == Qt::ControlModifier);
     if ((static_cast<int>(mask) & static_cast<int>(SnapType::Angle)) && angleSnapRequested
-        && QApplication::keyboardModifiers() == Qt::ControlModifier
+        && angleSnapActive
         && snapAtAngle(inputPos, snapPos)) {
+        lastSnapType = SnapIndicatorType::Angle;
+        viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
         return snapPos;
     }
     else {
         lastMouseAngle = 0.0;
+    }
+
+    // 1.5 - FusionCAD: Snap to face center (important for finding rectangle/polygon centers)
+    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Point)) && snapToObjectsRequested) {
+        if (snapToFaceCenter(inputPos, snapPos)) {
+            lastSnapType = SnapIndicatorType::FaceCenter;
+            viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
+            return snapPos;
+        }
     }
 
     // 2 - Snap to objects (may partially snap to axis, leaving other coordinate for grid)
@@ -201,6 +232,8 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
         && snapToObjectsRequested) {
         snappedToObject = snapToObject(inputPos, snapPos, mask);
         if (snappedToObject) {
+            // lastSnapType is set inside snapToObject
+            viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
             return snapPos;  // Full snap (point or curve) - done
         }
         // if false was returned but snapPos was modified (axis case), continue to grid snap
@@ -214,13 +247,19 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
         // use snapPos as input (which may have one coordinate locked by axis)
         Base::Vector2d gridSnapResult = snapPos;
         if (snapToGrid(snapPos, gridSnapResult)) {
+            lastSnapType = SnapIndicatorType::Grid;
+            viewProvider.drawSnapIndicator(gridSnapResult, static_cast<int>(lastSnapType));
             return gridSnapResult;
         }
         // if grid snap happened, return the result which combines axis + grid
         // if axis locked a coordinate, snapPos already had it, and grid snap respected it
+        lastSnapType = SnapIndicatorType::None;
+        viewProvider.clearSnapIndicator();
         return snapPos;
     }
 
+    lastSnapType = SnapIndicatorType::None;
+    viewProvider.clearSnapIndicator();
     return snapPos;
 }
 
@@ -252,9 +291,11 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
         if (CrsId == 0) {
             geoId = Sketcher::GeoEnum::RtPnt;
             posId = Sketcher::PointPos::start;
+            lastSnapType = SnapIndicatorType::Origin;  // FusionCAD: Origin snap
         }
         else if (VtId >= 0) {
             Obj->getGeoVertexIndex(VtId, geoId, posId);
+            lastSnapType = SnapIndicatorType::Point;  // FusionCAD: Point snap
         }
 
         snapPos.x = Obj->getPoint(geoId, posId).x;
@@ -264,11 +305,13 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
     else if (static_cast<int>(mask) & static_cast<int>(SnapType::Edge)) {
         if (CrsId == 1) {  // H_Axis
             snapPos.y = 0;
+            lastSnapType = SnapIndicatorType::Edge;  // FusionCAD: Axis snap
             // dont return true, allow grid snap to handle X coordinate
             return false;
         }
         else if (CrsId == 2) {  // V_Axis
             snapPos.x = 0;
+            lastSnapType = SnapIndicatorType::Edge;  // FusionCAD: Axis snap
             // dont return true, allow grid snap to handle Y coordinate
             return false;
         }
@@ -290,16 +333,22 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
                     return false;
                 }
 
+                lastSnapType = SnapIndicatorType::Edge;  // FusionCAD: Default to edge snap
+
                 // If it is a line, then we check if we need to snap to the middle.
                 if (geo->is<Part::GeomLineSegment>()) {
                     const Part::GeomLineSegment* line = static_cast<const Part::GeomLineSegment*>(geo);
-                    snapToLineMiddle(pointToOverride, line);
+                    if (snapToLineMiddle(pointToOverride, line)) {
+                        lastSnapType = SnapIndicatorType::Middle;  // FusionCAD: Middle snap
+                    }
                 }
 
                 // If it is an arc, then we check if we need to snap to the middle (not the center).
                 if (geo->is<Part::GeomArcOfCircle>()) {
                     const Part::GeomArcOfCircle* arc = static_cast<const Part::GeomArcOfCircle*>(geo);
-                    snapToArcMiddle(pointToOverride, arc);
+                    if (snapToArcMiddle(pointToOverride, arc)) {
+                        lastSnapType = SnapIndicatorType::Middle;  // FusionCAD: Middle snap
+                    }
                 }
 
                 snapPos.x = pointToOverride.x;
@@ -388,6 +437,64 @@ bool SnapManager::snapToArcMiddle(Base::Vector3d& pointToOverride, const Part::G
      */
     if (fabs(pVec.Angle() - (revert * mVec).Angle()) < 0.10 * angle) {
         pointToOverride = centerPoint + middleVec * revert;
+        return true;
+    }
+
+    return false;
+}
+
+// FusionCAD: Snap to the center of detected faces in the sketch
+bool SnapManager::snapToFaceCenter(Base::Vector2d inputPos, Base::Vector2d& snapPos)
+{
+    Sketcher::SketchObject* sketchObj = viewProvider.getSketchObject();
+    if (!sketchObj) {
+        return false;
+    }
+
+    // Get InternalShape which contains detected faces
+    const Part::TopoShape& internalShape = sketchObj->InternalShape.getShape();
+    if (internalShape.isNull()) {
+        return false;
+    }
+
+    // Get sketch placement for coordinate transformation
+    Base::Placement sketchPlacement = sketchObj->globalPlacement();
+    Base::Matrix4D invMat = sketchPlacement.inverse().toMatrix();
+
+    double bestDistance = std::numeric_limits<double>::max();
+    Base::Vector2d bestCenter;
+    bool foundFace = false;
+
+    // Snap tolerance - use grid size / 3 for face center snap
+    const double snapTol = viewProvider.getGridSize() / 3.0;
+
+    // Iterate through all faces in the internal shape
+    TopExp_Explorer explorer(internalShape.getShape(), TopAbs_FACE);
+    for (; explorer.More(); explorer.Next()) {
+        const TopoDS_Face& face = TopoDS::Face(explorer.Current());
+        
+        // Calculate face center of mass
+        GProp_GProps props;
+        BRepGProp::SurfaceProperties(face, props);
+        gp_Pnt centerOfMass = props.CentreOfMass();
+        
+        // Transform to sketch local coordinates
+        Base::Vector3d center3d(centerOfMass.X(), centerOfMass.Y(), centerOfMass.Z());
+        invMat.multVec(center3d, center3d);
+        
+        Base::Vector2d center2d(center3d.x, center3d.y);
+        double distance = (inputPos - center2d).Length();
+        
+        // Check if within snap tolerance and closer than previous best
+        if (distance < snapTol && distance < bestDistance) {
+            bestDistance = distance;
+            bestCenter = center2d;
+            foundFace = true;
+        }
+    }
+
+    if (foundFace) {
+        snapPos = bestCenter;
         return true;
     }
 

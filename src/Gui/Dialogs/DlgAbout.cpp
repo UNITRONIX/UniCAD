@@ -291,7 +291,7 @@ void AboutDialog::setupLabels()
             }
 
             if (url == QStringLiteral("Unknown")) {
-                url = QStringLiteral("https://github.com/FreeCAD/FreeCAD");  // Just take a guess
+                url = QStringLiteral("https://github.com/UNITRONIX/FusionCAD");  // FusionCAD fork
             }
 
             // This may only create valid URLs for Github, but some other hosts use the same format
@@ -330,7 +330,7 @@ void AboutDialog::showCredits()
     QString creditsHTML
         = QStringLiteral("<html><body><h1>%1</h1><p>%2</p><h2>%3</h2><ul>")
               .arg(tr("Credits", "Header for the Credits tab of the About screen"))
-              .arg(tr("FreeCAD would not be possible without the contributions of:"))
+              .arg(tr("FusionCAD by UNITRONIX would not be possible without the FreeCAD contributors:"))
               .arg(tr("Individuals", "Header for the list of individual people in the Credits list."));
 
     QTextStream stream(&creditsFile);

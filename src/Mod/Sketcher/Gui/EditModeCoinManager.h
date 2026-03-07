@@ -220,6 +220,21 @@ public:
     void setAxisPickStyle(bool on);
     //@}
 
+    /** @name FusionCAD Snap indicator visualization */
+    //@{
+    enum class SnapIndicatorType {
+        None,
+        Point,      // Snapped to a vertex/point
+        Grid,       // Snapped to grid
+        Angle,      // Snapped to angle constraint
+        Edge,       // Snapped to edge/curve
+        Middle,     // Snapped to middle of line/arc
+        Origin      // Snapped to origin
+    };
+    void drawSnapIndicator(const Base::Vector2d& snapPos, SnapIndicatorType type);
+    void clearSnapIndicator();
+    //@}
+
     /** @name handle preselection and selection of points */
     //@{
     PreselectionResult detectPreselection(SoPickedPoint* Point);

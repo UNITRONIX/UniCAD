@@ -22,6 +22,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <cmath>
+
 #include <QSignalBlocker>
 #include <QAction>
 
@@ -148,6 +150,9 @@ void TaskExtrudeParameters::setupSideDialog(SideController& side)
 
     // --- Bind UI widgets to the correct properties ---
     side.lengthEdit->bind(*side.Length);
+    // FusionCAD: Allow negative values so dragging through zero
+    // triggers auto-switch between Join and Cut operation
+    side.lengthEdit->setMinimum(-1e15);
     side.offsetEdit->bind(*side.Offset);
     side.taperEdit->bind(*side.TaperAngle);
 
@@ -636,8 +641,55 @@ std::vector<std::string> PartDesignGui::TaskExtrudeParameters::getShapeFaces(
 
 void TaskExtrudeParameters::onLengthChanged(double len, Side side)
 {
+    // FusionCAD: Fusion 360-style behavior — dragging below zero auto-switches
+    // between Join and Cut operation. Operation=Cut already reverses the
+    // profile normal (like Pocket), so no Reversed flip needed.
+    // State tracking prevents ping-pong toggling during continuous drag.
+    auto extrude = getObject<PartDesign::FeatureExtrude>();
+    if (extrude && len < 0) {
+        auto* opProp = dynamic_cast<App::PropertyEnumeration*>(
+            extrude->getPropertyByName("Operation"));
+        if (opProp) {
+            if (!_crossedZero) {
+                _crossedZero = true;
+                _originalOp = opProp->getValue();
+                int targetOp = (_originalOp == 0) ? 1 : (_originalOp == 1) ? 0 : _originalOp;
+                if (opProp->getValue() != targetOp) {
+                    opProp->setValue(static_cast<long>(targetOp));
+                    onOperationAutoSwitched(targetOp);
+                }
+            }
+        }
+
+        len = std::abs(len);
+
+        // Update the spinbox to show positive value.
+        // MUST block signals to prevent re-entrant call to onLengthChanged
+        // (setValue emits valueChanged → onLengthChanged(+val) → sees
+        // _crossedZero && len>=0 → immediately restores original op).
+        {
+            QSignalBlocker blocker(getSideController(side).lengthEdit);
+            getSideController(side).lengthEdit->setValue(len);
+        }
+    }
+    else if (_crossedZero && len >= 0) {
+        // Dragged back above zero — restore original operation
+        auto* opProp = dynamic_cast<App::PropertyEnumeration*>(
+            extrude->getPropertyByName("Operation"));
+        if (opProp && opProp->getValue() != _originalOp) {
+            opProp->setValue(static_cast<long>(_originalOp));
+            onOperationAutoSwitched(_originalOp);
+        }
+        _crossedZero = false;
+    }
+
     getSideController(side).Length->setValue(len);
-    tryRecomputeFeature();
+    if (!_crossedZero) {
+        setGizmoPositions();
+    }
+    if (len >= 0.001) {
+        tryRecomputeFeature();
+    }
 }
 
 void TaskExtrudeParameters::onOffsetChanged(double len, Side side)

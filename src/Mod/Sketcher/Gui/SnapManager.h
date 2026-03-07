@@ -100,6 +100,7 @@ class SnapManager
         void updateSnapToObjectParameter(const std::string& parametername);
         void updateSnapToGridParameter(const std::string& parametername);
         void updateSnapAngleParameter(const std::string& parametername);
+        void updateAutoAngleSnapParameter(const std::string& parametername);
 
         static ParameterGrp::handle getParameterGrpHandle();
 
@@ -119,8 +120,24 @@ public:
 
     bool snapToLineMiddle(Base::Vector3d& pointToOverride, const Part::GeomLineSegment* line);
     bool snapToArcMiddle(Base::Vector3d& pointToOverride, const Part::GeomArcOfCircle* arc);
+    bool snapToFaceCenter(Base::Vector2d inputPos, Base::Vector2d& snapPos);  // FusionCAD: Snap to face center
 
     void setAngleSnapping(bool enable, Base::Vector2d referencepoint);
+
+    /// FusionCAD: Snap indicator type for visualization
+    enum class SnapIndicatorType {
+        None = 0,
+        Point = 1,
+        Grid = 2,
+        Angle = 3,
+        Edge = 4,
+        Middle = 5,
+        Origin = 6,
+        FaceCenter = 7   // FusionCAD: Snap to face/rectangle center
+    };
+
+    /// FusionCAD: Get the last snap type for visualization
+    SnapIndicatorType getLastSnapType() const { return lastSnapType; }
 
     struct SnapHandle
     {
@@ -143,11 +160,15 @@ private:
     bool snapRequested;
     bool snapToObjectsRequested;
     bool snapToGridRequested;
+    bool autoAngleSnapEnabled;  // FusionCAD: Auto angle snap without Ctrl key
 
     Base::Vector2d referencePoint;
     double lastMouseAngle;
 
     double snapAngle;
+
+    /// FusionCAD: Track last snap type for visualization
+    SnapIndicatorType lastSnapType;
 
     /// Observer to track all the needed parameters.
     std::unique_ptr<SnapManager::ParameterObserver> pObserver;

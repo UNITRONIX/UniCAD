@@ -53,6 +53,15 @@
 #include "FeaturePrimitive.h"
 #include "FeatureRevolution.h"
 #include "FeatureScaled.h"
+#include "FeatureUnifiedExtrude.h"
+#include "FeatureUnifiedRevolve.h"
+#include "FeatureUnifiedSweep.h"
+#include "FeatureUnifiedLoft.h"
+#include "FeatureOffsetFace.h"
+#include "FeatureDeleteFace.h"
+#include "FeatureReplaceFace.h"
+#include "FeatureSplitFace.h"
+#include "FeatureMoveFace.h"
 #include "FeatureSketchBased.h"
 #include "FeatureSolid.h"
 #include "FeatureThickness.h"
@@ -109,12 +118,21 @@ PyMOD_INIT_FUNC(_PartDesign)
     PartDesign::FeatureExtrude              ::init();
     PartDesign::Pad                         ::init();
     PartDesign::Pocket                      ::init();
+    PartDesign::Extrude                     ::init();
     PartDesign::Fillet                      ::init();
     PartDesign::Revolution                  ::init();
     PartDesign::Groove                      ::init();
     PartDesign::Chamfer                     ::init();
     PartDesign::Draft                       ::init();
     PartDesign::Thickness                   ::init();
+    PartDesign::OffsetFace                  ::init();
+    PartDesign::DeleteFace                  ::init();
+    PartDesign::ReplaceFace                 ::init();
+    PartDesign::SplitFace                   ::init();
+    PartDesign::MoveFace                    ::init();
+    PartDesign::UnifiedRevolve              ::init();
+    PartDesign::UnifiedSweep                ::init();
+    PartDesign::UnifiedLoft                 ::init();
     PartDesign::Pipe                        ::init();
     PartDesign::AdditivePipe                ::init();
     PartDesign::SubtractivePipe             ::init();

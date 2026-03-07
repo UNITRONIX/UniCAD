@@ -198,6 +198,9 @@ private:
 
     void onFaceName(const QString& text, Side side);
     void onAllFacesToggled(bool checked, Side side);
+
+    // FusionCAD: hook for auto-switching Operation (Join↔Cut) on negative drag
+    virtual void onOperationAutoSwitched(int newOpIndex) { Q_UNUSED(newOpIndex); }
     void onSelectShapeToggle(bool checked, Side side);
     void onSelectShapeFacesToggle(bool checked, Side side);
     void onUnselectShapeFacesTrigger(Side side);
@@ -269,6 +272,10 @@ private:
     Gui::RotationGizmo* taperAngleGizmo2 = nullptr;
     void setupGizmos();
     void setGizmoPositions();
+
+    // FusionCAD: state tracking for drag-through-zero auto-switch
+    bool _crossedZero = false;
+    int _originalOp = 0;  // Operation value before crossing zero
 
 protected:
     QWidget* proxy;

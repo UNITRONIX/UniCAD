@@ -63,7 +63,10 @@ bool getPDRefineModelParameter()
                                              .GetGroup("BaseApp")
                                              ->GetGroup("Preferences")
                                              ->GetGroup("Mod/PartDesign");
-    return hGrp->GetBool("RefineModel", true);
+    // FusionCAD: Default Refine to false to preserve individual face topology
+    // from sketch internal faces. This allows selecting individual faces on
+    // the Pad/Pocket body for further operations (Fusion 360 workflow).
+    return hGrp->GetBool("RefineModel", false);
 }
 
 // ------------------------------------------------------------------------------------------------

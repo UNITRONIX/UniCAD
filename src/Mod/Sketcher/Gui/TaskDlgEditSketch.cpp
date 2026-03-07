@@ -57,6 +57,8 @@ TaskDlgEditSketch::TaskDlgEditSketch(ViewProviderSketch* sketchView)
     Content.push_back(ToolSettings);
     Content.push_back(Messages);
 
+    // FusionCAD: Simplified Sketcher panel by default
+    // Advanced solver widget hidden unless user explicitly enables it
     if (hGrp->GetBool("ShowSolverAdvancedWidget", false)) {
         Content.push_back(SolverAdvanced);
     }
@@ -64,7 +66,8 @@ TaskDlgEditSketch::TaskDlgEditSketch(ViewProviderSketch* sketchView)
     Content.push_back(Constraints);
     Content.push_back(Elements);
 
-    if (!hGrp->GetBool("ExpandedMessagesWidget", true)) {
+    // FusionCAD: Default to collapsed panels for a cleaner Fusion 360-like experience
+    if (!hGrp->GetBool("ExpandedMessagesWidget", false)) {
         Messages->hideGroupBox();
     }
     if (!hGrp->GetBool("ExpandedSolverAdvancedWidget", false)) {

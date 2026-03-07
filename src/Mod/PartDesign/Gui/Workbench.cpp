@@ -204,11 +204,18 @@ void Workbench::activated()
     ));
 
     const char* Face[] = {
+        "PartDesign_PressPull",
+        "PartDesign_Extrude",
         "PartDesign_NewSketch",
         "PartDesign_Fillet",
         "PartDesign_Chamfer",
         "PartDesign_Draft",
         "PartDesign_Thickness",
+        "PartDesign_OffsetFace",
+        "PartDesign_DeleteFace",
+        "PartDesign_ReplaceFace",
+        "PartDesign_SplitFace",
+        "PartDesign_MoveFace",
         "Part_DatumPoint",
         "Part_DatumLine",
         "Part_DatumPlane",
@@ -355,10 +362,17 @@ void Workbench::activated()
     );
 
     const char* Faces[] = {
+        "PartDesign_PressPull",
+        "PartDesign_Extrude",
         "PartDesign_Fillet",
         "PartDesign_Chamfer",
         "PartDesign_Draft",
         "PartDesign_Thickness",
+        "PartDesign_OffsetFace",
+        "PartDesign_DeleteFace",
+        "PartDesign_ReplaceFace",
+        "PartDesign_SplitFace",
+        "PartDesign_MoveFace",
         nullptr
     };
     Watcher.push_back(new Gui::TaskView::TaskWatcherCommands(
@@ -370,17 +384,12 @@ void Workbench::activated()
 
     const char* Sketch[] = {
         "PartDesign_NewSketch",
-        "PartDesign_Pad",
-        "PartDesign_Pocket",
+        "PartDesign_PressPull",
+        "PartDesign_Extrude",
+        "PartDesign_Revolve",
+        "PartDesign_Sweep",
+        "PartDesign_Loft",
         "PartDesign_Hole",
-        "PartDesign_Revolution",
-        "PartDesign_Groove",
-        "PartDesign_AdditiveLoft",
-        "PartDesign_SubtractiveLoft",
-        "PartDesign_AdditivePipe",
-        "PartDesign_SubtractivePipe",
-        "PartDesign_AdditiveHelix",
-        "PartDesign_SubtractiveHelix",
         nullptr
     };
     Watcher.push_back(new Gui::TaskView::TaskWatcherCommands(
@@ -391,10 +400,8 @@ void Workbench::activated()
     ));
 
     const char* Sketches[] = {
-        "PartDesign_AdditiveLoft",
-        "PartDesign_SubtractiveLoft",
-        "PartDesign_AdditivePipe",
-        "PartDesign_SubtractivePipe",
+        "PartDesign_Loft",
+        "PartDesign_Sweep",
         nullptr
     };
     Watcher.push_back(new Gui::TaskView::TaskWatcherCommands(
@@ -405,14 +412,12 @@ void Workbench::activated()
     ));
 
     const char* ShapeBinder[] = {
-        "PartDesign_Pad",
-        "PartDesign_Pocket",
-        "PartDesign_Revolution",
-        "PartDesign_Groove",
-        "PartDesign_AdditiveLoft",
-        "PartDesign_SubtractiveLoft",
-        "PartDesign_AdditivePipe",
-        "PartDesign_SubtractivePipe",
+        "PartDesign_PressPull",
+        "PartDesign_Extrude",
+        "PartDesign_Revolve",
+        "PartDesign_Sweep",
+        "PartDesign_Loft",
+        "PartDesign_Hole",
         nullptr
     };
     Watcher.push_back(new Gui::TaskView::TaskWatcherCommands(
@@ -423,14 +428,12 @@ void Workbench::activated()
     ));
 
     const char* SubShapeBinder[] = {
-        "PartDesign_Pad",
-        "PartDesign_Pocket",
-        "PartDesign_Revolution",
-        "PartDesign_Groove",
-        "PartDesign_AdditiveLoft",
-        "PartDesign_SubtractiveLoft",
-        "PartDesign_AdditivePipe",
-        "PartDesign_SubtractivePipe",
+        "PartDesign_PressPull",
+        "PartDesign_Extrude",
+        "PartDesign_Revolve",
+        "PartDesign_Sweep",
+        "PartDesign_Loft",
+        "PartDesign_Hole",
         nullptr
     };
     Watcher.push_back(new Gui::TaskView::TaskWatcherCommands(
@@ -496,26 +499,8 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     root->insertItem(item, part);
     part->setCommand("&Part Design");
 
-    // additives
-    Gui::MenuItem* additives = new Gui::MenuItem;
-    additives->setCommand("Additive Features");
-
-    *additives << "PartDesign_Pad"
-               << "PartDesign_Revolution"
-               << "PartDesign_AdditiveLoft"
-               << "PartDesign_AdditivePipe"
-               << "PartDesign_AdditiveHelix";
-
-    // subtractives
-    Gui::MenuItem* subtractives = new Gui::MenuItem;
-    subtractives->setCommand("Subtractive Features");
-
-    *subtractives << "PartDesign_Pocket"
-                  << "PartDesign_Hole"
-                  << "PartDesign_Groove"
-                  << "PartDesign_SubtractiveLoft"
-                  << "PartDesign_SubtractivePipe"
-                  << "PartDesign_SubtractiveHelix";
+    // Legacy additive/subtractive submenus removed — unified commands are used instead
+    // (PartDesign_Extrude, PartDesign_Revolve, PartDesign_Sweep, PartDesign_Loft)
 
     // transformations
     Gui::MenuItem* transformations = new Gui::MenuItem;
@@ -533,15 +518,27 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     *dressups << "PartDesign_Fillet"
               << "PartDesign_Chamfer"
               << "PartDesign_Draft"
-              << "PartDesign_Thickness";
+              << "PartDesign_Thickness"
+              << "PartDesign_OffsetFace"
+              << "PartDesign_DeleteFace"
+              << "PartDesign_ReplaceFace"
+              << "PartDesign_SplitFace"
+              << "PartDesign_MoveFace";
 
     *part << "PartDesign_Body"
           << "Separator"
           << "PartDesign_ShapeBinder"
           << "PartDesign_SubShapeBinder"
           << "PartDesign_Clone"
-          << "Separator" << additives << "PartDesign_CompPrimitiveAdditive"
-          << "Separator" << subtractives << "PartDesign_CompPrimitiveSubtractive"
+          << "Separator"
+          << "PartDesign_PressPull"
+          << "PartDesign_Extrude"
+          << "PartDesign_Revolve"
+          << "PartDesign_Sweep"
+          << "PartDesign_Loft"
+          << "PartDesign_Hole"
+          << "Separator" << "PartDesign_CompPrimitiveAdditive"
+          << "Separator" << "PartDesign_CompPrimitiveSubtractive"
           << "Separator" << dressups << "Separator" << transformations << "Separator"
           << "PartDesign_Boolean"
           << "Separator"
@@ -590,25 +587,34 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_SubShapeBinder"
           << "PartDesign_Clone";
 
+    // FusionCAD: Always show Sketcher toolbars for faster workflow (Fusion 360 style)
+    Gui::ToolBarItem* sketchGeom = new Gui::ToolBarItem(root);
+    sketchGeom->setCommand("Sketch Geometries");
+    SketcherGui::addSketcherWorkbenchGeometries(*sketchGeom);
+
+    Gui::ToolBarItem* sketchCons = new Gui::ToolBarItem(root);
+    sketchCons->setCommand("Sketch Constraints");
+    SketcherGui::addSketcherWorkbenchConstraints(*sketchCons);
+
+    Gui::ToolBarItem* sketchTools = new Gui::ToolBarItem(root);
+    sketchTools->setCommand("Sketch Tools");
+    SketcherGui::addSketcherWorkbenchTools(*sketchTools);
+
     part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Modeling Features");
 
-    *part << "PartDesign_Pad"
-          << "PartDesign_Revolution"
-          << "PartDesign_AdditiveLoft"
-          << "PartDesign_AdditivePipe"
-          << "PartDesign_AdditiveHelix"
-          << "PartDesign_CompPrimitiveAdditive"
+    // FusionCAD: Unified commands first (Fusion 360 style)
+    *part << "PartDesign_PressPull"
+          << "PartDesign_Extrude"
+          << "PartDesign_Revolve"
+          << "PartDesign_Sweep"
+          << "PartDesign_Loft"
           << "Separator"
-          << "PartDesign_Pocket"
           << "PartDesign_Hole"
-          << "PartDesign_Groove"
-          << "PartDesign_SubtractiveLoft"
-          << "PartDesign_SubtractivePipe"
-          << "PartDesign_SubtractiveHelix"
-          << "PartDesign_CompPrimitiveSubtractive"
+          << "PartDesign_Boolean"
           << "Separator"
-          << "PartDesign_Boolean";
+          << "PartDesign_CompPrimitiveAdditive"
+          << "PartDesign_CompPrimitiveSubtractive";
 
     part = new Gui::ToolBarItem(root);
 
@@ -616,7 +622,12 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     *part << "PartDesign_Fillet"
           << "PartDesign_Chamfer"
           << "PartDesign_Draft"
-          << "PartDesign_Thickness";
+          << "PartDesign_Thickness"
+          << "PartDesign_OffsetFace"
+          << "PartDesign_DeleteFace"
+          << "PartDesign_ReplaceFace"
+          << "PartDesign_SplitFace"
+          << "PartDesign_MoveFace";
 
     part = new Gui::ToolBarItem(root);
     part->setCommand("Part Design Transformation Features");

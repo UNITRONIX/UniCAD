@@ -372,21 +372,26 @@ void GridExtensionP::createGridPart(
     maxX = minX + gridDimension;
     maxY = minY + gridDimension;
 
+    // FusionCAD: Small z-offset ensures grid lines render in front of coplanar face
+    // fills (sketch internal faces, body surfaces). Without this, depth buffer hides
+    // grid behind the face polygons rendered at z=0.
+    constexpr float gridZ = 0.001f;
+
     // vertical lines
     int i_offset_x = static_cast<int>(minX / computedGridValue);
     for (int i = 0; i < vlines; i++) {
         int iStep = (i + i_offset_x);
         if (((iStep % numberSubdiv == 0) && divLines)
             || ((iStep % numberSubdiv != 0) && subDivLines)) {
-            vertex_coords[2 * i].setValue(iStep * computedGridValue, minY, 0);
-            vertex_coords[2 * i + 1].setValue(iStep * computedGridValue, maxY, 0);
+            vertex_coords[2 * i].setValue(iStep * computedGridValue, minY, gridZ);
+            vertex_coords[2 * i + 1].setValue(iStep * computedGridValue, maxY, gridZ);
         }
         else {
             /*the number of vertices is defined before. To know the number of vertices ahead it would
             require to run the loop once before, which would double computation time. If vertices are
             not filled then there're visual bugs so there are here filled with dummy values.*/
-            vertex_coords[2 * i].setValue(0, 0, 0);
-            vertex_coords[2 * i + 1].setValue(0, 0, 0);
+            vertex_coords[2 * i].setValue(0, 0, gridZ);
+            vertex_coords[2 * i + 1].setValue(0, 0, gridZ);
         }
     }
 
@@ -396,12 +401,12 @@ void GridExtensionP::createGridPart(
         int iStep = (i + i_offset_y);
         if (((iStep % numberSubdiv == 0) && divLines)
             || ((iStep % numberSubdiv != 0) && subDivLines)) {
-            vertex_coords[2 * i].setValue(minX, iStep * computedGridValue, 0);
-            vertex_coords[2 * i + 1].setValue(maxX, iStep * computedGridValue, 0);
+            vertex_coords[2 * i].setValue(minX, iStep * computedGridValue, gridZ);
+            vertex_coords[2 * i + 1].setValue(maxX, iStep * computedGridValue, gridZ);
         }
         else {
-            vertex_coords[2 * i].setValue(0, 0, 0);
-            vertex_coords[2 * i + 1].setValue(0, 0, 0);
+            vertex_coords[2 * i].setValue(0, 0, gridZ);
+            vertex_coords[2 * i + 1].setValue(0, 0, gridZ);
         }
     }
     vts->vertex.finishEditing();
@@ -467,7 +472,7 @@ ViewProviderGridExtension::ViewProviderGridExtension()
 
     EXTENSION_ADD_PROPERTY_TYPE(
         ShowGrid,
-        (false),
+        (true),
         "Grid",
         (App::PropertyType)(App::Prop_None),
         "Toggle grid visibility"

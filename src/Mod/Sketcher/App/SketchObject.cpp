@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /****************************************************************************
  *                                                                          *
@@ -168,8 +168,9 @@ SketchObject::SketchObject() : geoLastId(0)
                       "Tolerance for fitting arcs of projected external geometry");
     ADD_PROPERTY(InternalShape,
                  (Part::TopoShape()));
+    // FusionCAD: Default to true for automatic closed profile/face detection (Fusion 360 style)
     ADD_PROPERTY_TYPE(MakeInternals,
-                      (false),
+                      (true),
                       "Internal Geometry",
                       App::Prop_None,
                       "Enables selection of closed profiles within a sketch as input for operations");
@@ -222,7 +223,9 @@ void SketchObject::setupObject()
     ParameterGrp::handle hGrpp = App::GetApplication().GetParameterGroupByPath(
             "User parameter:BaseApp/Preferences/Mod/Sketcher");
     ArcFitTolerance.setValue(hGrpp->GetFloat("ArcFitTolerance", Precision::Confusion()*10.0));
-    MakeInternals.setValue(hGrpp->GetBool("MakeInternals", false));
+    // FusionCAD: Enable internal face detection by default (Fusion 360 style)
+    // This allows selecting closed profiles as single faces for operations like Pad/Extrude
+    MakeInternals.setValue(hGrpp->GetBool("MakeInternals", true));
     inherited::setupObject();
 }
 
@@ -471,7 +474,10 @@ Part::TopoShape SketchObject::buildInternals(const Part::TopoShape &edges) const
 
     try {
         Part::WireJoiner joiner;
-        joiner.setTightBound(true);
+        // For grid-like sketches with shared/intersecting edges:
+        // setTightBound(false) + setSplitEdges(true) will find all internal closed regions
+        joiner.setTightBound(false);   // Find ALL closed wires, not just tight boundary
+        joiner.setSplitEdges(true);    // Split edges at intersection points
         joiner.setMergeEdges(true);
         joiner.addShape(edges);
         Part::TopoShape result(getID(), getDocument()->getStringHasher());
@@ -479,7 +485,7 @@ Part::TopoShape SketchObject::buildInternals(const Part::TopoShape &edges) const
             joiner.getResultWires(result, "SKF");
             result = result.makeElementFace(result.getSubTopoShapes(TopAbs_WIRE),
                     /*op*/"",
-                    /*maker*/"Part::FaceMakerRing",
+                    /*maker*/"Part::FaceMakerBullseye",
                     /*pln*/nullptr
             );
         }
@@ -11562,6 +11568,29 @@ App::DocumentObject *SketchObject::getSubObject(
             auto shapeType = Part::TopoShape::shapeType(realType, true);
             if (shapeType != TopAbs_SHAPE)
                 subshape = InternalShape.getShape().getSubTopoShape(shapeType, indexedName.getIndex(), true);
+        }
+        // FusionCAD: Fallback — if InternalShape has no faces (buildInternals failed),
+        // dynamically build faces from Shape wires so InternalFaceN is resolvable.
+        if (subshape.isNull() && boost::starts_with(std::string(indexedName.getType()), "InternalFace")) {
+            const auto& shapeVal = Shape.getShape();
+            if (!shapeVal.isNull()) {
+                int faceIdx = indexedName.getIndex();
+                int built = 0;
+                for (TopExp_Explorer ex(shapeVal.getShape(), TopAbs_WIRE); ex.More(); ex.Next()) {
+                    TopoDS_Wire wire = TopoDS::Wire(ex.Current());
+                    wire.Location(TopLoc_Location()); // strip location
+                    try {
+                        BRepBuilderAPI_MakeFace mkFace(wire, /*onlyPlane=*/true);
+                        if (mkFace.IsDone()) {
+                            built++;
+                            if (built == faceIdx) {
+                                subshape = Part::TopoShape(mkFace.Face());
+                                break;
+                            }
+                        }
+                    } catch (...) {}
+                }
+            }
         }
         if (subshape.isNull())
             return nullptr;

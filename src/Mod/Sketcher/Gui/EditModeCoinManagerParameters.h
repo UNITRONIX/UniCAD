@@ -455,6 +455,16 @@ struct EditModeScenegraphNodes
     SoDrawStyle* EditMarkersDrawStyle;
     //@}
 
+    /** @name FusionCAD Snap indicator nodes - Visual feedback for snap points */
+    //@{
+    SoSeparator* SnapIndicatorRoot;
+    SoMaterial* SnapIndicatorMaterial;
+    SoCoordinate3* SnapIndicatorCoordinate;
+    SoMarkerSet* SnapIndicatorMarkerSet;
+    SoLineSet* SnapIndicatorLineSet;
+    SoDrawStyle* SnapIndicatorDrawStyle;
+    //@}
+
     /** @name Temporal edit text nodes*/
     //@{
     SoText2* textX;

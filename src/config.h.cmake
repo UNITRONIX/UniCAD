@@ -120,19 +120,19 @@
 #cmakedefine HAVE_BACKTRACE_SYMBOLS
 
 /* Name of package */
-#define PACKAGE "FreeCAD"
+#define PACKAGE "FusionCAD"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "wmayer@users.sourceforge.net"
+#define PACKAGE_BUGREPORT "https://github.com/UNITRONIX/FusionCAD/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "FreeCAD"
+#define PACKAGE_NAME "FusionCAD"
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING "${PACKAGE_STRING}"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "FreeCAD"
+#define PACKAGE_TARNAME "FusionCAD"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "${PACKAGE_VERSION}"
