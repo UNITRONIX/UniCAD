@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Task panel for Replace Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Task panel for Replace Face feature.
 
 #include <QAction>
 #include <QLabel>
@@ -53,7 +53,7 @@ void TaskReplaceFaceParameters::onSelectTarget()
 {
     selectingTarget = !selectingTarget;
     if (selectingTarget) {
-        btnSelectTarget->setText(tr("Picking target … (click again to cancel)"));
+        btnSelectTarget->setText(tr("Picking target â€¦ (click again to cancel)"));
     }
     else {
         btnSelectTarget->setText(tr("Select Target Face"));

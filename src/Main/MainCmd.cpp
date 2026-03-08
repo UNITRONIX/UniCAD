@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 /***************************************************************************
- *   Copyright (c) 2008 Jürgen Riegel <juergen.riegel@web.de>              *
+ *   Copyright (c) 2008 JĂĽrgen Riegel <juergen.riegel@web.de>              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -48,7 +48,7 @@ using Base::Console;
 
 const auto sBanner = fmt::format(
     "(C) 2001-{} FreeCAD contributors\n"
-    "FusionCAD by UNITRONIX - a fork of FreeCAD\n"
+    "UniCAD by UNITRONIX - a fork of FreeCAD\n"
     "Licensed under the terms of LGPL2+ license.\n\n",
     FCCopyrightYear
 );
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 #endif
 
     // Name and Version of the Application
-    App::Application::Config()["ExeName"] = "FusionCAD";
+    App::Application::Config()["ExeName"] = "UniCAD";
     App::Application::Config()["ExeVendor"] = "UNITRONIX";
     App::Application::Config()["AppDataSkipVendor"] = "true";
 

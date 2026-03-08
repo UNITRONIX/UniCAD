@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — ViewProvider for Offset Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” ViewProvider for Offset Face feature.
 
 #include "TaskOffsetFaceParameters.h"
 #include "ViewProviderOffsetFace.h"

@@ -42,6 +42,8 @@ public:
 
     App::PropertyQuantityConstraint Radius;
     App::PropertyBool UseAllEdges;
+    App::PropertyBool VariableRadius;
+    App::PropertyQuantityConstraint EndRadius;
 
     /** @name methods override feature */
     //@{

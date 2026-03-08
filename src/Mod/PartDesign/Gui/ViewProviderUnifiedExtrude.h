@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — ViewProvider for unified Extrude feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” ViewProvider for unified Extrude feature.
 
 #ifndef PARTGUI_ViewProviderUnifiedExtrude_H
 #define PARTGUI_ViewProviderUnifiedExtrude_H

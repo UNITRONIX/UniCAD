@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Move Face feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Move Face feature (direct edit).
 // Translates selected faces on a solid by a displacement vector.
 
 #ifndef PARTDESIGN_FEATURE_MOVEFACE_H

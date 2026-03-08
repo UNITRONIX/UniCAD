@@ -1886,6 +1886,18 @@ bool isTreeViewDragging()
 
 void TreeWidget::keyPressEvent(QKeyEvent* event)
 {
+    if (event->key() == Qt::Key_Delete && event->modifiers() == Qt::NoModifier) {
+        // Close document when Delete is pressed on a document item
+        for (auto item : selectedItems()) {
+            if (item->type() == DocumentType) {
+                this->contextItem = item;
+                onCloseDoc();
+                event->accept();
+                return;
+            }
+        }
+    }
+
     if (event->matches(QKeySequence::Find)) {
         event->accept();
         onSearchObjects();

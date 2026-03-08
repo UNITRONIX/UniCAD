@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Task panel for Move Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Task panel for Move Face feature.
 
 #ifndef GUI_TASKVIEW_TaskMoveFaceParameters_H
 #define GUI_TASKVIEW_TaskMoveFaceParameters_H

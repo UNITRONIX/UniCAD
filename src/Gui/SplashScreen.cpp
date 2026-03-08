@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
  *   Copyright (c) 2004 Werner Mayer <wmayer[at]users.sourceforge.net>     *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
@@ -360,7 +360,7 @@ QPixmap SplashScreen::splashImage()
         fontExe.setPointSizeF(20.0);
         QFontMetrics metricExe(fontExe);
         int l = QtTools::horizontalAdvance(metricExe, title);
-        if (title == QLatin1String("FreeCAD") || title == QLatin1String("FusionCAD")) {
+        if (title == QLatin1String("FreeCAD") || title == QLatin1String("UniCAD")) {
             l = 0.0;  // title text is already part of the splashscreen, version goes below it
         }
         int w = splash_image.width();
@@ -387,7 +387,7 @@ QPixmap SplashScreen::splashImage()
         if (color.isValid()) {
             painter.setPen(color);
             painter.setFont(fontExe);
-            if (title != QLatin1String("FreeCAD") && title != QLatin1String("FusionCAD")) {
+            if (title != QLatin1String("FreeCAD") && title != QLatin1String("UniCAD")) {
                 // FreeCAD's Splashscreen already contains the EXE name, no need to draw it
                 painter.drawText(x, y, title);
             }

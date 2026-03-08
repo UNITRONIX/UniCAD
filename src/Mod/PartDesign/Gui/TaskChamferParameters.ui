@@ -121,6 +121,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="checkBoxTangentChain">
+     <property name="text">
+      <string>Tangent chain</string>
+     </property>
+     <property name="toolTip">
+      <string>Automatically extend selection along tangent-continuous edges</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
       <number>0</number>

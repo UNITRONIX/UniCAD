@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Replace Face feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Replace Face feature (direct edit).
 // Replaces selected faces on a solid with a target surface.
 
 #ifndef PARTDESIGN_FEATURE_REPLACEFACE_H

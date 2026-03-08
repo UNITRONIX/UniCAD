@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 /***************************************************************************
- *   Copyright (c) 2008 Jürgen Riegel <juergen.riegel@web.de>              *
+ *   Copyright (c) 2008 JĂĽrgen Riegel <juergen.riegel@web.de>              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -56,7 +56,7 @@ void PrintInitHelp();
 
 const auto sBanner = fmt::format(
     "(C) 2001-{} FreeCAD contributors\n"
-    "FusionCAD by UNITRONIX - a fork of FreeCAD\n"
+    "UniCAD by UNITRONIX - a fork of FreeCAD\n"
     "Licensed under the terms of LGPL2+ license.\n\n",
     FCCopyrightYear
 );
@@ -189,18 +189,17 @@ int main(int argc, char** argv)
 #endif
 
     // Name and Version of the Application
-    App::Application::Config()["ExeName"] = "FusionCAD";
+    App::Application::Config()["ExeName"] = "UniCAD";
     App::Application::Config()["ExeVendor"] = "UNITRONIX";
     App::Application::Config()["AppDataSkipVendor"] = "true";
-    App::Application::Config()["MaintainerUrl"] = "https://github.com/UNITRONIX/FusionCAD";
+    App::Application::Config()["MaintainerUrl"] = "https://github.com/UNITRONIX/UniCAD";
+    App::Application::Config()["Application"] = "UniCAD";
 
     // set the banner (for logging and console)
     App::Application::Config()["CopyrightInfo"] = sBanner;
-    App::Application::Config()["AppIcon"] = "fusioncad";
-    App::Application::Config()["SplashScreen"] = "freecadsplash";
-    App::Application::Config()["AboutImage"] = App::Application::isDevelopmentVersion()
-        ? "freecadaboutdev"
-        : "freecadabout";
+    App::Application::Config()["AppIcon"] = "unicad";
+    App::Application::Config()["SplashScreen"] = "unicadsplash";
+    App::Application::Config()["AboutImage"] = "unicadsplash";
     App::Application::Config()["StartWorkbench"] = "PartDesignWorkbench";
     // App::Application::Config()["HiddenDockWindow"] = "Property editor";
     App::Application::Config()["SplashAlignment"] = "Bottom|Left";
@@ -208,7 +207,7 @@ int main(int argc, char** argv)
     App::Application::Config()["SplashWarningColor"] = "#CA333B";
     App::Application::Config()["SplashInfoColor"] = "#000000";
     App::Application::Config()["SplashInfoPosition"] = "6,75";
-    App::Application::Config()["DesktopFileName"] = "org.unitronix.FusionCAD";
+    App::Application::Config()["DesktopFileName"] = "org.unitronix.UniCAD";
 
     try {
         // Init phase ===========================================================

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2020 Werner Mayer <wmayer[at]users.sourceforge.net>     *
@@ -343,9 +343,9 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
                                                                     : 0.0
                                           : 0.0;
 
-    // FusionCAD: Fusion 360-style negative extrusion.
-    // Negative Length on a Pad → reverse direction + Cut (drills into base).
-    // Negative Length on a Pocket → reverse direction + Fuse (adds material).
+    // UniCAD: Fusion 360-style negative extrusion.
+    // Negative Length on a Pad â†’ reverse direction + Cut (drills into base).
+    // Negative Length on a Pocket â†’ reverse direction + Fuse (adds material).
     bool isNegativeExtrusion = false;
     if (Sidemethod == "One side" && method == "Length" && L < 0) {
         isNegativeExtrusion = true;
@@ -482,7 +482,7 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
             dir.Reverse();
         }
 
-        // FusionCAD: For negative extrusion, reverse the direction.
+        // UniCAD: For negative extrusion, reverse the direction.
         // L was already made positive above; reversing dir makes the prism
         // go in the opposite direction (into the base for Pad, out for Pocket).
         if (isNegativeExtrusion) {
@@ -758,9 +758,9 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
             // Let's call algorithm computing a fuse operation:
             TopoShape result(0, getDocument()->getStringHasher());
             try {
-                // FusionCAD: Fusion 360-style negative extrusion flips the boolean op.
-                // Pad with negative Length → Cut (drills into base).
-                // Pocket with negative Length → Fuse (adds material).
+                // UniCAD: Fusion 360-style negative extrusion flips the boolean op.
+                // Pad with negative Length â†’ Cut (drills into base).
+                // Pocket with negative Length â†’ Fuse (adds material).
                 const char* maker;
                 switch (getAddSubType()) {
                     case Subtractive:
@@ -991,7 +991,7 @@ void FeatureExtrude::onDocumentRestored()
         SideType.setValue("Symmetric");
     }
 
-    // FusionCAD: Migrate old documents — disable Refine to preserve individual
+    // UniCAD: Migrate old documents â€” disable Refine to preserve individual
     // face topology from sketch internal faces (required for per-face selection).
     if (Refine.getValue()) {
         Refine.setValue(false);

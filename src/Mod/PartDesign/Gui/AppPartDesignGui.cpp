@@ -66,6 +66,8 @@
 #include "ViewProviderDeleteFace.h"
 #include "ViewProviderReplaceFace.h"
 #include "ViewProviderSplitFace.h"
+#include "ViewProviderSplitBody.h"
+#include "ViewProviderEmboss.h"
 #include "ViewProviderMoveFace.h"
 #include "ViewProviderShapeBinder.h"
 #include "ViewProviderSketchBased.h"
@@ -155,6 +157,8 @@ PyMOD_INIT_FUNC(PartDesignGui)
     PartDesignGui::ViewProviderDeleteFace    ::init();
     PartDesignGui::ViewProviderReplaceFace   ::init();
     PartDesignGui::ViewProviderSplitFace     ::init();
+    PartDesignGui::ViewProviderSplitBody     ::init();
+    PartDesignGui::ViewProviderEmboss        ::init();
     PartDesignGui::ViewProviderMoveFace      ::init();
     PartDesignGui::ViewProviderUnifiedRevolve::init();
     PartDesignGui::ViewProviderUnifiedSweep  ::init();

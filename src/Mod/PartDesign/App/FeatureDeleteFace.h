@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Delete Face + Heal feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Delete Face + Heal feature (direct edit).
 // Removes selected faces from a solid and heals the resulting gaps.
 
 #ifndef PARTDESIGN_FEATURE_DELETEFACE_H

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2021 Abdullah Tahiri <abdullah.tahiri.yo@gmail.com>     *
@@ -559,7 +559,7 @@ void EditModeCoinManager::drawEditMarkers(
     editModeScenegraphNodes.EditMarkerSet->markerIndex.finishEditing();
 }
 
-/***** FusionCAD Snap Indicator Visualization *****/
+/***** UniCAD Snap Indicator Visualization *****/
 
 void EditModeCoinManager::drawSnapIndicator(const Base::Vector2d& snapPos, SnapIndicatorType type)
 {
@@ -568,7 +568,7 @@ void EditModeCoinManager::drawSnapIndicator(const Base::Vector2d& snapPos, SnapI
         return;
     }
 
-    // FusionCAD: Simple snap indicator - just a colored dot
+    // UniCAD: Simple snap indicator - just a colored dot
     // Color based on snap type for visual feedback
     SbColor indicatorColor;
     switch (type) {
@@ -1053,7 +1053,7 @@ void EditModeCoinManager::createEditModeInventorNodes()
         = Gui::Inventor::MarkerBitmaps::getMarkerIndex("CIRCLE_LINE", drawingParameters.markerSize);
     editMarkersRoot->addChild(editModeScenegraphNodes.EditMarkerSet);
 
-    // FusionCAD: Snap indicator nodes for visual feedback +++++++++++++++++++++
+    // UniCAD: Snap indicator nodes for visual feedback +++++++++++++++++++++
     editModeScenegraphNodes.SnapIndicatorRoot = new SoSeparator;
     editModeScenegraphNodes.SnapIndicatorRoot->setName("SnapIndicatorRoot");
     editModeScenegraphNodes.SnapIndicatorRoot->renderCaching = SoSeparator::OFF;

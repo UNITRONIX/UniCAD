@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2004 Werner Mayer <wmayer[at]users.sourceforge.net>     *
@@ -291,7 +291,7 @@ void AboutDialog::setupLabels()
             }
 
             if (url == QStringLiteral("Unknown")) {
-                url = QStringLiteral("https://github.com/UNITRONIX/FusionCAD");  // FusionCAD fork
+                url = QStringLiteral("https://github.com/UNITRONIX/UniCAD");  // UniCAD fork
             }
 
             // This may only create valid URLs for Github, but some other hosts use the same format
@@ -330,7 +330,7 @@ void AboutDialog::showCredits()
     QString creditsHTML
         = QStringLiteral("<html><body><h1>%1</h1><p>%2</p><h2>%3</h2><ul>")
               .arg(tr("Credits", "Header for the Credits tab of the About screen"))
-              .arg(tr("FusionCAD by UNITRONIX would not be possible without the FreeCAD contributors:"))
+              .arg(tr("UniCAD by UNITRONIX would not be possible without the FreeCAD contributors:"))
               .arg(tr("Individuals", "Header for the list of individual people in the Credits list."));
 
     QTextStream stream(&creditsFile);

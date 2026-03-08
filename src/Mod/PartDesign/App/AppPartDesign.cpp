@@ -61,6 +61,8 @@
 #include "FeatureDeleteFace.h"
 #include "FeatureReplaceFace.h"
 #include "FeatureSplitFace.h"
+#include "FeatureSplitBody.h"
+#include "FeatureEmboss.h"
 #include "FeatureMoveFace.h"
 #include "FeatureSketchBased.h"
 #include "FeatureSolid.h"
@@ -129,6 +131,8 @@ PyMOD_INIT_FUNC(_PartDesign)
     PartDesign::DeleteFace                  ::init();
     PartDesign::ReplaceFace                 ::init();
     PartDesign::SplitFace                   ::init();
+    PartDesign::SplitBody                   ::init();
+    PartDesign::Emboss                      ::init();
     PartDesign::MoveFace                    ::init();
     PartDesign::UnifiedRevolve              ::init();
     PartDesign::UnifiedSweep                ::init();

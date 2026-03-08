@@ -168,7 +168,7 @@ SketchObject::SketchObject() : geoLastId(0)
                       "Tolerance for fitting arcs of projected external geometry");
     ADD_PROPERTY(InternalShape,
                  (Part::TopoShape()));
-    // FusionCAD: Default to true for automatic closed profile/face detection (Fusion 360 style)
+    // UniCAD: Default to true for automatic closed profile/face detection (Fusion 360 style)
     ADD_PROPERTY_TYPE(MakeInternals,
                       (true),
                       "Internal Geometry",
@@ -223,7 +223,7 @@ void SketchObject::setupObject()
     ParameterGrp::handle hGrpp = App::GetApplication().GetParameterGroupByPath(
             "User parameter:BaseApp/Preferences/Mod/Sketcher");
     ArcFitTolerance.setValue(hGrpp->GetFloat("ArcFitTolerance", Precision::Confusion()*10.0));
-    // FusionCAD: Enable internal face detection by default (Fusion 360 style)
+    // UniCAD: Enable internal face detection by default (Fusion 360 style)
     // This allows selecting closed profiles as single faces for operations like Pad/Extrude
     MakeInternals.setValue(hGrpp->GetBool("MakeInternals", true));
     inherited::setupObject();
@@ -11569,7 +11569,7 @@ App::DocumentObject *SketchObject::getSubObject(
             if (shapeType != TopAbs_SHAPE)
                 subshape = InternalShape.getShape().getSubTopoShape(shapeType, indexedName.getIndex(), true);
         }
-        // FusionCAD: Fallback — if InternalShape has no faces (buildInternals failed),
+        // UniCAD: Fallback — if InternalShape has no faces (buildInternals failed),
         // dynamically build faces from Shape wires so InternalFaceN is resolvable.
         if (subshape.isNull() && boost::starts_with(std::string(indexedName.getType()), "InternalFace")) {
             const auto& shapeVal = Shape.getShape();

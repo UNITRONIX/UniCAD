@@ -54,9 +54,12 @@ public:
 
 private Q_SLOTS:
     void onLengthChanged(double);
+    void onEndRadiusChanged(double);
     void onRefDeleted() override;
     void onAddAllEdges();
     void onCheckBoxUseAllEdgesToggled(bool checked);
+    void onCheckBoxTangentChainToggled(bool checked);
+    void onCheckBoxVariableRadiusToggled(bool checked);
 
 protected:
     double getLength() const;

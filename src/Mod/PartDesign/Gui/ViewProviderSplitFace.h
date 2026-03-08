@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — ViewProvider for Split Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” ViewProvider for Split Face feature.
 
 #ifndef PARTGUI_ViewProviderSplitFace_H
 #define PARTGUI_ViewProviderSplitFace_H

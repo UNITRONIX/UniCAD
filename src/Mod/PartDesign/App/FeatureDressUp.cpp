@@ -24,12 +24,15 @@
 
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
+#include <BRepAdaptor_Curve.hxx>
 #include <TopExp.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
+#include <TopoDS_Vertex.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <TopTools_IndexedDataMapOfShapeListOfShape.hxx>
 #include <TopExp_Explorer.hxx>
+#include <gp_Vec.hxx>
 
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -62,6 +65,14 @@ DressUp::DressUp()
         App::Prop_None,
         "Include the base additive/subtractive shape when used in pattern features.\n"
         "If disabled, only the dressed part of the shape is used for patterning."
+    );
+
+    ADD_PROPERTY_TYPE(
+        TangentChain,
+        (true),
+        "Base",
+        App::Prop_None,
+        "Automatically extend selection along tangent-continuous edges (G1 continuity)."
     );
 
     AddSubShape.setStatus(App::Property::Output, true);
@@ -235,6 +246,92 @@ std::vector<TopoShape> DressUp::getContinuousEdges(const TopoShape& shape)
         }
     }
     return ret;
+}
+
+std::vector<TopoShape> DressUp::expandTangentChain(
+    const TopoShape& baseShape,
+    const std::vector<TopoShape>& seedEdges)
+{
+    if (seedEdges.empty()) {
+        return seedEdges;
+    }
+
+    // Build vertex->edge adjacency
+    TopTools_IndexedDataMapOfShapeListOfShape vertexEdgeMap;
+    TopExp::MapShapesAndAncestors(baseShape.getShape(), TopAbs_VERTEX, TopAbs_EDGE, vertexEdgeMap);
+
+    std::unordered_set<TopoDS_Shape, Part::ShapeHasher, Part::ShapeHasher> visited;
+    std::vector<TopoShape> result;
+
+    // Helper: check if two edges are tangent at a shared vertex
+    auto areTangent = [](const TopoDS_Edge& e1, const TopoDS_Edge& e2,
+                         const TopoDS_Vertex& vertex) -> bool {
+        try {
+            BRepAdaptor_Curve c1(e1);
+            BRepAdaptor_Curve c2(e2);
+
+            double param1 = BRep_Tool::Parameter(vertex, e1);
+            double param2 = BRep_Tool::Parameter(vertex, e2);
+
+            gp_Vec tan1, tan2;
+            gp_Pnt p1, p2;
+            c1.D1(param1, p1, tan1);
+            c2.D1(param2, p2, tan2);
+
+            if (tan1.Magnitude() < 1e-10 || tan2.Magnitude() < 1e-10) {
+                return false;
+            }
+
+            tan1.Normalize();
+            tan2.Normalize();
+
+            // Tangent if vectors are parallel (same or opposite direction)
+            double dot = std::abs(tan1.Dot(tan2));
+            return dot > 0.9998;  // ~1 degree tolerance
+        }
+        catch (...) {
+            return false;
+        }
+    };
+
+    // BFS expansion from seed edges
+    std::deque<TopoDS_Edge> queue;
+    for (const auto& seed : seedEdges) {
+        if (seed.shapeType(true) == TopAbs_EDGE) {
+            const TopoDS_Edge& edge = TopoDS::Edge(seed.getShape());
+            if (visited.insert(edge).second) {
+                queue.push_back(edge);
+                result.push_back(seed);
+            }
+        }
+    }
+
+    while (!queue.empty()) {
+        TopoDS_Edge current = queue.front();
+        queue.pop_front();
+
+        // Iterate over vertices of this edge
+        for (TopExp_Explorer vExp(current, TopAbs_VERTEX); vExp.More(); vExp.Next()) {
+            const TopoDS_Vertex& vertex = TopoDS::Vertex(vExp.Current());
+            if (!vertexEdgeMap.Contains(vertex)) {
+                continue;
+            }
+            const TopTools_ListOfShape& adjacentEdges = vertexEdgeMap.FindFromKey(vertex);
+            for (auto it = adjacentEdges.cbegin(); it != adjacentEdges.cend(); ++it) {
+                const TopoDS_Edge& neighbor = TopoDS::Edge(*it);
+                if (visited.count(neighbor)) {
+                    continue;
+                }
+                if (areTangent(current, neighbor, vertex)) {
+                    visited.insert(neighbor);
+                    queue.push_back(neighbor);
+                    result.push_back(neighbor);
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
 std::vector<TopoShape> DressUp::getFaces(const TopoShape& shape)

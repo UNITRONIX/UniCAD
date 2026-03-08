@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Task panel for Replace Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Task panel for Replace Face feature.
 
 #ifndef GUI_TASKVIEW_TaskReplaceFaceParameters_H
 #define GUI_TASKVIEW_TaskReplaceFaceParameters_H

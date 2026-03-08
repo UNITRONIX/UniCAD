@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Split Face feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Split Face feature (direct edit).
 // Splits selected faces on a solid using a tool shape (sketch, plane, face).
 
 #ifndef PARTDESIGN_FEATURE_SPLITFACE_H

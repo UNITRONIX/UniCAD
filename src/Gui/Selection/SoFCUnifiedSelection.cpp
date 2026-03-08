@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 /***************************************************************************
- *   Copyright (c) 2005 Jürgen Riegel <juergen.riegel@web.de>              *
+ *   Copyright (c) 2005 JĂĽrgen Riegel <juergen.riegel@web.de>              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -122,9 +122,9 @@ SoFCUnifiedSelection::SoFCUnifiedSelection()
 {
     SO_NODE_CONSTRUCTOR(SoFCUnifiedSelection);
 
-    // FusionCAD: Fusion 360-style selection colors
-    // Highlight (preselect/hover): light blue (#4FC3F7 → 0.31, 0.76, 0.97)
-    // Selection: Fusion blue (#0696D7 → 0.024, 0.588, 0.843)
+    // UniCAD: Fusion 360-style selection colors
+    // Highlight (preselect/hover): light blue (#4FC3F7 â†’ 0.31, 0.76, 0.97)
+    // Selection: Fusion blue (#0696D7 â†’ 0.024, 0.588, 0.843)
     SO_NODE_ADD_FIELD(colorHighlight, (SbColor(0.31f, 0.76f, 0.97f)));
     SO_NODE_ADD_FIELD(colorSelection, (SbColor(0.024f, 0.588f, 0.843f)));
     SO_NODE_ADD_FIELD(preselectionMode, (AUTO));
@@ -271,7 +271,7 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
         if (this->pcDocument && path && path->containsPath(action->getCurPath())) {
             vp = this->pcDocument->getViewProviderByPathFromHead(path);
             if (singlePick && last_vp && last_vp != vp) {
-                // FusionCAD: Don't stop immediately - check if the next pick is at the same
+                // UniCAD: Don't stop immediately - check if the next pick is at the same
                 // location and has a more specific element (e.g. sketch internal face vs body face)
                 const SbVec3f& firstPt = ret.front().pp->getPoint();
                 const SbVec3f& curPt = info.pp->getPoint();
@@ -336,7 +336,7 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
         int cur_prio = getPriority(info.pp);
         const SbVec3f& cur_pt = info.pp->getPoint();
 
-        // FusionCAD: Only prefer Internal face over generic face when both picks
+        // UniCAD: Only prefer Internal face over generic face when both picks
         // are truly at the same point (tight tolerance). This prevents sketch faces
         // buried inside a Pad body from overriding the Pad's own face picks.
         if (picked_pt.equals(cur_pt, 0.01F)) {

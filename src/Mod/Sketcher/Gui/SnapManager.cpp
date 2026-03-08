@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2023 Pierre-Louis Boyer <pierrelouis.boyer@gmail.com>   *
@@ -108,7 +108,7 @@ void SnapManager::ParameterObserver::updateSnapToGridParameter(const std::string
 {
     ParameterGrp::handle hGrp = getParameterGrpHandle();
 
-    // FusionCAD: Default to true for automatic grid snapping
+    // UniCAD: Default to true for automatic grid snapping
     client.snapToGridRequested = hGrp->GetBool(parametername.c_str(), true);
 }
 
@@ -116,7 +116,7 @@ void SnapManager::ParameterObserver::updateAutoAngleSnapParameter(const std::str
 {
     ParameterGrp::handle hGrp = getParameterGrpHandle();
 
-    // FusionCAD: Auto angle snap without requiring Ctrl key
+    // UniCAD: Auto angle snap without requiring Ctrl key
     client.autoAngleSnapEnabled = hGrp->GetBool(parametername.c_str(), true);
 }
 
@@ -178,10 +178,10 @@ ParameterGrp::handle SnapManager::ParameterObserver::getParameterGrpHandle()
 SnapManager::SnapManager(ViewProviderSketch& vp)
     : viewProvider(vp)
     , angleSnapRequested(false)
-    , autoAngleSnapEnabled(true)  // FusionCAD: Auto angle snap enabled by default
+    , autoAngleSnapEnabled(true)  // UniCAD: Auto angle snap enabled by default
     , referencePoint(Base::Vector2d(0., 0.))
     , lastMouseAngle(0.0)
-    , lastSnapType(SnapIndicatorType::None)  // FusionCAD: Initialize snap type
+    , lastSnapType(SnapIndicatorType::None)  // UniCAD: Initialize snap type
 {
     // Create parameter observer and initialise watched parameters
     pObserver = std::make_unique<SnapManager::ParameterObserver>(*this);
@@ -203,7 +203,7 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
     // In order of priority:
 
     // 1 - Snap at an angle
-    // FusionCAD: Support both Ctrl-triggered and automatic angle snap
+    // UniCAD: Support both Ctrl-triggered and automatic angle snap
     bool angleSnapActive = (autoAngleSnapEnabled || QApplication::keyboardModifiers() == Qt::ControlModifier);
     if ((static_cast<int>(mask) & static_cast<int>(SnapType::Angle)) && angleSnapRequested
         && angleSnapActive
@@ -216,7 +216,7 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
         lastMouseAngle = 0.0;
     }
 
-    // 1.5 - FusionCAD: Snap to face center (important for finding rectangle/polygon centers)
+    // 1.5 - UniCAD: Snap to face center (important for finding rectangle/polygon centers)
     if ((static_cast<int>(mask) & static_cast<int>(SnapType::Point)) && snapToObjectsRequested) {
         if (snapToFaceCenter(inputPos, snapPos)) {
             lastSnapType = SnapIndicatorType::FaceCenter;
@@ -291,11 +291,11 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
         if (CrsId == 0) {
             geoId = Sketcher::GeoEnum::RtPnt;
             posId = Sketcher::PointPos::start;
-            lastSnapType = SnapIndicatorType::Origin;  // FusionCAD: Origin snap
+            lastSnapType = SnapIndicatorType::Origin;  // UniCAD: Origin snap
         }
         else if (VtId >= 0) {
             Obj->getGeoVertexIndex(VtId, geoId, posId);
-            lastSnapType = SnapIndicatorType::Point;  // FusionCAD: Point snap
+            lastSnapType = SnapIndicatorType::Point;  // UniCAD: Point snap
         }
 
         snapPos.x = Obj->getPoint(geoId, posId).x;
@@ -305,13 +305,13 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
     else if (static_cast<int>(mask) & static_cast<int>(SnapType::Edge)) {
         if (CrsId == 1) {  // H_Axis
             snapPos.y = 0;
-            lastSnapType = SnapIndicatorType::Edge;  // FusionCAD: Axis snap
+            lastSnapType = SnapIndicatorType::Edge;  // UniCAD: Axis snap
             // dont return true, allow grid snap to handle X coordinate
             return false;
         }
         else if (CrsId == 2) {  // V_Axis
             snapPos.x = 0;
-            lastSnapType = SnapIndicatorType::Edge;  // FusionCAD: Axis snap
+            lastSnapType = SnapIndicatorType::Edge;  // UniCAD: Axis snap
             // dont return true, allow grid snap to handle Y coordinate
             return false;
         }
@@ -333,13 +333,13 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
                     return false;
                 }
 
-                lastSnapType = SnapIndicatorType::Edge;  // FusionCAD: Default to edge snap
+                lastSnapType = SnapIndicatorType::Edge;  // UniCAD: Default to edge snap
 
                 // If it is a line, then we check if we need to snap to the middle.
                 if (geo->is<Part::GeomLineSegment>()) {
                     const Part::GeomLineSegment* line = static_cast<const Part::GeomLineSegment*>(geo);
                     if (snapToLineMiddle(pointToOverride, line)) {
-                        lastSnapType = SnapIndicatorType::Middle;  // FusionCAD: Middle snap
+                        lastSnapType = SnapIndicatorType::Middle;  // UniCAD: Middle snap
                     }
                 }
 
@@ -347,7 +347,7 @@ bool SnapManager::snapToObject(Base::Vector2d inputPos, Base::Vector2d& snapPos,
                 if (geo->is<Part::GeomArcOfCircle>()) {
                     const Part::GeomArcOfCircle* arc = static_cast<const Part::GeomArcOfCircle*>(geo);
                     if (snapToArcMiddle(pointToOverride, arc)) {
-                        lastSnapType = SnapIndicatorType::Middle;  // FusionCAD: Middle snap
+                        lastSnapType = SnapIndicatorType::Middle;  // UniCAD: Middle snap
                     }
                 }
 
@@ -443,7 +443,7 @@ bool SnapManager::snapToArcMiddle(Base::Vector3d& pointToOverride, const Part::G
     return false;
 }
 
-// FusionCAD: Snap to the center of detected faces in the sketch
+// UniCAD: Snap to the center of detected faces in the sketch
 bool SnapManager::snapToFaceCenter(Base::Vector2d inputPos, Base::Vector2d& snapPos)
 {
     Sketcher::SketchObject* sketchObj = viewProvider.getSketchObject();

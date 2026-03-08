@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2021 Abdullah Tahiri <abdullah.tahiri.yo@gmail.com>     *
@@ -220,7 +220,7 @@ public:
     void setAxisPickStyle(bool on);
     //@}
 
-    /** @name FusionCAD Snap indicator visualization */
+    /** @name UniCAD Snap indicator visualization */
     //@{
     enum class SnapIndicatorType {
         None,

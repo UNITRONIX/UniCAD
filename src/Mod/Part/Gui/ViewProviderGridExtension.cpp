@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2023 Abdullah Tahiri <abdullah.tahiri.yo@gmail.com>     *
@@ -372,7 +372,7 @@ void GridExtensionP::createGridPart(
     maxX = minX + gridDimension;
     maxY = minY + gridDimension;
 
-    // FusionCAD: Small z-offset ensures grid lines render in front of coplanar face
+    // UniCAD: Small z-offset ensures grid lines render in front of coplanar face
     // fills (sketch internal faces, body surfaces). Without this, depth buffer hides
     // grid behind the face polygons rendered at z=0.
     constexpr float gridZ = 0.001f;

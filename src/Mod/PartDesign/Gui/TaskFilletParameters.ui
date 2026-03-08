@@ -63,6 +63,50 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxTangentChain">
+     <property name="text">
+      <string>Tangent chain</string>
+     </property>
+     <property name="toolTip">
+      <string>Automatically extend selection along tangent-continuous edges</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkBoxVariableRadius">
+     <property name="text">
+      <string>Variable radius</string>
+     </property>
+     <property name="toolTip">
+      <string>Enable linear radius variation from start to end of each edge</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="labelEndRadius">
+       <property name="text">
+        <string>End radius</string>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Gui::QuantitySpinBox" name="filletEndRadius">
+       <property name="keyboardTracking">
+        <bool>false</bool>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>

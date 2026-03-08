@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 /****************************************************************************
  *                                                                          *
  *   Copyright (c) 2024 <bgbsww@gmail.com>                                  *
@@ -53,7 +53,7 @@ FeatureRefine::FeatureRefine()
                                              .GetGroup("BaseApp")
                                              ->GetGroup("Preferences")
                                              ->GetGroup("Mod/PartDesign");
-    // FusionCAD: Default Refine to false to preserve individual face topology
+    // UniCAD: Default Refine to false to preserve individual face topology
     this->Refine.setValue(hGrp->GetBool("RefineModel", false));
 }
 

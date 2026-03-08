@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Move Face feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Move Face feature (direct edit).
 // Translates selected faces using BRepOffsetAPI_MakeThickSolid
 // with a directional offset computed from face normal or custom direction.
 
@@ -88,7 +88,7 @@ App::DocumentObjectExecReturn* MoveFace::execute()
             selectedFaces.emplace_back(face);
         }
 
-        // Use makeElementThickSolid — this offsets the selected faces.
+        // Use makeElementThickSolid â€” this offsets the selected faces.
         // The distance is signed: positive = outward, negative = inward.
         TopoShape result(0);
         result = baseShape.makeElementThickSolid(

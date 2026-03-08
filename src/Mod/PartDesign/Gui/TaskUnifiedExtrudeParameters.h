@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Task panel for unified Extrude feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Task panel for unified Extrude feature.
 
 #ifndef GUI_TASKVIEW_TaskUnifiedExtrudeParameters_H
 #define GUI_TASKVIEW_TaskUnifiedExtrudeParameters_H

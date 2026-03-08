@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD Logging System
-// Provides structured logging for debugging FusionCAD-specific features
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD Logging System
+// Provides structured logging for debugging UniCAD-specific features
 
 #ifndef GUI_FUSIONLOG_H
 #define GUI_FUSIONLOG_H
@@ -15,7 +15,7 @@
 
 namespace Gui {
 
-/// FusionCAD structured logging to console and optional file
+/// UniCAD structured logging to console and optional file
 class GuiExport FusionLog
 {
 public:
@@ -95,7 +95,7 @@ private:
             case Level::Warning: levelStr = "WRN"; break;
             case Level::Error:   levelStr = "ERR"; break;
         }
-        return std::string("[FusionCAD/") + category + "/" + levelStr + "] ";
+        return std::string("[UniCAD/") + category + "/" + levelStr + "] ";
     }
 
     template<typename... Args>

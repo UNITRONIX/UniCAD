@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 /***************************************************************************
  *   Copyright (c) 2009 Werner Mayer <wmayer[at]users.sourceforge.net>     *
  *                                                                         *
@@ -338,11 +338,11 @@ PyMOD_INIT_FUNC(FreeCADGui)
     try {
         // clang-format off
         Base::Interpreter().loadModule("FreeCAD");
-        App::Application::Config()["AppIcon"] = "fusioncad";
+        App::Application::Config()["AppIcon"] = "unicad";
         App::Application::Config()["SplashScreen"] = "freecadsplash";
         App::Application::Config()["CopyrightInfo"] = fmt::format("\xc2\xa9 UNITRONIX & FreeCAD contributors 2001-{}\n", FCCopyrightYear);
-        App::Application::Config()["LicenseInfo"] = "FusionCAD is a fork of FreeCAD, licensed under the terms of LGPL2+ license.\n";
-        App::Application::Config()["CreditsInfo"] = "FusionCAD by UNITRONIX would not be possible without the FreeCAD contributors.\n";
+        App::Application::Config()["LicenseInfo"] = "UniCAD is a fork of FreeCAD, licensed under the terms of LGPL2+ license.\n";
+        App::Application::Config()["CreditsInfo"] = "UniCAD by UNITRONIX would not be possible without the FreeCAD contributors.\n";
         // clang-format on
 
         // it's possible that the GUI is already initialized when the Gui version of the executable

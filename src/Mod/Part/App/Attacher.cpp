@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2015 Victor Titov (DeepSOIC) <vv.titov@gmail.com>       *
@@ -192,7 +192,7 @@ Base::Rotation rotationAlignedToNormal(
 
     xProj.Normalize();
 
-    // 4) Build Y as Z × X (so it is perpendicular)
+    // 4) Build Y as Z Ă— X (so it is perpendicular)
     Base::Vector3d yNew = normal.Cross(xProj);
     yNew.Normalize();
 
@@ -1576,7 +1576,7 @@ Base::Placement AttachEngine3D::_calculateAttachedPlacement(
             }
             SketchNormal = Normal.Direction();
 
-            // FusionCAD enhancement: optionally use face centroid as sketch origin
+            // UniCAD enhancement: optionally use face centroid as sketch origin
             // instead of projecting the reference object's origin onto the plane
             ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath(
                 "User parameter:BaseApp/Preferences/Mod/Part/Attachment"

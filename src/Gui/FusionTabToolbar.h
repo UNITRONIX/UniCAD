@@ -1,10 +1,10 @@
-/***************************************************************************
+﻿/***************************************************************************
  *   Copyright (c) 2025 UNITRONIX                                         *
- *   FusionCAD - A fork of FreeCAD                                        *
+ *   UniCAD - A fork of FreeCAD                                        *
  *                                                                         *
- *   This file is part of FusionCAD.                                       *
+ *   This file is part of UniCAD.                                       *
  *                                                                         *
- *   FusionCAD is free software; you can redistribute it and/or modify     *
+ *   UniCAD is free software; you can redistribute it and/or modify     *
  *   it under the terms of the GNU Lesser General Public License (LGPL)    *
  *   as published by the Free Software Foundation; either version 2.1 of   *
  *   the License, or (at your option) any later version.                   *
@@ -55,7 +55,7 @@ public:
     void setActive(bool active);
     bool isActive() const { return m_active; }
 
-    /// Returns the mapping: tab name → list of command names
+    /// Returns the mapping: tab name â†’ list of command names
     struct TabDefinition {
         QString name;
         QStringList commands;

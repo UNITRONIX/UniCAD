@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Sweep feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Sweep feature.
 
 #include "FeatureUnifiedSweep.h"
 
@@ -31,7 +31,7 @@ short UnifiedSweep::mustExecute() const
 
 App::DocumentObjectExecReturn* UnifiedSweep::execute()
 {
-    // FusionCAD: Set addSubType based on Operation before calling Pipe::execute().
+    // UniCAD: Set addSubType based on Operation before calling Pipe::execute().
     // Pipe::execute() uses getAddSubType() for the boolean decision.
     const char* op = Operation.getValueAsString();
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2009 Juergen Riegel <juergen.riegel@web.de>             *
@@ -370,12 +370,12 @@ private:
             PreselectPoint = InvalidPoint;
             PreselectCurve = InvalidCurve;
             PreselectCross = Axes::None;
-            PreselectFace = InvalidPoint;  // FusionCAD: Reset face preselection
+            PreselectFace = InvalidPoint;  // UniCAD: Reset face preselection
             PreselectConstraintSet.clear();
             blockedPreselection = false;
         }
 
-        // FusionCAD: Check if a face is preselected
+        // UniCAD: Check if a face is preselected
         bool isPreselectFaceValid() const
         {
             return PreselectFace >= 0;
@@ -424,7 +424,7 @@ private:
         int PreselectCurve;   // EdgeN, with N = PreselectCurve + 1 for positive values ;
                               // ExternalEdgeN, with N = -PreselectCurve - 2
         Axes PreselectCross;  // 0 => rootPoint, 1 => HAxis, 2 => VAxis
-        int PreselectFace;    // FusionCAD: Face#N, N = PreselectFace + 1, for internal shape faces
+        int PreselectFace;    // UniCAD: Face#N, N = PreselectFace + 1, for internal shape faces
         std::set<int> PreselectConstraintSet;  // ConstraintN, N = index + 1
         bool blockedPreselection;
     };
@@ -579,7 +579,7 @@ public:
         STATUS_SELECT_Constraint,      /**< enum value a constraint was selected. */
         STATUS_SELECT_Cross,           /**< enum value the base coordinate system was selected. */
         STATUS_SELECT_Wire,            /**< enum value and edge was double clicked. */
-        STATUS_SELECT_Face,            /**< FusionCAD: an internal face was selected. */
+        STATUS_SELECT_Face,            /**< UniCAD: an internal face was selected. */
         STATUS_SKETCH_Drag,            /**< enum value while dragging curves and or points. */
         STATUS_SKETCH_DragConstraint,  /**< enum value while dragging a compatible constraint. */
         STATUS_SKETCH_UseHandler,      /**< enum value a DrawSketchHandler is in control. */
@@ -746,7 +746,7 @@ public:
     friend class ViewProviderSketchDrawSketchHandlerAttorney;
     friend class ViewProviderSketchCoinAttorney;
     friend class ViewProviderSketchSnapAttorney;
-    friend class SnapManager;  // FusionCAD: Allow SnapManager to call snap indicator methods
+    friend class SnapManager;  // UniCAD: Allow SnapManager to call snap indicator methods
     //@}
 protected:
     /** @name enter/exit edit mode */
@@ -958,9 +958,9 @@ private:
         const std::vector<Base::Vector2d>& EditMarkers,
         unsigned int augmentationlevel = 0
     );
-    /// FusionCAD: draw snap point indicator
+    /// UniCAD: draw snap point indicator
     void drawSnapIndicator(const Base::Vector2d& snapPos, int snapType);
-    /// FusionCAD: clear snap indicator
+    /// UniCAD: clear snap indicator
     void clearSnapIndicator();
     /// set the pick style of the sketch coordinate axes
     void setAxisPickStyle(bool on);
@@ -1014,7 +1014,7 @@ private:
 
     Gui::CoinPtr<SoSketchFaces> pcSketchFaces;
     Gui::CoinPtr<SoToggleSwitch> pcSketchFacesToggle;
-    Gui::CoinPtr<SoSeparator> pcSketchFacesGroup;  // FusionCAD: parent group under pcRoot
+    Gui::CoinPtr<SoSeparator> pcSketchFacesGroup;  // UniCAD: parent group under pcRoot
 
     std::unique_ptr<ShortcutListener> listener;
 

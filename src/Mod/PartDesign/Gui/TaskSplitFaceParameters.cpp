@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Task panel for Split Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Task panel for Split Face feature.
 
 #include <QAction>
 #include <QLabel>
@@ -53,7 +53,7 @@ void TaskSplitFaceParameters::onSelectTool()
 {
     selectingTool = !selectingTool;
     if (selectingTool) {
-        btnSelectTool->setText(tr("Picking tool … (click again to cancel)"));
+        btnSelectTool->setText(tr("Picking tool â€¦ (click again to cancel)"));
     }
     else {
         btnSelectTool->setText(tr("Select Splitting Tool"));

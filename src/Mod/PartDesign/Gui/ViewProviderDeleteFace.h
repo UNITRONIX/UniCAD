@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — ViewProvider for Delete Face feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” ViewProvider for Delete Face feature.
 
 #ifndef PARTGUI_ViewProviderDeleteFace_H
 #define PARTGUI_ViewProviderDeleteFace_H

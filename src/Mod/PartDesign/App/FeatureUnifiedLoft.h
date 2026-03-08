@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Loft feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Loft feature.
 
 #ifndef PARTDESIGN_UNIFIED_LOFT_H
 #define PARTDESIGN_UNIFIED_LOFT_H

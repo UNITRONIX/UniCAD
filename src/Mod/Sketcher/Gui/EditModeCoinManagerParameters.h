@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2021 Abdullah Tahiri <abdullah.tahiri.yo@gmail.com>     *
@@ -455,7 +455,7 @@ struct EditModeScenegraphNodes
     SoDrawStyle* EditMarkersDrawStyle;
     //@}
 
-    /** @name FusionCAD Snap indicator nodes - Visual feedback for snap points */
+    /** @name UniCAD Snap indicator nodes - Visual feedback for snap points */
     //@{
     SoSeparator* SnapIndicatorRoot;
     SoMaterial* SnapIndicatorMaterial;

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Sweep feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Sweep feature.
 
 #ifndef PARTDESIGN_UNIFIED_SWEEP_H
 #define PARTDESIGN_UNIFIED_SWEEP_H

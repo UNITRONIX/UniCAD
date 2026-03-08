@@ -1,10 +1,10 @@
-/***************************************************************************
+﻿/***************************************************************************
  *   Copyright (c) 2025 UNITRONIX                                         *
- *   FusionCAD - A fork of FreeCAD                                        *
+ *   UniCAD - A fork of FreeCAD                                        *
  *                                                                         *
- *   This file is part of FusionCAD.                                       *
+ *   This file is part of UniCAD.                                       *
  *                                                                         *
- *   FusionCAD is free software; you can redistribute it and/or modify     *
+ *   UniCAD is free software; you can redistribute it and/or modify     *
  *   it under the terms of the GNU Lesser General Public License (LGPL)    *
  *   as published by the Free Software Foundation; either version 2.1 of   *
  *   the License, or (at your option) any later version.                   *
@@ -92,10 +92,10 @@ void FusionMarkingMenu::showAt(const QPoint& globalPos)
 }
 
 // Slot positions arranged as: N(0), NE(1), E(2), SE(3), S(4), SW(5), W(6), NW(7)
-// Angles starting from top (N = -90°), going clockwise
+// Angles starting from top (N = -90Â°), going clockwise
 static double sliceAngle(int index)
 {
-    // Each slice is 45°, starting from North (-90° or 270°)
+    // Each slice is 45Â°, starting from North (-90Â° or 270Â°)
     return -90.0 + index * 45.0;
 }
 

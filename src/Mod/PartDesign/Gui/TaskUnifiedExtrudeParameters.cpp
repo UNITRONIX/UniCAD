@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Task panel for unified Extrude feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Task panel for unified Extrude feature.
 
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -24,7 +24,7 @@ TaskUnifiedExtrudeParameters::TaskUnifiedExtrudeParameters(
     bool newObj)
     : TaskExtrudeParameters(ExtrudeView, parent, "PartDesign_Pad", tr("Extrude"))
 {
-    // FusionCAD: Add Operation combo box at top of the panel
+    // UniCAD: Add Operation combo box at top of the panel
     auto* opLayout = new QHBoxLayout();
     auto* opLabel = new QLabel(tr("Operation"), proxy);
     operationCombo = new QComboBox(proxy);
@@ -90,7 +90,7 @@ void TaskUnifiedExtrudeParameters::onOperationChanged(int index)
 
 void TaskUnifiedExtrudeParameters::onOperationAutoSwitched(int newOpIndex)
 {
-    // FusionCAD: Sync combo box when base class auto-switches Operation
+    // UniCAD: Sync combo box when base class auto-switches Operation
     if (operationCombo && operationCombo->currentIndex() != newOpIndex) {
         QSignalBlocker blocker(operationCombo);
         operationCombo->setCurrentIndex(newOpIndex);

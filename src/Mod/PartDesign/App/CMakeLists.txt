@@ -97,6 +97,10 @@ SET(FeaturesSketchBased_SRCS
     FeatureReplaceFace.h
     FeatureSplitFace.cpp
     FeatureSplitFace.h
+    FeatureSplitBody.cpp
+    FeatureSplitBody.h
+    FeatureEmboss.cpp
+    FeatureEmboss.h
     FeatureMoveFace.cpp
     FeatureMoveFace.h
     FeatureRevolution.cpp

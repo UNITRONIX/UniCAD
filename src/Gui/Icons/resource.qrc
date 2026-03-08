@@ -1,4 +1,4 @@
-<RCC>
+﻿<RCC>
     <qresource prefix="/icons">
         <file>3dx_pivot.png</file>
         <file>accessories-calculator.svg</file>
@@ -92,7 +92,9 @@
         <file>freecad-doc.png</file>
         <file>freecad-doc.svg</file>
         <file>freecad.svg</file>
-        <file>fusioncad.png</file>
+        <file>unicad.png</file>
+        <file>unicadsplash.png</file>
+        <file>unicadsplash_2x.png</file>
         <file>freecadabout.png</file>
         <file>freecadaboutdev.png</file>
         <file>freecadsplash_2x.png</file>

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — ViewProvider for unified Revolve.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” ViewProvider for unified Revolve.
 
 #ifndef PARTDESIGNGUI_ViewProviderUnifiedRevolve_H
 #define PARTDESIGNGUI_ViewProviderUnifiedRevolve_H

@@ -1,4 +1,4 @@
-# As of February 2025 we require CMake 3.22.0
+﻿# As of February 2025 we require CMake 3.22.0
 cmake_minimum_required(VERSION 3.22.0 FATAL_ERROR)
 
 
@@ -48,7 +48,7 @@ if(FREECAD_USE_CCACHE)
     endif()
 endif()
 
-project(FusionCAD)
+project(UniCAD)
 
 set(PACKAGE_VERSION_MAJOR "1")
 set(PACKAGE_VERSION_MINOR "2")

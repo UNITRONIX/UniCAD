@@ -71,6 +71,7 @@ TaskChamferParameters::TaskChamferParameters(ViewProviderDressUp* DressUpView, Q
 
     bool useAllEdges = pcChamfer->UseAllEdges.getValue();
     ui->checkBoxUseAllEdges->setChecked(useAllEdges);
+    ui->checkBoxTangentChain->setChecked(pcChamfer->TangentChain.getValue());
     ui->buttonRefSel->setEnabled(!useAllEdges);
     ui->listWidgetReferences->setEnabled(!useAllEdges);
     QMetaObject::invokeMethod(ui->chamferSize, "setFocus", Qt::QueuedConnection);
@@ -97,6 +98,8 @@ TaskChamferParameters::TaskChamferParameters(ViewProviderDressUp* DressUpView, Q
             this, &TaskChamferParameters::onButtonRefSel);
     connect(ui->checkBoxUseAllEdges, &QCheckBox::toggled,
             this, &TaskChamferParameters::onCheckBoxUseAllEdgesToggled);
+    connect(ui->checkBoxTangentChain, &QCheckBox::toggled,
+            this, &TaskChamferParameters::onCheckBoxTangentChainToggled);
 
     // Create context menu
     createDeleteAction(ui->listWidgetReferences);
@@ -191,6 +194,14 @@ void TaskChamferParameters::onCheckBoxUseAllEdgesToggled(bool checked)
         ui->buttonRefSel->setEnabled(!checked);
         ui->listWidgetReferences->setEnabled(!checked);
         chamfer->UseAllEdges.setValue(checked);
+        chamfer->recomputeFeature();
+    }
+}
+
+void TaskChamferParameters::onCheckBoxTangentChainToggled(bool checked)
+{
+    if (auto chamfer = getObject<PartDesign::Chamfer>()) {
+        chamfer->TangentChain.setValue(checked);
         chamfer->recomputeFeature();
     }
 }

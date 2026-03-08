@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
- *   Copyright (c) 2009 Jürgen Riegel <juergen.riegel@web.de>              *
+ *   Copyright (c) 2009 JĂĽrgen Riegel <juergen.riegel@web.de>              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -57,7 +57,7 @@ TaskDlgEditSketch::TaskDlgEditSketch(ViewProviderSketch* sketchView)
     Content.push_back(ToolSettings);
     Content.push_back(Messages);
 
-    // FusionCAD: Simplified Sketcher panel by default
+    // UniCAD: Simplified Sketcher panel by default
     // Advanced solver widget hidden unless user explicitly enables it
     if (hGrp->GetBool("ShowSolverAdvancedWidget", false)) {
         Content.push_back(SolverAdvanced);
@@ -66,7 +66,7 @@ TaskDlgEditSketch::TaskDlgEditSketch(ViewProviderSketch* sketchView)
     Content.push_back(Constraints);
     Content.push_back(Elements);
 
-    // FusionCAD: Default to collapsed panels for a cleaner Fusion 360-like experience
+    // UniCAD: Default to collapsed panels for a cleaner Fusion 360-like experience
     if (!hGrp->GetBool("ExpandedMessagesWidget", false)) {
         Messages->hideGroupBox();
     }

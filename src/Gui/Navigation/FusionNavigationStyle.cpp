@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 /***************************************************************************
- *   Copyright (c) 2026 FusionCAD Contributors                            *
+ *   Copyright (c) 2026 UniCAD Contributors                            *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -182,7 +182,7 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
                     this->lockrecenter = false;
                 }
                 else {
-                    // On release: check for double-click → fit all
+                    // On release: check for double-click â†’ fit all
                     SbTime tmp = (ev->getTime() - this->centerTime);
                     float dci = (float)QApplication::doubleClickInterval() / 1000.0f;
                     if (tmp.getValue() < dci && !this->lockrecenter) {

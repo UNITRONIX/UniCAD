@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Extrude feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Extrude feature.
 // Single command for Join (Fuse), Cut, Intersect, and NewBody operations.
 
 #ifndef PARTDESIGN_UNIFIED_EXTRUDE_H
@@ -17,7 +17,7 @@ class PartDesignExport Extrude : public FeatureExtrude
 public:
     Extrude();
 
-    // FusionCAD: Operation type — Fusion 360-style result type
+    // UniCAD: Operation type â€” Fusion 360-style result type
     // "Join" = Fuse with body (like Pad)
     // "Cut" = Subtract from body (like Pocket)
     // "Intersect" = Common with body

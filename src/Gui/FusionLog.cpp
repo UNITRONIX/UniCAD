@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD Logging System - Implementation
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD Logging System - Implementation
 
 #include "FusionLog.h"
 #include <App/Application.h>
@@ -20,7 +20,7 @@ void FusionLog::setFileLogging(bool enable, const std::string& path)
         std::string logPath = path;
         if (logPath.empty()) {
             // Default: write to user data dir
-            logPath = App::Application::getUserAppDataDir() + "/fusioncad.log";
+            logPath = App::Application::getUserAppDataDir() + "/UniCAD.log";
         }
 
         // Ensure directory exists
@@ -41,7 +41,7 @@ void FusionLog::setFileLogging(bool enable, const std::string& path)
             localtime_r(&time, &tmBuf);
 #endif
             strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &tmBuf);
-            fileStream << "\n=== FusionCAD Log Session Started " << timeBuf << " ===\n";
+            fileStream << "\n=== UniCAD Log Session Started " << timeBuf << " ===\n";
             fileStream.flush();
         }
     }

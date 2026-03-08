@@ -1,4 +1,4 @@
-# file types to ignore
+﻿# file types to ignore
 .*
 !/.packit.yaml
 !/.clang-format
@@ -71,7 +71,7 @@ files_to_translate.txt
 .pixi
 *.egg-info
 
-# FusionCAD: build artifacts and local files
+# UniCAD: build artifacts and local files
 build_output.txt
 *.log
 

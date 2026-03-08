@@ -45,6 +45,7 @@ public:
      */
     App::PropertyLinkSub Base;
     App::PropertyBool SupportTransform;
+    App::PropertyBool TangentChain;
 
     short mustExecute() const override;
     /// updates the Placement property from the Placement of the BaseFeature
@@ -64,6 +65,9 @@ public:
     void getContinuousEdges(Part::TopoShape, std::vector<std::string>&, std::vector<std::string>&);
     // Todo: Post-TNP the above two versions should be able to be factored out.
     std::vector<TopoShape> getContinuousEdges(const TopoShape& shape);
+    /// Expand edges along tangent chains (G1 continuity at shared vertices)
+    std::vector<TopoShape> expandTangentChain(const TopoShape& baseShape,
+                                               const std::vector<TopoShape>& seedEdges);
 
     std::vector<TopoShape> getFaces(const TopoShape& shape);
     void getAddSubShape(Part::TopoShape& addShape, Part::TopoShape& subShape) override;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2008 Werner Mayer <wmayer[at]users.sourceforge.net>     *
@@ -48,7 +48,7 @@ namespace sp = std::placeholders;
     qApp->translate("Workbench", "Subtractive Features");
     qApp->translate("Workbench", "Dress-Up Features");
     qApp->translate("Workbench", "Transformation Features");
-    qApp->translate("Workbench", "Sprocket…");
+    qApp->translate("Workbench", "Sprocketâ€¦");
     qApp->translate("Workbench", "Involute Gear");
 
     qApp->translate("Workbench", "Shaft Design Wizard");
@@ -487,49 +487,45 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     root->insertItem(item, sketch);
     sketch->setCommand("&Sketch");
 
+    // UniCAD: Simplified Sketch menu â€” only essential commands
     *sketch << "PartDesign_NewSketch"
             << "Sketcher_EditSketch"
-            << "Sketcher_MapSketch"
-            << "Sketcher_ReorientSketch"
             << "Sketcher_ValidateSketch"
-            << "Sketcher_MergeSketches"
             << "Sketcher_MirrorSketch";
 
     Gui::MenuItem* part = new Gui::MenuItem;
     root->insertItem(item, part);
     part->setCommand("&Part Design");
 
-    // Legacy additive/subtractive submenus removed — unified commands are used instead
-    // (PartDesign_Extrude, PartDesign_Revolve, PartDesign_Sweep, PartDesign_Loft)
+    // UniCAD: Simplified menu â€” only unified commands, no legacy additive/subtractive split
 
-    // transformations
-    Gui::MenuItem* transformations = new Gui::MenuItem;
-    transformations->setCommand("Transformation Features");
+    // Modify submenu
+    Gui::MenuItem* modify = new Gui::MenuItem;
+    modify->setCommand("Modify");
+    *modify << "PartDesign_Fillet"
+            << "PartDesign_Chamfer"
+            << "PartDesign_Draft"
+            << "PartDesign_Thickness"
+            << "Separator"
+            << "PartDesign_OffsetFace"
+            << "PartDesign_DeleteFace"
+            << "PartDesign_ReplaceFace"
+            << "PartDesign_SplitFace"
+            << "PartDesign_SplitBody"
+            << "PartDesign_MoveFace";
 
-    *transformations << "PartDesign_Mirrored"
-                     << "PartDesign_LinearPattern"
-                     << "PartDesign_PolarPattern"
-                     << "PartDesign_MultiTransform";
-
-    // dressups
-    Gui::MenuItem* dressups = new Gui::MenuItem;
-    dressups->setCommand("Dress-Up Features");
-
-    *dressups << "PartDesign_Fillet"
-              << "PartDesign_Chamfer"
-              << "PartDesign_Draft"
-              << "PartDesign_Thickness"
-              << "PartDesign_OffsetFace"
-              << "PartDesign_DeleteFace"
-              << "PartDesign_ReplaceFace"
-              << "PartDesign_SplitFace"
-              << "PartDesign_MoveFace";
+    // Pattern submenu
+    Gui::MenuItem* pattern = new Gui::MenuItem;
+    pattern->setCommand("Pattern");
+    *pattern << "PartDesign_Mirrored"
+             << "PartDesign_LinearPattern"
+             << "PartDesign_PolarPattern"
+             << "PartDesign_MultiTransform";
 
     *part << "PartDesign_Body"
-          << "Separator"
-          << "PartDesign_ShapeBinder"
           << "PartDesign_SubShapeBinder"
-          << "PartDesign_Clone"
+          << "Separator"
+          << "PartDesign_NewSketch"
           << "Separator"
           << "PartDesign_PressPull"
           << "PartDesign_Extrude"
@@ -537,25 +533,18 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "PartDesign_Sweep"
           << "PartDesign_Loft"
           << "PartDesign_Hole"
-          << "Separator" << "PartDesign_CompPrimitiveAdditive"
-          << "Separator" << "PartDesign_CompPrimitiveSubtractive"
-          << "Separator" << dressups << "Separator" << transformations << "Separator"
+          << "PartDesign_Emboss"
+          << "Separator"
+          << "PartDesign_CompPrimitiveAdditive"
+          << "Separator" << modify
+          << "Separator" << pattern
+          << "Separator"
           << "PartDesign_Boolean"
+          << "PartDesign_MoveBody"
+          << "PartDesign_CopyBody"
           << "Separator"
           << "Materials_InspectAppearance"
-          << "Materials_InspectMaterial"
-          << "Separator"
-          << "Part_CheckGeometry"
-          << "Separator"
-          << "PartDesign_InvoluteGear"
-          << "PartDesign_Sprocket";
-
-    // For 0.13 a couple of python packages like numpy, matplotlib and others
-    // are not deployed with the installer on Windows. Thus, the WizardShaft is
-    // not deployed either hence the check for the existence of the command.
-    if (Gui::Application::Instance->commandManager().getCommandByName("PartDesign_WizardShaft")) {
-        *part << "Separator" << "PartDesign_WizardShaft";
-    }
+          << "Part_CheckGeometry";
 
     Gui::MenuItem* view = root->findItem("&View");
     if (view) {
@@ -578,16 +567,14 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
 {
     Gui::ToolBarItem* root = StdWorkbench::setupToolBars();
     Gui::ToolBarItem* part = new Gui::ToolBarItem(root);
-    part->setCommand("Part Design Helper Features");
+    part->setCommand("Part Design");
 
+    // UniCAD: Simplified helper toolbar â€” only essential items
     *part << "PartDesign_Body"
-          << "PartDesign_CompSketches"
-          << "Sketcher_ValidateSketch"
-          << "Part_CheckGeometry"
-          << "PartDesign_SubShapeBinder"
-          << "PartDesign_Clone";
+          << "PartDesign_NewSketch"
+          << "PartDesign_SubShapeBinder";
 
-    // FusionCAD: Always show Sketcher toolbars for faster workflow (Fusion 360 style)
+    // UniCAD: Always show Sketcher toolbars for faster workflow (Fusion 360 style)
     Gui::ToolBarItem* sketchGeom = new Gui::ToolBarItem(root);
     sketchGeom->setCommand("Sketch Geometries");
     SketcherGui::addSketcherWorkbenchGeometries(*sketchGeom);
@@ -601,9 +588,9 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     SketcherGui::addSketcherWorkbenchTools(*sketchTools);
 
     part = new Gui::ToolBarItem(root);
-    part->setCommand("Part Design Modeling Features");
+    part->setCommand("Create");
 
-    // FusionCAD: Unified commands first (Fusion 360 style)
+    // UniCAD: Unified commands only (Fusion 360 style workflow)
     *part << "PartDesign_PressPull"
           << "PartDesign_Extrude"
           << "PartDesign_Revolve"
@@ -611,31 +598,42 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
           << "PartDesign_Loft"
           << "Separator"
           << "PartDesign_Hole"
-          << "PartDesign_Boolean"
+          << "PartDesign_Emboss"
           << "Separator"
-          << "PartDesign_CompPrimitiveAdditive"
-          << "PartDesign_CompPrimitiveSubtractive";
+          << "PartDesign_Boolean";
 
     part = new Gui::ToolBarItem(root);
-
-    part->setCommand("Part Design Dress-Up Features");
+    part->setCommand("Modify");
     *part << "PartDesign_Fillet"
           << "PartDesign_Chamfer"
           << "PartDesign_Draft"
           << "PartDesign_Thickness"
+          << "Separator"
           << "PartDesign_OffsetFace"
           << "PartDesign_DeleteFace"
           << "PartDesign_ReplaceFace"
           << "PartDesign_SplitFace"
+          << "PartDesign_SplitBody"
           << "PartDesign_MoveFace";
 
     part = new Gui::ToolBarItem(root);
-    part->setCommand("Part Design Transformation Features");
-
+    part->setCommand("Pattern");
     *part << "PartDesign_Mirrored"
           << "PartDesign_LinearPattern"
           << "PartDesign_PolarPattern"
-          << "PartDesign_MultiTransform";
+          << "PartDesign_MultiTransform"
+          << "Separator"
+          << "PartDesign_MoveBody"
+          << "PartDesign_CopyBody";
+
+    // UniCAD: Selection Priority toolbar (Fusion 360 style)
+    part = new Gui::ToolBarItem(root);
+    part->setCommand("Selection Priority");
+    *part << "PartDesign_SelectFacePriority"
+          << "PartDesign_SelectEdgePriority"
+          << "PartDesign_SelectBodyPriority"
+          << "Separator"
+          << "PartDesign_SelectThrough";
 
     return root;
 }

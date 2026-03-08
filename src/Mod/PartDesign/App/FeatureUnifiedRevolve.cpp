@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Revolve feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Revolve feature.
 
 #include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepFeat_MakeRevol.hxx>
@@ -161,7 +161,7 @@ App::DocumentObjectExecReturn* UnifiedRevolve::execute()
                 supportface = TopoDS_Face();
             }
 
-            // FusionCAD: Use CutFromBase for Cut, FuseWithBase for Join
+            // UniCAD: Use CutFromBase for Cut, FuseWithBase for Join
             auto revolMode = isCut ? Part::RevolMode::CutFromBase : Part::RevolMode::FuseWithBase;
 
             try {
@@ -193,7 +193,7 @@ App::DocumentObjectExecReturn* UnifiedRevolve::execute()
             this->AddSubShape.setValue(result);
 
             if (!base.isNull() && !isNewBody) {
-                // FusionCAD: Boolean operation based on Operation property
+                // UniCAD: Boolean operation based on Operation property
                 const char* maker;
                 if (isCut) {
                     maker = Part::OpCodes::Cut;

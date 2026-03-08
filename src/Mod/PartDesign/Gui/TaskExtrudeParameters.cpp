@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2021 Werner Mayer <wmayer[at]users.sourceforge.net>     *
@@ -150,7 +150,7 @@ void TaskExtrudeParameters::setupSideDialog(SideController& side)
 
     // --- Bind UI widgets to the correct properties ---
     side.lengthEdit->bind(*side.Length);
-    // FusionCAD: Allow negative values so dragging through zero
+    // UniCAD: Allow negative values so dragging through zero
     // triggers auto-switch between Join and Cut operation
     side.lengthEdit->setMinimum(-1e15);
     side.offsetEdit->bind(*side.Offset);
@@ -641,7 +641,7 @@ std::vector<std::string> PartDesignGui::TaskExtrudeParameters::getShapeFaces(
 
 void TaskExtrudeParameters::onLengthChanged(double len, Side side)
 {
-    // FusionCAD: Fusion 360-style behavior — dragging below zero auto-switches
+    // UniCAD: Fusion 360-style behavior â€” dragging below zero auto-switches
     // between Join and Cut operation. Operation=Cut already reverses the
     // profile normal (like Pocket), so no Reversed flip needed.
     // State tracking prevents ping-pong toggling during continuous drag.
@@ -665,15 +665,15 @@ void TaskExtrudeParameters::onLengthChanged(double len, Side side)
 
         // Update the spinbox to show positive value.
         // MUST block signals to prevent re-entrant call to onLengthChanged
-        // (setValue emits valueChanged → onLengthChanged(+val) → sees
-        // _crossedZero && len>=0 → immediately restores original op).
+        // (setValue emits valueChanged â†’ onLengthChanged(+val) â†’ sees
+        // _crossedZero && len>=0 â†’ immediately restores original op).
         {
             QSignalBlocker blocker(getSideController(side).lengthEdit);
             getSideController(side).lengthEdit->setValue(len);
         }
     }
     else if (_crossedZero && len >= 0) {
-        // Dragged back above zero — restore original operation
+        // Dragged back above zero â€” restore original operation
         auto* opProp = dynamic_cast<App::PropertyEnumeration*>(
             extrude->getPropertyByName("Operation"));
         if (opProp && opProp->getValue() != _originalOp) {
@@ -743,7 +743,7 @@ void TaskExtrudeParameters::fillDirectionCombo()
         }
 
         // add the other entries
-        addAxisToCombo(nullptr, std::string(), tr("Select reference…"));
+        addAxisToCombo(nullptr, std::string(), tr("Select referenceâ€¦"));
 
         // we start with the sketch normal as proposal for the custom direction
         if (pcSketch) {

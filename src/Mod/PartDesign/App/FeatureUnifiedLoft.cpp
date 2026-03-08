@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Loft feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Loft feature.
 
 #include "FeatureUnifiedLoft.h"
 
@@ -31,7 +31,7 @@ short UnifiedLoft::mustExecute() const
 
 App::DocumentObjectExecReturn* UnifiedLoft::execute()
 {
-    // FusionCAD: Set addSubType based on Operation before calling Loft::execute().
+    // UniCAD: Set addSubType based on Operation before calling Loft::execute().
     // Loft::execute() uses getAddSubType() for the boolean decision.
     const char* op = Operation.getValueAsString();
 

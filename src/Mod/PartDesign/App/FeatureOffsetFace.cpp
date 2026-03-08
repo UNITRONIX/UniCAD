@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Offset Face feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Offset Face feature (direct edit).
 // Offsets selected faces on a solid along their normals using BRepOffsetAPI_MakeOffsetShape.
 
 #include <BRepOffsetAPI_MakeOffsetShape.hxx>
@@ -60,7 +60,7 @@ App::DocumentObjectExecReturn* OffsetFace::execute()
     double tol = Precision::Confusion();
 
     if (fabs(offset) < tol) {
-        // Zero offset — just copy the base shape
+        // Zero offset â€” just copy the base shape
         this->Shape.setValue(baseShape);
         return App::DocumentObject::StdReturn;
     }

@@ -77,6 +77,10 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderReplaceFace.h
     ViewProviderSplitFace.cpp
     ViewProviderSplitFace.h
+    ViewProviderSplitBody.cpp
+    ViewProviderSplitBody.h
+    ViewProviderEmboss.cpp
+    ViewProviderEmboss.h
     ViewProviderMoveFace.cpp
     ViewProviderMoveFace.h
     ViewProviderHole.cpp
@@ -169,6 +173,8 @@ SET(PartDesignGuiTaskDlgs_SRCS
     TaskReplaceFaceParameters.h
     TaskSplitFaceParameters.cpp
     TaskSplitFaceParameters.h
+    TaskSplitBodyParameters.cpp
+    TaskSplitBodyParameters.h
     TaskMoveFaceParameters.cpp
     TaskMoveFaceParameters.h
     TaskChamferParameters.ui

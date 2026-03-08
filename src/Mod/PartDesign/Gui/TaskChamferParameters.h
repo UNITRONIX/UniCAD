@@ -66,6 +66,7 @@ private Q_SLOTS:
     void onRefDeleted() override;
     void onAddAllEdges();
     void onCheckBoxUseAllEdgesToggled(bool checked);
+    void onCheckBoxTangentChainToggled(bool checked);
 
 protected:
     void setButtons(const selectionModes mode) override;

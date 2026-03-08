@@ -1,10 +1,10 @@
-/***************************************************************************
+﻿/***************************************************************************
  *   Copyright (c) 2025 UNITRONIX                                         *
- *   FusionCAD - A fork of FreeCAD                                        *
+ *   UniCAD - A fork of FreeCAD                                        *
  *                                                                         *
- *   This file is part of FusionCAD.                                       *
+ *   This file is part of UniCAD.                                       *
  *                                                                         *
- *   FusionCAD is free software; you can redistribute it and/or modify     *
+ *   UniCAD is free software; you can redistribute it and/or modify     *
  *   it under the terms of the GNU Lesser General Public License (LGPL)    *
  *   as published by the Free Software Foundation; either version 2.1 of   *
  *   the License, or (at your option) any later version.                   *
@@ -104,8 +104,8 @@ void FusionNavigationBar::setupActions()
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     addWidget(spacer);
 
-    // FusionCAD branding label on right side
-    auto* brandLabel = new QLabel(QStringLiteral("FusionCAD"));
+    // UniCAD branding label on right side
+    auto* brandLabel = new QLabel(QStringLiteral("UniCAD"));
     brandLabel->setStyleSheet(QStringLiteral(
         "color: #444444; font-size: 9px; font-weight: bold; padding-right: 8px;"
     ));

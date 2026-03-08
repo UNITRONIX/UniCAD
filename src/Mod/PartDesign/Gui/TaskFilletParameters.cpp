@@ -61,6 +61,7 @@ TaskFilletParameters::TaskFilletParameters(ViewProviderDressUp* DressUpView, QWi
     PartDesign::Fillet* pcFillet = DressUpView->getObject<PartDesign::Fillet>();
     bool useAllEdges = pcFillet->UseAllEdges.getValue();
     ui->checkBoxUseAllEdges->setChecked(useAllEdges);
+    ui->checkBoxTangentChain->setChecked(pcFillet->TangentChain.getValue());
     ui->buttonRefSel->setEnabled(!useAllEdges);
     ui->listWidgetReferences->setEnabled(!useAllEdges);
     double r = pcFillet->Radius.getValue();
@@ -70,6 +71,17 @@ TaskFilletParameters::TaskFilletParameters(ViewProviderDressUp* DressUpView, QWi
     ui->filletRadius->setMinimum(0);
     ui->filletRadius->selectNumber();
     ui->filletRadius->bind(pcFillet->Radius);
+
+    // Variable radius
+    bool varRadius = pcFillet->VariableRadius.getValue();
+    ui->checkBoxVariableRadius->setChecked(varRadius);
+    ui->filletEndRadius->setUnit(Base::Unit::Length);
+    ui->filletEndRadius->setValue(pcFillet->EndRadius.getValue());
+    ui->filletEndRadius->setMinimum(0);
+    ui->filletEndRadius->bind(pcFillet->EndRadius);
+    ui->filletEndRadius->setEnabled(varRadius);
+    ui->labelEndRadius->setEnabled(varRadius);
+
     QMetaObject::invokeMethod(ui->filletRadius, "setFocus", Qt::QueuedConnection);
     std::vector<std::string> strings = pcFillet->Base.getSubValues();
     for (const auto& string : strings) {
@@ -85,6 +97,12 @@ TaskFilletParameters::TaskFilletParameters(ViewProviderDressUp* DressUpView, QWi
         this, &TaskFilletParameters::onButtonRefSel);
     connect(ui->checkBoxUseAllEdges, &QToolButton::toggled,
         this, &TaskFilletParameters::onCheckBoxUseAllEdgesToggled);
+    connect(ui->checkBoxTangentChain, &QCheckBox::toggled,
+        this, &TaskFilletParameters::onCheckBoxTangentChainToggled);
+    connect(ui->checkBoxVariableRadius, &QCheckBox::toggled,
+        this, &TaskFilletParameters::onCheckBoxVariableRadiusToggled);
+    connect(ui->filletEndRadius, qOverload<double>(&Gui::QuantitySpinBox::valueChanged),
+        this, &TaskFilletParameters::onEndRadiusChanged);
 
     // Create context menu
     createDeleteAction(ui->listWidgetReferences);
@@ -138,6 +156,33 @@ void TaskFilletParameters::onCheckBoxUseAllEdgesToggled(bool checked)
         ui->buttonRefSel->setEnabled(!checked);
         ui->listWidgetReferences->setEnabled(!checked);
         fillet->UseAllEdges.setValue(checked);
+        fillet->recomputeFeature();
+    }
+}
+
+void TaskFilletParameters::onCheckBoxTangentChainToggled(bool checked)
+{
+    if (auto fillet = getObject<PartDesign::Fillet>()) {
+        fillet->TangentChain.setValue(checked);
+        fillet->recomputeFeature();
+    }
+}
+
+void TaskFilletParameters::onCheckBoxVariableRadiusToggled(bool checked)
+{
+    ui->filletEndRadius->setEnabled(checked);
+    ui->labelEndRadius->setEnabled(checked);
+    if (auto fillet = getObject<PartDesign::Fillet>()) {
+        fillet->VariableRadius.setValue(checked);
+        fillet->recomputeFeature();
+    }
+}
+
+void TaskFilletParameters::onEndRadiusChanged(double len)
+{
+    if (auto fillet = getObject<PartDesign::Fillet>()) {
+        setupTransaction();
+        fillet->EndRadius.setValue(len);
         fillet->recomputeFeature();
     }
 }
@@ -199,6 +244,7 @@ void TaskFilletParameters::changeEvent(QEvent* e)
 void TaskFilletParameters::apply()
 {
     ui->filletRadius->apply();
+    ui->filletEndRadius->apply();
 
     // Alert user if he created an empty feature
     if (ui->listWidgetReferences->count() == 0) {

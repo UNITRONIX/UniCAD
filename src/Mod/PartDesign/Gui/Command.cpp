@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
- *   Copyright (c) 2008 Jürgen Riegel <juergen.riegel@web.de>              *
+ *   Copyright (c) 2008 JĂĽrgen Riegel <juergen.riegel@web.de>              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -44,6 +44,7 @@
 #include <Gui/MainWindow.h>
 #include <Gui/Selection/Selection.h>
 #include <Gui/Selection/SelectionObject.h>
+#include <Gui/Selection/SelectionFilter.h>
 #include <Mod/Sketcher/App/SketchObject.h>
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeatureBoolean.h>
@@ -976,7 +977,7 @@ void prepareProfileBased(
             }
         }
         else {
-            // FusionCAD: Pass sub-elements through (including InternalFace) — 
+            // UniCAD: Pass sub-elements through (including InternalFace) â€” 
             // SketchObject::getSubObject resolves InternalFaceN dynamically from Shape wires.
             runProfileCmdWithSubs();
         }
@@ -1276,7 +1277,7 @@ bool CmdPartDesignPocket::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_Extrude — Unified Extrude (Join/Cut/Intersect)
+// UniCAD: PartDesign_Extrude â€” Unified Extrude (Join/Cut/Intersect)
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignExtrude)
 
@@ -1305,7 +1306,7 @@ bool CmdPartDesignExtrude::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_Revolve — Unified revolve (Join/Cut/Intersect/NewBody)
+// UniCAD: PartDesign_Revolve â€” Unified revolve (Join/Cut/Intersect/NewBody)
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignRevolve)
 
@@ -1365,7 +1366,7 @@ bool CmdPartDesignRevolve::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_Sweep — Unified sweep (Join/Cut/Intersect/NewBody)
+// UniCAD: PartDesign_Sweep â€” Unified sweep (Join/Cut/Intersect/NewBody)
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignSweep)
 
@@ -1407,7 +1408,7 @@ bool CmdPartDesignSweep::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_Loft — Unified loft (Join/Cut/Intersect/NewBody)
+// UniCAD: PartDesign_Loft â€” Unified loft (Join/Cut/Intersect/NewBody)
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignLoft)
 
@@ -1449,11 +1450,11 @@ bool CmdPartDesignLoft::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_PressPull — Adaptive meta-command
+// UniCAD: PartDesign_PressPull â€” Adaptive meta-command
 // Dispatches based on selection:
-//   Sketch/Profile → Extrude
-//   Edge           → Fillet
-//   Face           → OffsetFace
+//   Sketch/Profile â†’ Extrude
+//   Edge           â†’ Fillet
+//   Face           â†’ OffsetFace
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignPressPull)
 
@@ -1478,7 +1479,7 @@ void CmdPartDesignPressPull::activated(int iMsg)
     std::vector<Gui::SelectionObject> selection = getSelection().getSelectionEx();
 
     if (selection.empty()) {
-        // No selection — default to Extrude (user picks sketch)
+        // No selection â€” default to Extrude (user picks sketch)
         runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Extrude')");
         return;
     }
@@ -1486,7 +1487,7 @@ void CmdPartDesignPressPull::activated(int iMsg)
     // Check if a sketch is selected (with or without InternalFace sub-element)
     if (selection[0].getObject()
         && selection[0].getObject()->isDerivedFrom(Sketcher::SketchObject::getClassTypeId())) {
-        // FusionCAD: Keep InternalFace sub-selection intact so Extrude can
+        // UniCAD: Keep InternalFace sub-selection intact so Extrude can
         // extrude only the selected face (not the whole sketch).
         // SketchObject::getSubObject now resolves InternalFaceN dynamically.
         runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Extrude')");
@@ -1498,13 +1499,13 @@ void CmdPartDesignPressPull::activated(int iMsg)
         const std::string& subName = selection[0].getSubNames()[0];
 
         if (subName.rfind("Edge", 0) == 0) {
-            // Edge selected → Fillet
+            // Edge selected â†’ Fillet
             runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_Fillet')");
             return;
         }
 
         if (subName.rfind("Face", 0) == 0) {
-            // Face on solid selected → Offset Face (Fusion 360 Press Pull behavior)
+            // Face on solid selected â†’ Offset Face (Fusion 360 Press Pull behavior)
             runCommand(Gui::Command::Gui, "Gui.runCommand('PartDesign_OffsetFace')");
             return;
         }
@@ -2384,7 +2385,7 @@ bool CmdPartDesignThickness::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_OffsetFace — Offset selected faces
+// UniCAD: PartDesign_OffsetFace â€” Offset selected faces
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignOffsetFace)
 
@@ -2439,7 +2440,7 @@ bool CmdPartDesignOffsetFace::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_DeleteFace — Delete + heal selected faces
+// UniCAD: PartDesign_DeleteFace â€” Delete + heal selected faces
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignDeleteFace)
 
@@ -2495,7 +2496,7 @@ bool CmdPartDesignDeleteFace::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_ReplaceFace — Replace selected faces with target surface
+// UniCAD: PartDesign_ReplaceFace â€” Replace selected faces with target surface
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignReplaceFace)
 
@@ -2551,7 +2552,7 @@ bool CmdPartDesignReplaceFace::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_SplitFace — Split selected faces with a tool shape
+// UniCAD: PartDesign_SplitFace â€” Split selected faces with a tool shape
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignSplitFace)
 
@@ -2607,7 +2608,62 @@ bool CmdPartDesignSplitFace::isActive()
 }
 
 //===========================================================================
-// FusionCAD: PartDesign_MoveFace — Move selected faces
+// UniCAD: PartDesign_SplitBody â€” Split body with a tool
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignSplitBody)
+
+CmdPartDesignSplitBody::CmdPartDesignSplitBody()
+    : Command("PartDesign_SplitBody")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Split Body");
+    sToolTipText = QT_TR_NOOP("Split a body into multiple bodies using a splitting tool");
+    sWhatsThis = "PartDesign_SplitBody";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+}
+
+void CmdPartDesignSplitBody::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    Gui::SelectionObject selected;
+    bool useAllEdges = false;
+    bool noSelection = false;
+    if (!dressupGetSelected(this, "SplitBody", selected, useAllEdges, noSelection)) {
+        return;
+    }
+
+    Part::Feature* base;
+    std::vector<std::string> SubNames;
+    if (noSelection) {
+        base = static_cast<Part::Feature*>(PartDesignGui::getBody(true)->Tip.getValue());
+    }
+    else {
+        base = static_cast<Part::Feature*>(selected.getObject());
+        SubNames = std::vector<std::string>(selected.getSubNames());
+
+        size_t i = 0;
+        while (i < SubNames.size()) {
+            if (SubNames.at(i).compare(0, 4, "Face") != 0) {
+                SubNames.erase(SubNames.begin() + i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    finishDressupFeature(this, "SplitBody", base, SubNames, useAllEdges);
+}
+
+bool CmdPartDesignSplitBody::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// UniCAD: PartDesign_MoveFace â€” Move selected faces
 //===========================================================================
 DEF_STD_CMD_A(CmdPartDesignMoveFace)
 
@@ -3232,6 +3288,309 @@ public:
 };
 
 //===========================================================================
+// UniCAD: PartDesign_Emboss â€” Emboss/Deboss sketch onto face
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignEmboss)
+
+CmdPartDesignEmboss::CmdPartDesignEmboss()
+    : Command("PartDesign_Emboss")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Emboss/Deboss");
+    sToolTipText = QT_TR_NOOP("Emboss or deboss a sketch profile onto a face");
+    sWhatsThis = "PartDesign_Emboss";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Pad";
+}
+
+void CmdPartDesignEmboss::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    PartDesign::Body* pcActiveBody = PartDesignGui::getBody(true);
+    if (!pcActiveBody) {
+        return;
+    }
+
+    Gui::Command* cmd = this;
+    auto worker = [cmd](Part::Feature* sketch, App::DocumentObject* Feat) {
+        if (!Feat) {
+            return;
+        }
+        finishProfileBased(cmd, sketch, Feat);
+    };
+
+    prepareProfileBased(pcActiveBody, this, "Emboss", worker);
+}
+
+bool CmdPartDesignEmboss::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// UniCAD: PartDesign_MoveBody â€” Move active body (change Placement)
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignMoveBody)
+
+CmdPartDesignMoveBody::CmdPartDesignMoveBody()
+    : Command("PartDesign_MoveBody")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Move Body");
+    sToolTipText = QT_TR_NOOP("Move the active body by changing its placement");
+    sWhatsThis = "PartDesign_MoveBody";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Body";
+}
+
+void CmdPartDesignMoveBody::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    auto body = PartDesignGui::getBody(true);
+    if (!body) {
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("No Body"),
+            QObject::tr("No active body found. Please activate a body first."));
+        return;
+    }
+
+    // Open the standard placement dialog for the body
+    Gui::Selection().clearSelection();
+    Gui::Selection().addSelection(body->getDocument()->getName(), body->getNameInDocument());
+    Gui::Application::Instance->commandManager().runCommandByName("Std_Placement");
+}
+
+bool CmdPartDesignMoveBody::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// UniCAD: PartDesign_CopyBody â€” Copy active body
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignCopyBody)
+
+CmdPartDesignCopyBody::CmdPartDesignCopyBody()
+    : Command("PartDesign_CopyBody")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Copy Body");
+    sToolTipText = QT_TR_NOOP("Create a copy of the active body");
+    sWhatsThis = "PartDesign_CopyBody";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Body";
+}
+
+void CmdPartDesignCopyBody::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    auto body = PartDesignGui::getBody(true);
+    if (!body) {
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("No Body"),
+            QObject::tr("No active body found. Please activate a body first."));
+        return;
+    }
+
+    auto doc = body->getDocument();
+    openCommand("Copy Body");
+
+    std::vector<App::DocumentObject*> objs = {body};
+    auto copies = doc->copyObject(objs, true);
+    if (!copies.empty()) {
+        commitCommand();
+        updateActive();
+
+        // Select the copy and open placement dialog
+        Gui::Selection().clearSelection();
+        Gui::Selection().addSelection(doc->getName(), copies.front()->getNameInDocument());
+        Gui::Application::Instance->commandManager().runCommandByName("Std_Placement");
+    }
+    else {
+        abortCommand();
+        QMessageBox::warning(Gui::getMainWindow(), QObject::tr("Copy Failed"),
+            QObject::tr("Failed to copy the body."));
+    }
+}
+
+bool CmdPartDesignCopyBody::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// UniCAD: Selection Priority Filter â€” gate that only allows specific sub-element types
+//===========================================================================
+
+namespace {
+
+/// Selection gate that filters by sub-element type prefix
+class SelectionPriorityGate : public Gui::SelectionGate
+{
+public:
+    explicit SelectionPriorityGate(const char* prefix) : m_prefix(prefix) {}
+
+    bool allow(App::Document*, App::DocumentObject*, const char* sSubName) override
+    {
+        if (!sSubName || sSubName[0] == '\0') {
+            // Allow whole-object selection when no sub-element
+            return m_prefix[0] == '\0';
+        }
+        return std::string_view(sSubName).substr(0, m_prefix.size()) == m_prefix;
+    }
+
+private:
+    std::string m_prefix;
+};
+
+/// Current selection priority mode (persists across toggles)
+enum class SelectionPriority { None, Face, Edge, Body };
+static SelectionPriority s_currentPriority = SelectionPriority::None;
+
+void setSelectionPriority(SelectionPriority priority)
+{
+    // Remove any existing gate
+    Gui::Selection().rmvSelectionGate();
+
+    if (s_currentPriority == priority) {
+        // Toggle off
+        s_currentPriority = SelectionPriority::None;
+        return;
+    }
+
+    s_currentPriority = priority;
+    switch (priority) {
+        case SelectionPriority::Face:
+            Gui::Selection().addSelectionGate(new SelectionPriorityGate("Face"));
+            break;
+        case SelectionPriority::Edge:
+            Gui::Selection().addSelectionGate(new SelectionPriorityGate("Edge"));
+            break;
+        case SelectionPriority::Body:
+            Gui::Selection().addSelectionGate(new SelectionPriorityGate(""));
+            break;
+        default:
+            break;
+    }
+}
+
+}  // anonymous namespace
+
+DEF_STD_CMD_A(CmdPartDesignSelectFacePriority)
+
+CmdPartDesignSelectFacePriority::CmdPartDesignSelectFacePriority()
+    : Command("PartDesign_SelectFacePriority")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Face Priority");
+    sToolTipText = QT_TR_NOOP("Set selection priority to faces");
+    sWhatsThis = "PartDesign_SelectFacePriority";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Thickness";
+    sAccel = "Shift+1";
+}
+
+void CmdPartDesignSelectFacePriority::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    setSelectionPriority(SelectionPriority::Face);
+}
+
+bool CmdPartDesignSelectFacePriority::isActive()
+{
+    return hasActiveDocument();
+}
+
+DEF_STD_CMD_A(CmdPartDesignSelectEdgePriority)
+
+CmdPartDesignSelectEdgePriority::CmdPartDesignSelectEdgePriority()
+    : Command("PartDesign_SelectEdgePriority")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Edge Priority");
+    sToolTipText = QT_TR_NOOP("Set selection priority to edges");
+    sWhatsThis = "PartDesign_SelectEdgePriority";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Line";
+    sAccel = "Shift+2";
+}
+
+void CmdPartDesignSelectEdgePriority::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    setSelectionPriority(SelectionPriority::Edge);
+}
+
+bool CmdPartDesignSelectEdgePriority::isActive()
+{
+    return hasActiveDocument();
+}
+
+DEF_STD_CMD_A(CmdPartDesignSelectBodyPriority)
+
+CmdPartDesignSelectBodyPriority::CmdPartDesignSelectBodyPriority()
+    : Command("PartDesign_SelectBodyPriority")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Body Priority");
+    sToolTipText = QT_TR_NOOP("Set selection priority to whole bodies");
+    sWhatsThis = "PartDesign_SelectBodyPriority";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Body";
+    sAccel = "Shift+3";
+}
+
+void CmdPartDesignSelectBodyPriority::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    setSelectionPriority(SelectionPriority::Body);
+}
+
+bool CmdPartDesignSelectBodyPriority::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// UniCAD: PartDesign_SelectThrough â€” Toggle select-through mode
+//===========================================================================
+DEF_STD_CMD_A(CmdPartDesignSelectThrough)
+
+CmdPartDesignSelectThrough::CmdPartDesignSelectThrough()
+    : Command("PartDesign_SelectThrough")
+{
+    sAppModule = "PartDesign";
+    sGroup = QT_TR_NOOP("PartDesign");
+    sMenuText = QT_TR_NOOP("Select Through");
+    sToolTipText = QT_TR_NOOP("Toggle select-through mode to pick objects behind the front face");
+    sWhatsThis = "PartDesign_SelectThrough";
+    sStatusTip = sToolTipText;
+    sPixmap = "PartDesign_Body";
+    sAccel = "Shift+T";
+}
+
+void CmdPartDesignSelectThrough::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    auto& sel = Gui::Selection();
+    if (sel.getSelectionStyle() == Gui::SelectionSingleton::SelectionStyle::GreedySelection) {
+        sel.setSelectionStyle(Gui::SelectionSingleton::SelectionStyle::NormalSelection);
+    }
+    else {
+        sel.setSelectionStyle(Gui::SelectionSingleton::SelectionStyle::GreedySelection);
+    }
+}
+
+bool CmdPartDesignSelectThrough::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
 // Initialization
 //===========================================================================
 
@@ -3239,9 +3598,9 @@ void CreatePartDesignCommands()
 {
     Gui::CommandManager& rcCmdMgr = Gui::Application::Instance->commandManager();
 
-    rcCmdMgr.addCommand(new CmdPartDesignShapeBinder());
+    rcCmdMgr.addCommand(new CmdPartDesignShapeBinder());  // Legacy â€” kept for backward compat
     rcCmdMgr.addCommand(new CmdPartDesignSubShapeBinder());
-    rcCmdMgr.addCommand(new CmdPartDesignClone());
+    rcCmdMgr.addCommand(new CmdPartDesignClone());  // Legacy â€” kept for backward compat
     rcCmdMgr.addCommand(new CmdPartDesignPlane());
     rcCmdMgr.addCommand(new CmdPartDesignLine());
     rcCmdMgr.addCommand(new CmdPartDesignPoint());
@@ -3249,6 +3608,8 @@ void CreatePartDesignCommands()
 
     rcCmdMgr.addCommand(new CmdPartDesignNewSketch());
 
+    // UniCAD: Legacy additive/subtractive commands kept for backward compatibility
+    // with old documents. They are NOT exposed in menus/toolbars.
     rcCmdMgr.addCommand(new CmdPartDesignPad());
     rcCmdMgr.addCommand(new CmdPartDesignPocket());
     rcCmdMgr.addCommand(new CmdPartDesignExtrude());
@@ -3257,14 +3618,14 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignSweep());
     rcCmdMgr.addCommand(new CmdPartDesignLoft());
     rcCmdMgr.addCommand(new CmdPartDesignHole());
-    rcCmdMgr.addCommand(new CmdPartDesignRevolution());
-    rcCmdMgr.addCommand(new CmdPartDesignGroove());
-    rcCmdMgr.addCommand(new CmdPartDesignAdditivePipe);
-    rcCmdMgr.addCommand(new CmdPartDesignSubtractivePipe);
-    rcCmdMgr.addCommand(new CmdPartDesignAdditiveLoft);
-    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveLoft);
-    rcCmdMgr.addCommand(new CmdPartDesignAdditiveHelix);
-    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveHelix);
+    rcCmdMgr.addCommand(new CmdPartDesignRevolution());  // Legacy â†’ use PartDesign_Revolve
+    rcCmdMgr.addCommand(new CmdPartDesignGroove());  // Legacy â†’ use PartDesign_Revolve
+    rcCmdMgr.addCommand(new CmdPartDesignAdditivePipe);  // Legacy â†’ use PartDesign_Sweep
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractivePipe);  // Legacy â†’ use PartDesign_Sweep
+    rcCmdMgr.addCommand(new CmdPartDesignAdditiveLoft);  // Legacy â†’ use PartDesign_Loft
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveLoft);  // Legacy â†’ use PartDesign_Loft
+    rcCmdMgr.addCommand(new CmdPartDesignAdditiveHelix);  // Legacy â€” no unified version yet
+    rcCmdMgr.addCommand(new CmdPartDesignSubtractiveHelix);  // Legacy â€” no unified version yet
 
     rcCmdMgr.addCommand(new CmdPartDesignFillet());
     rcCmdMgr.addCommand(new CmdPartDesignDraft());
@@ -3274,6 +3635,7 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignDeleteFace());
     rcCmdMgr.addCommand(new CmdPartDesignReplaceFace());
     rcCmdMgr.addCommand(new CmdPartDesignSplitFace());
+    rcCmdMgr.addCommand(new CmdPartDesignSplitBody());
     rcCmdMgr.addCommand(new CmdPartDesignMoveFace());
 
     rcCmdMgr.addCommand(new CmdPartDesignMirrored());
@@ -3285,4 +3647,19 @@ void CreatePartDesignCommands()
     rcCmdMgr.addCommand(new CmdPartDesignBoolean());
     rcCmdMgr.addCommand(new CmdPartDesignCompDatums());
     rcCmdMgr.addCommand(new CmdPartDesignCompSketches());
+
+    // UniCAD: Selection Priority
+    rcCmdMgr.addCommand(new CmdPartDesignSelectFacePriority());
+    rcCmdMgr.addCommand(new CmdPartDesignSelectEdgePriority());
+    rcCmdMgr.addCommand(new CmdPartDesignSelectBodyPriority());
+
+    // UniCAD: Move/Copy Bodies
+    rcCmdMgr.addCommand(new CmdPartDesignMoveBody());
+    rcCmdMgr.addCommand(new CmdPartDesignCopyBody());
+
+    // UniCAD: Emboss/Deboss
+    rcCmdMgr.addCommand(new CmdPartDesignEmboss());
+
+    // UniCAD: Select Through
+    rcCmdMgr.addCommand(new CmdPartDesignSelectThrough());
 }

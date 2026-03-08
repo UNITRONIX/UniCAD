@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Revolve feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Revolve feature.
 // Single command for Join (Fuse), Cut, Intersect, and NewBody operations.
 
 #ifndef PARTDESIGN_UNIFIED_REVOLVE_H
@@ -17,7 +17,7 @@ class PartDesignExport UnifiedRevolve : public Revolution
 public:
     UnifiedRevolve();
 
-    // FusionCAD: Operation type — Fusion 360-style result type
+    // UniCAD: Operation type â€” Fusion 360-style result type
     App::PropertyEnumeration Operation;
 
     App::DocumentObjectExecReturn* execute() override;

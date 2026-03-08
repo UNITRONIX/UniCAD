@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2009 Juergen Riegel <juergen.riegel@web.de>             *
@@ -512,12 +512,12 @@ SO_NODE_SOURCE(SoSketchFaces);
 SoSketchFaces::SoSketchFaces(){
     SO_NODE_CONSTRUCTOR(SoSketchFaces);
 
-    // FusionCAD: Fusion 360-style face appearance
+    // UniCAD: Fusion 360-style face appearance
     // Blue-tinted, semi-transparent for sketch faces on body
     SO_NODE_ADD_FIELD(color, (SbColor(0.3f, 0.5f, 0.8f)));
     SO_NODE_ADD_FIELD(transparency, (0.25));
 
-    // FusionCAD: SoShapeHints for proper two-sided face rendering.
+    // UniCAD: SoShapeHints for proper two-sided face rendering.
     // Without this, faces viewed from behind are culled (invisible).
     auto* hints = new SoShapeHints;
     hints->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
@@ -1052,7 +1052,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                         setSketchMode(STATUS_SELECT_Constraint);
                         done = true;
                     }
-                    // FusionCAD: Handle face preselection click
+                    // UniCAD: Handle face preselection click
                     else if (preselection.isPreselectFaceValid()) {
                         setSketchMode(STATUS_SELECT_Face);
                         done = true;
@@ -1164,7 +1164,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                     setSketchMode(STATUS_NONE);
                     return true;
                 }
-                // FusionCAD: Handle face selection on click release
+                // UniCAD: Handle face selection on click release
                 case STATUS_SELECT_Face: {
                     if (pp && preselection.isPreselectFaceValid()) {
                         std::stringstream ss;
@@ -2504,7 +2504,7 @@ bool ViewProviderSketch::detectAndShowPreselection(SoPickedPoint* Point)
     };
 
     if (Point) {
-        // FusionCAD: Check for face preselection first (internal shape faces)
+        // UniCAD: Check for face preselection first (internal shape faces)
         SoPath* path = Point->getPath();
         if (path->containsNode(pcSketchFaces)) {
             // Get face detail from the picked point
@@ -2513,7 +2513,7 @@ bool ViewProviderSketch::detectAndShowPreselection(SoPickedPoint* Point)
                 int faceIndex = static_cast<const SoFaceDetail*>(detail)->getPartIndex();
                 
                 if (faceIndex != preselection.PreselectFace) {
-                    // FusionCAD: Build subname with internal prefix for face selection
+                    // UniCAD: Build subname with internal prefix for face selection
                     std::stringstream ss;
                     ss << SketchObject::internalPrefix() << "Face" << (faceIndex + 1);
                     
@@ -2536,7 +2536,7 @@ bool ViewProviderSketch::detectAndShowPreselection(SoPickedPoint* Point)
             }
         }
         
-        // FusionCAD: Reset face preselection when not hovering over a face
+        // UniCAD: Reset face preselection when not hovering over a face
         if (preselection.isPreselectFaceValid()) {
             preselection.PreselectFace = Preselection::InvalidPoint;
         }
@@ -3372,7 +3372,7 @@ void ViewProviderSketch::updateData(const App::Property* prop) {
             for (TopExp_Explorer ex(internalOCC, TopAbs_FACE); ex.More(); ex.Next()) { faceCount++; }
         }
 
-        // FusionCAD: Only update Coin3D geometry if InternalShape actually has faces.
+        // UniCAD: Only update Coin3D geometry if InternalShape actually has faces.
         // If it's null/empty, DON'T wipe existing geometry (the Shape handler may have set it).
         if (faceCount > 0) {
             setupCoinGeometry(internalOCC,
@@ -3387,13 +3387,13 @@ void ViewProviderSketch::updateData(const App::Property* prop) {
         }
     }
 
-    // FusionCAD: Build faces from Shape wires as fallback
+    // UniCAD: Build faces from Shape wires as fallback
     if (prop == &getSketchObject()->Shape) {
-        // Always rebuild from Shape wires — this is the reliable path
+        // Always rebuild from Shape wires â€” this is the reliable path
         // since InternalShape/buildInternals is not producing faces
         const auto& sketchOCC = getSketchObject()->Shape.getValue();
         if (!sketchOCC.IsNull()) {
-            // FusionCAD: Strip the OCC Location from the shape before extracting wires.
+            // UniCAD: Strip the OCC Location from the shape before extracting wires.
             // Shape.getValue() may carry the sketch's Placement as a Location.
             // Since pcTransform already applies the Placement to the scene graph,
             // we must use local coordinates (identity location) to avoid double-transformation.
@@ -3497,7 +3497,7 @@ void ViewProviderSketch::onChanged(const App::Property* prop)
     }
 
     if (prop == &Visibility) {
-        // FusionCAD: Sketch faces follow sketch visibility directly.
+        // UniCAD: Sketch faces follow sketch visibility directly.
         // When a Pad hides the sketch, pcSketchFaces must also hide so that
         // clicking on the Pad body picks the Pad's own individual faces
         // (not the sketch's face group which covers all faces at once).
@@ -3573,11 +3573,11 @@ bool ViewProviderSketch::getElementPicked(const SoPickedPoint* pp, std::string& 
 {
     FLOG_DEBUG("Pick", "VPSketch::getElementPicked: containsSketchFaces={}, isEditMode={}\n",
         pp->getPath()->containsNode(pcSketchFaces) ? 1 : 0, isInEditMode() ? 1 : 0);
-    // FusionCAD: Face picking only outside edit mode.
+    // UniCAD: Face picking only outside edit mode.
     // In edit mode the user works with sketch geometry (lines, arcs, constraints).
     // Outside edit mode, clicking on sketch faces selects them for Extrude/Pad.
     if (pp->getPath()->containsNode(pcSketchFaces) && !isInEditMode()) {
-        // FusionCAD: Extract individual face detail from pcSketchFaces
+        // UniCAD: Extract individual face detail from pcSketchFaces
         const SoDetail* detail = pp->getDetail(pcSketchFaces->faceset);
         if (detail && detail->isOfType(SoFaceDetail::getClassTypeId())) {
             int faceIndex = static_cast<const SoFaceDetail*>(detail)->getPartIndex();
@@ -3614,21 +3614,21 @@ bool ViewProviderSketch::getDetailPath(
         return realName ? realName + 1 : subname;
     };
 
-    // FusionCAD: Face detail path only outside edit mode.
+    // UniCAD: Face detail path only outside edit mode.
     // In edit mode, sketch geometry elements are handled by the edit coin manager.
     if (!isInEditMode() && subname) {
         const char* realName = getLastPartOfName(subname);
 
         const char* internalName = SketchObject::convertInternalName(realName);
         if (internalName) {
-            // FusionCAD: For internal faces, build path to pcSketchFaces->faceset
+            // UniCAD: For internal faces, build path to pcSketchFaces->faceset
             // so that SoBrepFaceSet gets SoFaceDetail and highlights single face
             auto type = Part::TopoShape::getElementTypeAndIndex(internalName);
             if (type.first == "Face" && type.second > 0) {
                 if (append) {
                     pPath->append(pcRoot);
                 }
-                // FusionCAD: Navigate through pcRoot -> pcSketchFacesGroup -> pcSketchFacesToggle
+                // UniCAD: Navigate through pcRoot -> pcSketchFacesGroup -> pcSketchFacesToggle
                 // -> pcSketchFaces -> faceset. This matches the actual scene graph hierarchy
                 // created in attach().
                 if (pcSketchFacesGroup) {
@@ -3667,7 +3667,7 @@ void ViewProviderSketch::attach(App::DocumentObject* pcFeat)
 {
     ViewProvider2DObject::attach(pcFeat);
 
-    // FusionCAD: Add sketch faces directly to pcRoot (not annotation) with a micro Z-offset.
+    // UniCAD: Add sketch faces directly to pcRoot (not annotation) with a micro Z-offset.
     // This ensures SoRayPickAction hits sketch faces BEFORE the coplanar Pad face,
     // enabling Fusion 360-style individual face selection.
     pcSketchFacesGroup = new SoSeparator;

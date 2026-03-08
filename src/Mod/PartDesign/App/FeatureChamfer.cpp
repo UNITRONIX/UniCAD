@@ -139,6 +139,11 @@ App::DocumentObjectExecReturn* Chamfer::execute()
     auto edges = UseAllEdges.getValue() ? TopShape.getSubTopoShapes(TopAbs_EDGE)
                                         : getContinuousEdges(TopShape);
 
+    // Expand selection along tangent chains if enabled
+    if (!UseAllEdges.getValue() && TangentChain.getValue()) {
+        edges = expandTangentChain(TopShape, edges);
+    }
+
     if (edges.empty()) {
         return new App::DocumentObjectExecReturn(QT_TRANSLATE_NOOP("Exception", "No edges specified"));
     }

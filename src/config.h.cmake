@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /* config.h.  Generated from config.h.cmake by cmake.  */
 
@@ -120,19 +120,19 @@
 #cmakedefine HAVE_BACKTRACE_SYMBOLS
 
 /* Name of package */
-#define PACKAGE "FusionCAD"
+#define PACKAGE "UniCAD"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/UNITRONIX/FusionCAD/issues"
+#define PACKAGE_BUGREPORT "https://github.com/UNITRONIX/UniCAD/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "FusionCAD"
+#define PACKAGE_NAME "UniCAD"
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING "${PACKAGE_STRING}"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "FusionCAD"
+#define PACKAGE_TARNAME "UniCAD"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "${PACKAGE_VERSION}"

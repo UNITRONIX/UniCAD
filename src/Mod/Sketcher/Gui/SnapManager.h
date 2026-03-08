@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2023 Pierre-Louis Boyer <pierrelouis.boyer@gmail.com>   *
@@ -67,7 +67,7 @@ enum class SnapType
 /* This class is used to manage the overriding of mouse pointer coordinates in Sketcher
  *  (in Edit-Mode) depending on the situation. Those situations are in priority order :
  *  1 - Snap at angle: For tools like Slot, Arc, Line, Ellipse, this enables to constrain the angle
- * at steps of 5° (or customized angle). This is useful to make features at a certain angle (45° for
+ * at steps of 5Â° (or customized angle). This is useful to make features at a certain angle (45Â° for
  * example) 2 - Snap to object: This snaps the mouse pointer onto objects. 3 - Snap to grid: This
  * snaps the mouse pointer on the grid.
  */
@@ -120,11 +120,11 @@ public:
 
     bool snapToLineMiddle(Base::Vector3d& pointToOverride, const Part::GeomLineSegment* line);
     bool snapToArcMiddle(Base::Vector3d& pointToOverride, const Part::GeomArcOfCircle* arc);
-    bool snapToFaceCenter(Base::Vector2d inputPos, Base::Vector2d& snapPos);  // FusionCAD: Snap to face center
+    bool snapToFaceCenter(Base::Vector2d inputPos, Base::Vector2d& snapPos);  // UniCAD: Snap to face center
 
     void setAngleSnapping(bool enable, Base::Vector2d referencepoint);
 
-    /// FusionCAD: Snap indicator type for visualization
+    /// UniCAD: Snap indicator type for visualization
     enum class SnapIndicatorType {
         None = 0,
         Point = 1,
@@ -133,10 +133,10 @@ public:
         Edge = 4,
         Middle = 5,
         Origin = 6,
-        FaceCenter = 7   // FusionCAD: Snap to face/rectangle center
+        FaceCenter = 7   // UniCAD: Snap to face/rectangle center
     };
 
-    /// FusionCAD: Get the last snap type for visualization
+    /// UniCAD: Get the last snap type for visualization
     SnapIndicatorType getLastSnapType() const { return lastSnapType; }
 
     struct SnapHandle
@@ -160,14 +160,14 @@ private:
     bool snapRequested;
     bool snapToObjectsRequested;
     bool snapToGridRequested;
-    bool autoAngleSnapEnabled;  // FusionCAD: Auto angle snap without Ctrl key
+    bool autoAngleSnapEnabled;  // UniCAD: Auto angle snap without Ctrl key
 
     Base::Vector2d referencePoint;
     double lastMouseAngle;
 
     double snapAngle;
 
-    /// FusionCAD: Track last snap type for visualization
+    /// UniCAD: Track last snap type for visualization
     SnapIndicatorType lastSnapType;
 
     /// Observer to track all the needed parameters.

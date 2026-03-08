@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
 
 /***************************************************************************
  *   Copyright (c) 2021 Werner Mayer <wmayer[at]users.sourceforge.net>     *
@@ -199,7 +199,7 @@ private:
     void onFaceName(const QString& text, Side side);
     void onAllFacesToggled(bool checked, Side side);
 
-    // FusionCAD: hook for auto-switching Operation (Join↔Cut) on negative drag
+    // UniCAD: hook for auto-switching Operation (Joinâ†”Cut) on negative drag
     virtual void onOperationAutoSwitched(int newOpIndex) { Q_UNUSED(newOpIndex); }
     void onSelectShapeToggle(bool checked, Side side);
     void onSelectShapeFacesToggle(bool checked, Side side);
@@ -273,7 +273,7 @@ private:
     void setupGizmos();
     void setGizmoPositions();
 
-    // FusionCAD: state tracking for drag-through-zero auto-switch
+    // UniCAD: state tracking for drag-through-zero auto-switch
     bool _crossedZero = false;
     int _originalOp = 0;  // Operation value before crossing zero
 

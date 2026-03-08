@@ -38,6 +38,7 @@
 #include <Base/Exception.h>
 #include <Base/Reader.h>
 #include <Mod/Part/App/TopoShape.h>
+#include <Mod/Part/App/TopoShapeOpCode.h>
 
 #include "FeatureFillet.h"
 
@@ -64,11 +65,18 @@ Fillet::Fillet()
         "If true, then this overrides any edge changes made to the Base property or in the "
         "dialog.\n"
     );
+    ADD_PROPERTY_TYPE(VariableRadius, (false), "Fillet", App::Prop_None,
+        "Enable variable radius (linear ramp from Radius to EndRadius).");
+    ADD_PROPERTY_TYPE(EndRadius, (1.0), "Fillet", App::Prop_None,
+        "End radius for variable fillet.");
+    EndRadius.setUnit(Base::Unit::Length);
+    EndRadius.setConstraints(&floatRadius);
 }
 
 short Fillet::mustExecute() const
 {
-    if (Placement.isTouched() || Radius.isTouched()) {
+    if (Placement.isTouched() || Radius.isTouched()
+        || VariableRadius.isTouched() || EndRadius.isTouched()) {
         return 1;
     }
     return DressUp::mustExecute();
@@ -92,6 +100,12 @@ App::DocumentObjectExecReturn* Fillet::execute()
 
     auto edges = UseAllEdges.getValue() ? baseShape.getSubTopoShapes(TopAbs_EDGE)
                                         : getContinuousEdges(baseShape);
+
+    // Expand selection along tangent chains if enabled
+    if (!UseAllEdges.getValue() && TangentChain.getValue()) {
+        edges = expandTangentChain(baseShape, edges);
+    }
+
     if (edges.empty()) {
         return new App::DocumentObjectExecReturn(
             QT_TRANSLATE_NOOP("Exception", "Fillet not possible on selected shapes")
@@ -99,8 +113,10 @@ App::DocumentObjectExecReturn* Fillet::execute()
     }
 
     double radius = Radius.getValue();
+    double endRadius = EndRadius.getValue();
+    bool variableMode = VariableRadius.getValue();
 
-    if (radius <= 0) {
+    if (radius <= 0 || (variableMode && endRadius <= 0)) {
         return new App::DocumentObjectExecReturn(
             QT_TRANSLATE_NOOP("Exception", "Fillet radius must be greater than zero")
         );
@@ -116,7 +132,26 @@ App::DocumentObjectExecReturn* Fillet::execute()
         Base::SignalException se;
 #endif
 
-        shape.makeElementFillet(baseShape, edges, Radius.getValue(), Radius.getValue());
+        if (variableMode) {
+            // Variable radius: construct BRepFilletAPI_MakeFillet directly
+            BRepFilletAPI_MakeFillet mkFillet(baseShape.getShape());
+            for (auto& e : edges) {
+                if (e.isNull()) {
+                    continue;
+                }
+                const auto& edge = e.getShape();
+                mkFillet.Add(radius, endRadius, TopoDS::Edge(edge));
+            }
+            mkFillet.Build();
+            if (!mkFillet.IsDone()) {
+                return new App::DocumentObjectExecReturn(
+                    QT_TRANSLATE_NOOP("Exception", "Variable radius fillet failed"));
+            }
+            shape.makeElementShape(mkFillet, baseShape, Part::OpCodes::Fillet);
+        }
+        else {
+            shape.makeElementFillet(baseShape, edges, radius, radius);
+        }
         if (shape.isNull()) {
             return new App::DocumentObjectExecReturn(
                 QT_TRANSLATE_NOOP("Exception", "Resulting shape is null")

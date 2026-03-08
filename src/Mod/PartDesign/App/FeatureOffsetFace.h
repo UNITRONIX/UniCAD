@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Offset Face feature (direct edit).
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Offset Face feature (direct edit).
 // Offsets selected faces on a solid along their normals.
 
 #ifndef PARTDESIGN_FEATURE_OFFSETFACE_H

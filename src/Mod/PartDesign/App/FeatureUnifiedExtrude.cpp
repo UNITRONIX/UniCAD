@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: LGPL-2.1-or-later
-// FusionCAD by UNITRONIX — Fusion 360-style unified Extrude feature.
+﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// UniCAD by UNITRONIX â€” Fusion 360-style unified Extrude feature.
 
 #include <Precision.hxx>
 
@@ -83,7 +83,7 @@ short Extrude::mustExecute() const
 
 App::DocumentObjectExecReturn* Extrude::execute()
 {
-    // FusionCAD: Set addSubType based on Operation before building extrusion.
+    // UniCAD: Set addSubType based on Operation before building extrusion.
     // This controls the boolean operation in buildExtrusion().
     const char* op = Operation.getValueAsString();
 
@@ -103,7 +103,7 @@ App::DocumentObjectExecReturn* Extrude::execute()
         options = ExtrudeOptions(ExtrudeOption::MakeFace);
     }
     else {
-        // "Join" — standard Additive with Fuse
+        // "Join" â€” standard Additive with Fuse
         addSubType = FeatureAddSub::Additive;
     }
 
@@ -119,7 +119,7 @@ App::DocumentObjectExecReturn* Extrude::execute()
             base = getBaseTopoShape();
         }
         catch (const Base::Exception&) {
-            // No base — shape is already correct (standalone extrusion)
+            // No base â€” shape is already correct (standalone extrusion)
         }
 
         if (!base.isNull() && isIntersect) {
