@@ -1,5 +1,5 @@
 ﻿<p align="center">
-  <img src="/UniCAD_icon.png" height="120px" width="120px" alt="UniCAD Logo">
+  <img src="/unicad_icon.png" height="120px" width="120px" alt="UniCAD Logo">
 </p>
 
 <h1 align="center">UniCAD by UNITRONIX</h1>
@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="/UniCAD_splash.png" width="800" alt="UniCAD interface"/>
+  <img src="/unicad_splash.png" width="800" alt="UniCAD interface"/>
 </p>
 
 ## What is UniCAD?
