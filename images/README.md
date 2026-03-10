@@ -85,15 +85,15 @@ Adaptive meta-command inspired by Fusion 360:
 - **Face selected** -> launches OffsetFace
 - **No selection** -> launches OffsetFace for interactive face picking
 
-### Auto-Switch Join / Cut
+### Auto-Switch Join â†” Cut
 
-When dragging the extrude gizmo through zero, the operation **automatically switches** between Join and Cut - just like in Fusion 360. Drag up to add material, drag below the surface to cut.
+When dragging the extrude gizmo through zero, the operation **automatically switches** between Join and Cut â€” just like in Fusion 360. Drag up to add material, drag below the surface to cut.
 
 ### Face Manipulation Tools
 
 | Command | Shortcut | Description |
 |---------|----------|-------------|
-| **OffsetFace** | - | Offset selected faces by a distance |
+| **OffsetFace** | â€” | Offset selected faces by a distance |
 | **DeleteFace** | `Shift+D` | Delete faces and heal the solid |
 | **ReplaceFace** | `Shift+R` | Replace faces with a target surface |
 | **SplitFace** | `Shift+S` | Split faces with a tool shape |
@@ -101,12 +101,12 @@ When dragging the extrude gizmo through zero, the operation **automatically swit
 
 ### Additional Improvements
 
-- **Fusion 360-style unified tab toolbar** - SKETCH, SOLID, SURFACE, MESH, INSPECT, TOOLS tabs
+- **Fusion 360-style unified tab toolbar** — SKETCH, SOLID, SURFACE, MESH, INSPECT, TOOLS tabs
 - **Dark theme UI** with blue accent colors inspired by Fusion 360
 - **Grid visible by default** in Sketch mode
-- **Dynamic command loading** - toolbar adapts to available workbenches
+- **Dynamic command loading** — toolbar adapts to available workbenches
 - **Fusion 360-inspired keyboard shortcuts** for common operations
-- **Sketch face rendering** - closed sketch wires display as filled faces in 3D
+- **Sketch face rendering** — closed sketch wires display as filled faces in 3D
 - **Individual face selection** for direct editing workflows
 - Cross-platform: **Windows**, **macOS**, **Linux**
 
@@ -114,7 +114,7 @@ When dragging the extrude gizmo through zero, the operation **automatically swit
 
 | Component | Description |
 |-----------|-------------|
-| **OpenCASCADE (OCCT 7.8+)** | Geometry kernel - boolean ops, BREP, face manipulation |
+| **OpenCASCADE (OCCT 7.8+)** | Geometry kernel â€” boolean ops, BREP, face manipulation |
 | **Coin3D** | Open Inventor-compliant 3D scene graph |
 | **Qt 6.8+** | GUI framework |
 | **Python 3.11+** | Scripting and automation API |
@@ -180,19 +180,19 @@ Standard FreeCAD CMake options apply. Refer to the [FreeCAD Developer Handbook](
 
 ```
 UniCAD/
-|-- src/
-|   |-- App/                    # Application core
-|   |-- Base/                   # Foundation classes
-|   |-- Gui/                    # Main GUI (Fusion UI components here)
-|   |-- Main/                   # Entry points (MainGui, MainCmd)
-|   +-- Mod/
-|       +-- PartDesign/
-|           |-- App/            # Feature classes (FeatureUnified*, Feature*Face)
-|           +-- Gui/            # Task panels, view providers, commands
-|-- cMake/                      # CMake modules and helpers
-|-- pixi.toml                   # Dependency management
-|-- CMakeLists.txt              # Top-level build config
-+-- CMakePresets.json           # Build presets (debug/release)
+â”śâ”€â”€ src/
+â”‚   â”śâ”€â”€ App/                    # Application core
+â”‚   â”śâ”€â”€ Base/                   # Foundation classes
+â”‚   â”śâ”€â”€ Gui/                    # Main GUI (Fusion UI components here)
+â”‚   â”śâ”€â”€ Main/                   # Entry points (MainGui, MainCmd)
+â”‚   â””â”€â”€ Mod/
+â”‚       â””â”€â”€ PartDesign/
+â”‚           â”śâ”€â”€ App/            # Feature classes (FeatureUnified*, Feature*Face)
+â”‚           â””â”€â”€ Gui/            # Task panels, view providers, commands
+â”śâ”€â”€ cMake/                      # CMake modules and helpers
+â”śâ”€â”€ pixi.toml                   # Dependency management
+â”śâ”€â”€ CMakeLists.txt              # Top-level build config
+â””â”€â”€ CMakePresets.json           # Build presets (debug/release)
 ```
 
 ## Reporting Issues
@@ -217,12 +217,12 @@ UniCAD is licensed under the [LGPL 2.1+](LICENSE) license. It is a fork of [Free
 
 UniCAD would not be possible without the [FreeCAD](https://www.freecad.org) project and its contributors. We are grateful for their work on the open-source CAD ecosystem.
 
-### Built with AI
+### đź¤– Built with AI
 
 This project is developed with the assistance of **AI (GitHub Copilot / Claude)**. AI is used for code generation, architecture design, feature implementation, and code review. All AI-generated code is reviewed and tested by the UNITRONIX team before being merged.
 
 ---
 
 <p align="center">
-  <sub>Made with love by <a href="https://github.com/UNITRONIX">UNITRONIX</a> &amp; AI</sub>
+  <sub>Made with âť¤ď¸Ź by <a href="https://github.com/UNITRONIX">UNITRONIX</a> &amp; AI</sub>
 </p>
