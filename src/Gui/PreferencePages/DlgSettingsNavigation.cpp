@@ -165,7 +165,7 @@ void DlgSettingsNavigation::loadSettings()
         "User parameter:BaseApp/Preferences/View"
     );
     std::string model
-        = hGrp->GetASCII("NavigationStyle", CADNavigationStyle::getClassTypeId().getName());
+        = hGrp->GetASCII("NavigationStyle", FusionNavigationStyle::getClassTypeId().getName());
     int index = ui->comboNavigationStyle->findData(QByteArray(model.c_str()));
     if (index > -1) {
         ui->comboNavigationStyle->setCurrentIndex(index);

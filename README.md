@@ -18,7 +18,7 @@
 ---
 
 <p align="center">
-  <img src="/unicad_splash.png" width="800" alt="UniCAD interface"/>
+  <img src="images/unicad-sketch-tab.png" width="900" alt="UniCAD Fusion 360-style interface"/>
 </p>
 
 ## What is UniCAD?
@@ -26,6 +26,44 @@
 UniCAD is a fork of [FreeCAD](https://www.freecad.org) that brings **Fusion 360-style unified modeling** to an open-source parametric CAD environment. Instead of separate additive/subtractive commands, UniCAD offers single commands with an **Operation** selector (Join / Cut / Intersect / New Body), making the workflow faster and more intuitive.
 
 Built on the solid foundation of FreeCAD 1.2.0-dev, it retains full compatibility with FreeCAD projects while adding modern interaction patterns.
+
+## Screenshots
+
+### Fusion 360-Style Unified Tab Toolbar
+
+UniCAD features a modern tabbed toolbar inspired by Fusion 360, with unified tabs that organize tools logically regardless of workbench:
+
+| Tab | Description |
+|-----|-------------|
+| **SKETCH** | All 2D sketching tools: lines, rectangles, circles, arcs, constraints |
+| **SOLID** | 3D modeling operations: Extrude, Revolve, Boolean, Patterns |
+| **SURFACE** | Surface modeling tools for complex organic shapes |
+| **SHEET METAL** | Sheet metal design tools (when available) |
+| **MESH** | Mesh import, export, and manipulation |
+| **INSPECT** | Measurement and analysis tools |
+| **TOOLS** | File operations, settings, macros |
+
+<p align="center">
+  <img src="images/unicad-surface-tab.png" width="800" alt="SURFACE tab with surface tools"/>
+  <br><em>SURFACE tab - Surface modeling tools</em>
+</p>
+
+<p align="center">
+  <img src="images/unicad-mesh-tab.png" width="800" alt="MESH tab with mesh tools"/>
+  <br><em>MESH tab - Mesh manipulation tools</em>
+</p>
+
+<p align="center">
+  <img src="images/unicad-tools-tab.png" width="800" alt="TOOLS tab"/>
+  <br><em>TOOLS tab - File operations, settings, and macros</em>
+</p>
+
+### Sketch Editing with Grid
+
+<p align="center">
+  <img src="images/unicad-sketch-editing.png" width="800" alt="Sketch editing mode with grid"/>
+  <br><em>Sketch editing mode with visible grid and constraint panel</em>
+</p>
 
 ## Key Features
 
@@ -63,8 +101,12 @@ When dragging the extrude gizmo through zero, the operation **automatically swit
 
 ### Additional Improvements
 
+- **Fusion 360-style unified tab toolbar** — SKETCH, SOLID, SURFACE, MESH, INSPECT, TOOLS tabs
+- **Dark theme UI** with blue accent colors inspired by Fusion 360
+- **Grid visible by default** in Sketch mode
+- **Dynamic command loading** — toolbar adapts to available workbenches
 - **Fusion 360-inspired keyboard shortcuts** for common operations
-- **Sketch face rendering** â€” closed sketch wires display as filled faces in 3D
+- **Sketch face rendering** — closed sketch wires display as filled faces in 3D
 - **Individual face selection** for direct editing workflows
 - Cross-platform: **Windows**, **macOS**, **Linux**
 

@@ -56,6 +56,8 @@ void FusionUIManager::destroy()
 FusionUIManager::FusionUIManager()
     : QObject()
     , m_enabled(false)
+    , m_mainWindow(nullptr)
+    , m_tabToolbarWrapper(nullptr)
     , m_tabToolbar(nullptr)
     , m_timeline(nullptr)
     , m_navBar(nullptr)
@@ -77,22 +79,25 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
     }
     m_mainWindow = mainWindow;
 
-    // Check preference - disabled by default to preserve traditional FreeCAD UI
+    // Check preference - enabled by default for UniCAD Fusion 360-style experience
     auto hGrp = App::GetApplication().GetParameterGroupByPath(
         "User parameter:BaseApp/Preferences/View"
     );
-    m_enabled = hGrp->GetBool("FusionUIEnabled", false);
+    m_enabled = hGrp->GetBool("FusionUIEnabled", true);
 
     // Create Fusion Tab Toolbar - inserted above the central widget
     m_tabToolbar = new FusionTabToolbar(mainWindow);
     // Insert between menu bar and central area using addToolBar at top
-    auto* tabToolbarWrapper = new QToolBar(QStringLiteral("FusionTabs"), mainWindow);
-    tabToolbarWrapper->setObjectName(QStringLiteral("FusionTabsToolbar"));
-    tabToolbarWrapper->setMovable(false);
-    tabToolbarWrapper->setFloatable(false);
-    tabToolbarWrapper->addWidget(m_tabToolbar);
-    tabToolbarWrapper->setStyleSheet(QStringLiteral("QToolBar { border: none; padding: 0; }"));
-    mainWindow->addToolBar(Qt::TopToolBarArea, tabToolbarWrapper);
+    m_tabToolbarWrapper = new QToolBar(QStringLiteral("FusionTabs"), mainWindow);
+    m_tabToolbarWrapper->setObjectName(QStringLiteral("FusionTabsToolbar"));
+    m_tabToolbarWrapper->setMovable(false);
+    m_tabToolbarWrapper->setFloatable(false);
+    m_tabToolbarWrapper->setMinimumHeight(72);
+    m_tabToolbarWrapper->addWidget(m_tabToolbar);
+    m_tabToolbarWrapper->setStyleSheet(QStringLiteral("QToolBar#FusionTabsToolbar { border: none; padding: 0; background: #2D2D2D; }"));
+    mainWindow->addToolBar(Qt::TopToolBarArea, m_tabToolbarWrapper);
+    // Force toolbar to take full width
+    mainWindow->addToolBarBreak(Qt::TopToolBarArea);
 
     // Create Fusion Timeline - docked at bottom
     m_timeline = new FusionTimeline(mainWindow);
@@ -127,6 +132,9 @@ void FusionUIManager::setEnabled(bool enabled)
 {
     m_enabled = enabled;
 
+    if (m_tabToolbarWrapper) {
+        m_tabToolbarWrapper->setVisible(enabled);
+    }
     if (m_tabToolbar) {
         m_tabToolbar->setActive(enabled);
     }
@@ -138,16 +146,17 @@ void FusionUIManager::setEnabled(bool enabled)
     }
 
     if (enabled) {
-        hideTraditionalToolbars();
-        configureNaviCube();
-
-        // Trigger initial workbench update
+        // First trigger workbench update to populate tabs BEFORE hiding traditional toolbars
         if (Application::Instance) {
             std::string wb = WorkbenchManager::instance()->activeName();
             if (!wb.empty()) {
                 onWorkbenchActivated(wb.c_str());
             }
         }
+
+        // Now hide traditional toolbars (FusionTabToolbar is already populated)
+        hideTraditionalToolbars();
+        configureNaviCube();
 
         // Refresh timeline
         refreshTimeline();

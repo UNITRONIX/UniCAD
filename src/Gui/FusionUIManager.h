@@ -15,6 +15,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QToolBar>
 
 #include <FCGlobal.h>
 
@@ -84,6 +85,7 @@ private:
 
     bool m_enabled;
     QPointer<MainWindow> m_mainWindow;
+    QToolBar* m_tabToolbarWrapper;
     FusionTabToolbar* m_tabToolbar;
     FusionTimeline* m_timeline;
     FusionNavigationBar* m_navBar;

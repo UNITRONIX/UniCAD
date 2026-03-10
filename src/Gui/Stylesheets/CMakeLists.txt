@@ -2,6 +2,8 @@
 SET(Stylesheets_Files
     "FreeCAD.qss"
     "defaults.qss"
+    "FusionCAD Dark.qss"
+    "UniCAD Dark.qss"
 )
 
 SET(Parameters_Files
