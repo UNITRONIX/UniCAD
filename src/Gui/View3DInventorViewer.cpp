@@ -110,6 +110,7 @@
 #include "GLPainter.h"
 #include "Inventor/SoAxisCrossKit.h"
 #include "Inventor/SoFCBackgroundGradient.h"
+#include "Inventor/SoFCUniversalGrid.h"
 #include "Inventor/SoFCBoundingBox.h"
 #include "MainWindow.h"
 #include "Multisample.h"
@@ -504,6 +505,10 @@ void View3DInventorViewer::init()
     pcBackGround = new SoFCBackgroundGradient;
     pcBackGround->ref();
 
+    // Universal Grid (Fusion 360-style grid visible in 3D view)
+    pcUniversalGrid = new SoFCUniversalGrid;
+    pcUniversalGrid->ref();
+
     // Set up foreground, overlaid scenegraph.
     this->foregroundroot = new SoSeparator;
     this->foregroundroot->ref();
@@ -547,6 +552,9 @@ void View3DInventorViewer::init()
     pcViewProviderRoot = selectionRoot;
     pcViewProviderRoot->addChild(threePointLightingSeparator);
     pcViewProviderRoot->addChild(environment);
+    
+    // Add universal grid (Fusion 360-style ground plane grid)
+    pcViewProviderRoot->addChild(pcUniversalGrid);
 
     // add a global hidden anchor object to ensure transparent objects work correctly
     // in empty scenes - OpenInventor's two-pass transparency rendering requires at least
@@ -718,6 +726,8 @@ View3DInventorViewer::~View3DInventorViewer()
     this->foregroundroot = nullptr;
     this->pcBackGround->unref();
     this->pcBackGround = nullptr;
+    this->pcUniversalGrid->unref();
+    this->pcUniversalGrid = nullptr;
 
     setSceneGraph(nullptr);
     this->pEventCallback->unref();
@@ -1396,6 +1406,35 @@ void View3DInventorViewer::setGradientBackgroundColor(
 )
 {
     pcBackGround->setColorGradient(fromColor, toColor, midColor);
+}
+
+void View3DInventorViewer::setUniversalGridVisible(bool on)
+{
+    if (pcUniversalGrid) {
+        pcUniversalGrid->setGridVisible(on);
+    }
+}
+
+bool View3DInventorViewer::isUniversalGridVisible() const
+{
+    return pcUniversalGrid ? pcUniversalGrid->isGridVisible() : false;
+}
+
+void View3DInventorViewer::setUniversalGridOriginVisible(bool on)
+{
+    if (pcUniversalGrid) {
+        pcUniversalGrid->setOriginVisible(on);
+    }
+}
+
+bool View3DInventorViewer::isUniversalGridOriginVisible() const
+{
+    return pcUniversalGrid ? pcUniversalGrid->isOriginVisible() : false;
+}
+
+SoFCUniversalGrid* View3DInventorViewer::getUniversalGrid() const
+{
+    return pcUniversalGrid;
 }
 
 void View3DInventorViewer::setEnabledFPSCounter(bool on)

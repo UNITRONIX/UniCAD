@@ -37,6 +37,7 @@
 #include <App/DocumentObject.h>
 #include <App/Expression.h>
 #include <App/GeoFeature.h>
+#include <App/GroupExtension.h>
 #include <Base/Exception.h>
 #include <Base/FileInfo.h>
 #include <Base/Stream.h>
@@ -2185,6 +2186,105 @@ protected:
     QAction* pcActionPaste {nullptr};
 };
 
+//===========================================================================
+// Std_MergeToContainer
+//===========================================================================
+/**
+ * Merges selected objects into an App::Part container.
+ * This allows transforming multiple imported CAD objects as a single unit
+ * without affecting relative positions of child elements.
+ */
+DEF_STD_CMD_A(StdCmdMergeToContainer)
+
+StdCmdMergeToContainer::StdCmdMergeToContainer()
+    : Command("Std_MergeToContainer")
+{
+    sGroup = "Edit";
+    sMenuText = QT_TR_NOOP("Merge to &Container");
+    sToolTipText = QT_TR_NOOP("Merges selected objects into a Part container for unified transformation");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_MergeToContainer";
+    sPixmap = "Geofeaturegroup";  // Same icon as Std_Part
+    sAccel = "Ctrl+Shift+G";
+}
+
+void StdCmdMergeToContainer::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    
+    App::Document* doc = App::GetApplication().getActiveDocument();
+    if (!doc) {
+        QMessageBox::warning(getMainWindow(), 
+            QObject::tr("No Document"),
+            QObject::tr("Please open a document first."));
+        return;
+    }
+    
+    std::vector<App::DocumentObject*> sel = Gui::Selection().getObjectsOfType(
+        App::GeoFeature::getClassTypeId()
+    );
+    
+    if (sel.empty()) {
+        QMessageBox::warning(getMainWindow(),
+            QObject::tr("No Selection"),
+            QObject::tr("Please select objects to merge into a container."));
+        return;
+    }
+    
+    openCommand(QT_TRANSLATE_NOOP("Command", "Merge to Container"));
+    
+    try {
+        // Create new App::Part container
+        App::DocumentObject* container = doc->addObject("App::Part", "ImportedModel");
+        if (!container) {
+            abortCommand();
+            QMessageBox::critical(getMainWindow(),
+                QObject::tr("Error"),
+                QObject::tr("Failed to create container."));
+            return;
+        }
+        
+        // Get the Part's group extension to add objects
+        auto* groupExt = container->getExtensionByType<App::GroupExtension>();
+        if (groupExt) {
+            // Add all selected objects to the container
+            for (auto* obj : sel) {
+                // Skip if object is already in a group
+                if (App::GroupExtension::getGroupOfObject(obj)) {
+                    continue;
+                }
+                groupExt->addObject(obj);
+            }
+        }
+        
+        commitCommand();
+        
+        // Update view
+        doc->recompute();
+        
+        // Select the new container
+        Gui::Selection().clearSelection();
+        Gui::Selection().addSelection(doc->getName(), container->getNameInDocument());
+        
+        QMessageBox::information(getMainWindow(),
+            QObject::tr("Container Created"),
+            QObject::tr("Objects merged into '%1'.\n\n"
+                       "You can now use Edit > Transform to move/rotate the entire container.")
+                       .arg(QString::fromUtf8(container->Label.getValue())));
+        
+    } catch (const Base::Exception& e) {
+        abortCommand();
+        QMessageBox::critical(getMainWindow(),
+            QObject::tr("Error"),
+            QString::fromUtf8(e.what()));
+    }
+}
+
+bool StdCmdMergeToContainer::isActive()
+{
+    return App::GetApplication().getActiveDocument() != nullptr;
+}
+
 namespace Gui
 {
 
@@ -2224,6 +2324,7 @@ void CreateDocCommands()
     rcCmdMgr.addCommand(new StdCmdPlacement());
     rcCmdMgr.addCommand(new StdCmdTransformManip());
     rcCmdMgr.addCommand(new StdCmdAlignment());
+    rcCmdMgr.addCommand(new StdCmdMergeToContainer());
     rcCmdMgr.addCommand(new StdCmdEdit());
     rcCmdMgr.addCommand(new StdCmdProperties());
     rcCmdMgr.addCommand(new StdCmdExpression());

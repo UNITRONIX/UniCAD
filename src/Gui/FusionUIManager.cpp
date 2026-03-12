@@ -17,19 +17,30 @@
 #include "FusionTimeline.h"
 #include "FusionNavigationBar.h"
 #include "FusionMarkingMenu.h"
+#include "FusionSelectionBar.h"
 #include "Application.h"
 #include "MainWindow.h"
+#include "MDIView.h"
 #include "NaviCube.h"
 #include "ToolBarManager.h"
 #include "View3DInventor.h"
 #include "View3DInventorViewer.h"
+#include "ViewProviderDocumentObject.h"
+#include "Inventor/SoFCUniversalGrid.h"
+
 #include "WorkbenchManager.h"
 
 #include <App/Application.h>
 
+#include <Inventor/SbColor.h>
+#include <Inventor/SoRenderManager.h>
+
 #include <QToolBar>
 #include <QMenuBar>
 #include <QMainWindow>
+#include <QTimer>
+
+#include <cstring>
 
 using namespace Gui;
 
@@ -62,6 +73,7 @@ FusionUIManager::FusionUIManager()
     , m_timeline(nullptr)
     , m_navBar(nullptr)
     , m_markingMenu(nullptr)
+    , m_selectionBar(nullptr)
 {
 }
 
@@ -110,6 +122,13 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
     // Create Marking Menu (not parented to main window - it's a popup)
     m_markingMenu = new FusionMarkingMenu();
 
+    // Create Selection Bar (docked at bottom, above navigation bar)
+    m_selectionBar = new FusionSelectionBar(mainWindow);
+    m_selectionBar->setObjectName(QStringLiteral("FusionSelectionBar"));
+    m_selectionBar->setMovable(false);
+    m_selectionBar->setFloatable(false);
+    mainWindow->addToolBar(Qt::BottomToolBarArea, m_selectionBar);
+
     // Connect to workbench activation signal
     Application::Instance->signalActivateWorkbench.connect(
         [this](const char* name) {
@@ -121,6 +140,31 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
     Application::Instance->signalActiveDocument.connect(
         [this](const Gui::Document&) {
             this->onActiveDocumentChanged();
+        }
+    );
+
+    // Connect to view activation signal - configure Blueprint style for new views
+    Application::Instance->signalActivateView.connect(
+        [this](const MDIView* view) {
+            if (m_enabled && view) {
+                // Delay configuration to ensure view is fully initialized
+                QTimer::singleShot(100, this, [this]() {
+                    configureBlueprintStyle();
+                });
+            }
+        }
+    );
+
+    // Connect to edit mode signals for Sketch Palette
+    Application::Instance->signalInEdit.connect(
+        [this](const ViewProviderDocumentObject& vp) {
+            this->onInEdit(vp);
+        }
+    );
+
+    Application::Instance->signalResetEdit.connect(
+        [this](const ViewProviderDocumentObject& vp) {
+            this->onResetEdit(vp);
         }
     );
 
@@ -144,6 +188,9 @@ void FusionUIManager::setEnabled(bool enabled)
     if (m_navBar) {
         m_navBar->setVisible(enabled);
     }
+    if (m_selectionBar) {
+        m_selectionBar->setVisible(enabled);
+    }
 
     if (enabled) {
         // First trigger workbench update to populate tabs BEFORE hiding traditional toolbars
@@ -157,12 +204,18 @@ void FusionUIManager::setEnabled(bool enabled)
         // Now hide traditional toolbars (FusionTabToolbar is already populated)
         hideTraditionalToolbars();
         configureNaviCube();
+        
+        // Apply Blueprint-style background and grid
+        configureBlueprintStyle();
 
         // Refresh timeline
         refreshTimeline();
     }
     else {
         showTraditionalToolbars();
+        
+        // Restore original background style
+        restoreOriginalStyle();
     }
 
     // Save preference
@@ -245,7 +298,8 @@ void FusionUIManager::hideTraditionalToolbars()
         QString name = toolbar->objectName();
         // Keep Fusion UI toolbars visible
         if (name == QStringLiteral("FusionTabsToolbar")
-            || name == QStringLiteral("FusionNavigationBar")) {
+            || name == QStringLiteral("FusionNavigationBar")
+            || name == QStringLiteral("FusionSelectionBar")) {
             continue;
         }
         // Hide standard toolbars
@@ -266,13 +320,116 @@ void FusionUIManager::showTraditionalToolbars()
         QString name = toolbar->objectName();
         // Skip Fusion toolbars
         if (name == QStringLiteral("FusionTabsToolbar")
-            || name == QStringLiteral("FusionNavigationBar")) {
+            || name == QStringLiteral("FusionNavigationBar")
+            || name == QStringLiteral("FusionSelectionBar")) {
             toolbar->setVisible(false);
             continue;
         }
         // Show standard toolbars
         if (toolbar->parentWidget() == m_mainWindow) {
             toolbar->setVisible(true);
+        }
+    }
+}
+
+void FusionUIManager::configureBlueprintStyle()
+{
+    if (!m_mainWindow) {
+        return;
+    }
+
+    // Find all 3D viewers and configure Blueprint-style background + grid
+    auto views = m_mainWindow->findChildren<View3DInventor*>();
+    for (auto* view3d : views) {
+        if (!view3d) {
+            continue;
+        }
+        auto* viewer = view3d->getViewer();
+        if (!viewer) {
+            continue;
+        }
+
+        // Universal Grid disabled for now - needs more work on camera/projection alignment
+        // TODO: Fix grid rendering to properly align with viewport
+        viewer->setUniversalGridVisible(false);
+        viewer->setUniversalGridOriginVisible(false);
+
+        // Set Blueprint-style gradient background
+        // Fusion 360 uses a blue gradient that looks like a blueprint
+        // Top: darker blue (#1a3a52) -> Bottom: slightly lighter (#2d5a78)
+        SbColor topColor(0.102f, 0.227f, 0.322f);      // #1a3a52
+        SbColor bottomColor(0.176f, 0.353f, 0.471f);   // #2d5a78
+        SbColor midColor(0.133f, 0.282f, 0.388f);      // #224862
+        
+        viewer->setGradientBackground(View3DInventorViewer::Background::LinearGradient);
+        viewer->setGradientBackgroundColor(topColor, bottomColor, midColor);
+        
+        // Force redraw to apply changes
+        viewer->getSoRenderManager()->scheduleRedraw();
+    }
+}
+
+void FusionUIManager::restoreOriginalStyle()
+{
+    if (!m_mainWindow) {
+        return;
+    }
+
+    // Find all 3D viewers and restore original style
+    auto views = m_mainWindow->findChildren<View3DInventor*>();
+    for (auto* view3d : views) {
+        if (!view3d) {
+            continue;
+        }
+        auto* viewer = view3d->getViewer();
+        if (!viewer) {
+            continue;
+        }
+
+        // Disable Universal Grid
+        viewer->setUniversalGridVisible(false);
+        viewer->setUniversalGridOriginVisible(false);
+
+        // Restore original FreeCAD gradient (gray tones)
+        SbColor topColor(0.098f, 0.098f, 0.098f);      // Dark gray
+        SbColor bottomColor(0.333f, 0.333f, 0.333f);   // Medium gray
+        
+        viewer->setGradientBackground(View3DInventorViewer::Background::LinearGradient);
+        viewer->setGradientBackgroundColor(topColor, bottomColor);
+        
+        // Force redraw to apply changes
+        viewer->getSoRenderManager()->scheduleRedraw();
+    }
+}
+
+void FusionUIManager::onInEdit(const ViewProviderDocumentObject& vp)
+{
+    if (!m_enabled || !m_mainWindow) {
+        return;
+    }
+
+    // Check if this is a Sketcher ViewProvider
+    const char* typeName = vp.getTypeId().getName();
+    if (typeName && strstr(typeName, "Sketch") != nullptr) {
+        // Highlight SKETCH tab in toolbar
+        if (m_tabToolbar) {
+            m_tabToolbar->setSketchMode(true);
+        }
+    }
+}
+
+void FusionUIManager::onResetEdit(const ViewProviderDocumentObject& vp)
+{
+    if (!m_enabled || !m_mainWindow) {
+        return;
+    }
+
+    // Check if this was a Sketcher ViewProvider
+    const char* typeName = vp.getTypeId().getName();
+    if (typeName && strstr(typeName, "Sketch") != nullptr) {
+        // Remove SKETCH tab highlight
+        if (m_tabToolbar) {
+            m_tabToolbar->setSketchMode(false);
         }
     }
 }

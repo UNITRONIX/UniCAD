@@ -17,6 +17,8 @@
 #include <QPointer>
 #include <QToolBar>
 
+#include <fastsignals/connection.h>
+
 #include <FCGlobal.h>
 
 namespace Gui {
@@ -25,7 +27,9 @@ class FusionTabToolbar;
 class FusionTimeline;
 class FusionNavigationBar;
 class FusionMarkingMenu;
+class FusionSelectionBar;
 class MainWindow;
+class ViewProviderDocumentObject;
 
 /**
  * FusionUIManager orchestrates all Fusion 360-style UI components.
@@ -61,6 +65,9 @@ public:
     /// Access Fusion marking menu for the 3D view context menu override
     FusionMarkingMenu* markingMenu() const { return m_markingMenu; }
 
+    /// Access Fusion selection bar
+    FusionSelectionBar* selectionBar() const { return m_selectionBar; }
+
 public Q_SLOTS:
     /// Called when a workbench is activated
     void onWorkbenchActivated(const char* name);
@@ -73,6 +80,19 @@ public Q_SLOTS:
 
     /// Configure the NaviCube with Fusion 360 style
     void configureNaviCube();
+    
+    /// Configure Blueprint-style background and grid
+    void configureBlueprintStyle();
+    
+    /// Restore original background style
+    void restoreOriginalStyle();
+
+public Q_SLOTS:
+    /// Called when entering edit mode (e.g., Sketcher)
+    void onInEdit(const ViewProviderDocumentObject& vp);
+    
+    /// Called when exiting edit mode
+    void onResetEdit(const ViewProviderDocumentObject& vp);
 
 private:
     FusionUIManager();
@@ -90,6 +110,7 @@ private:
     FusionTimeline* m_timeline;
     FusionNavigationBar* m_navBar;
     FusionMarkingMenu* m_markingMenu;
+    FusionSelectionBar* m_selectionBar;
 };
 
 } // namespace Gui

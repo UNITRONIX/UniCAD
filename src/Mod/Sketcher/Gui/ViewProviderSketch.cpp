@@ -283,7 +283,8 @@ void ViewProviderSketch::ParameterObserver::initParameters()
 {
     // once initialize the map with the properties
 
-    SbColor defaultGridColor(0.7f, 0.7f, 0.7f);
+    // Fusion 360 style grid color - pure white for maximum visibility on blue background
+    SbColor defaultGridColor(1.0f, 1.0f, 1.0f);
     unsigned int packedDefaultGridColor = defaultGridColor.getPackedValue();
 
     parameterMap = {
@@ -368,13 +369,15 @@ void ViewProviderSketch::ParameterObserver::initParameters()
           nullptr}},
         {"GridLineWidth",
          {[this](const std::string& string, [[maybe_unused]] App::Property* property) {
-              auto v = getSketcherGeneralParameter(string, 1);
+              // Fusion 360 style: thicker grid lines (default was 1)
+              auto v = getSketcherGeneralParameter(string, 2);
               Client.setGridLineWidth(v);
           },
           nullptr}},
         {"GridDivLineWidth",
          {[this](const std::string& string, [[maybe_unused]] App::Property* property) {
-              auto v = getSketcherGeneralParameter(string, 2);
+              // Fusion 360 style: thicker division lines (default was 2)
+              auto v = getSketcherGeneralParameter(string, 3);
               Client.setGridDivLineWidth(v);
           },
           nullptr}},

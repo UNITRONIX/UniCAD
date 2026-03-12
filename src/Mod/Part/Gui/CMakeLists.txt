@@ -252,6 +252,17 @@ SET(PartGui_SRCS
     TaskCheckGeometry.h
     TaskAttacher.h
     TaskAttacher.cpp
+    GeometryRecognition.cpp
+    GeometryRecognition.h
+    SnapPointVisualizer.cpp
+    SnapPointVisualizer.h
+    SnapPointManager.cpp
+    SnapPointManager.h
+    ViewProviderClearanceVolume.cpp
+    ViewProviderClearanceVolume.h
+    TaskClearanceVolume.cpp
+    TaskClearanceVolume.h
+    CommandClearanceVolume.cpp
 )
 
 SET(PartGuiIcon_SVG

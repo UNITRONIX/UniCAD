@@ -138,13 +138,13 @@ struct DrawingParameters
     int labelFontSize = 17;  // Font size to be used by SoDatumLabel, which uses a QPainter and a
                              // QFont internally
     int constraintIconSize = 15;  // Size of constraint icons
-    int markerSize = 7;           // Size used for markers
+    int markerSize = 5;           // UniCAD: Smaller markers (Fusion style)
 
     int CurveWidth = 2;             // width of normal edges
-    int ConstructionWidth = 1;      // width of construction edges
+    int ConstructionWidth = 2;      // UniCAD: Thicker construction (Fusion style)
     int InternalWidth = 1;          // width of internal edges
-    int ExternalWidth = 1;          // width of external edges
-    int ExternalDefiningWidth = 1;  // width of external defining edges
+    int ExternalWidth = 2;          // UniCAD: Thicker external edges (Fusion style)
+    int ExternalDefiningWidth = 2;  // UniCAD: Thicker external defining edges
 
     unsigned int CurvePattern = 0b1111111111111111;             // pattern of normal edges
     unsigned int ConstructionPattern = 0b1111110011111100;      // pattern of construction edges

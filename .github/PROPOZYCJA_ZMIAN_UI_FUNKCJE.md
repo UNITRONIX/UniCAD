@@ -32,12 +32,14 @@ UniCAD ma już silny backend (PartDesign, Sketcher, OpenCASCADE) i zaczątki war
 - Zakładki nie zmieniają workbencha — organizują komendy z wielu workbenchy w logiczne grupy
 - Dodać dropdown „Workspace" (Design / Manufacture / Drawing) po lewej stronie zakładek
 
-#### 1.2 Kontekstowe zakładki z wyróżnieniem trybu [P0]
+#### 1.2 Kontekstowe zakładki z wyróżnieniem trybu [P0] ✅ ZAIMPLEMENTOWANE
 **Problem:** Użytkownik nie wie, że jest w trybie szkicu.  
 **Zmiana:**  
 - Przy wejściu w szkic: zakładka SKETCH pojawia się z wizualnym akcentem (niebieski highlight) + przycisk „Finish Sketch"
 - Przy wejściu w Form/SubD: zakładki zastępowane przez środowisko kontekstowe + „Finish Form"
 - Wzorowane na Fusion: `Contextual Tab` vs `Contextual Environment`
+
+**Implementacja:** `FusionTabToolbar::setSketchMode()` wywoływane przez `FusionUIManager::onInEdit()`
 
 #### 1.3 Application Bar (QAT) — stała strefa statusowa [P1]
 **Problem:** Elementy statusowe (save, undo/redo, notifications) nie mają stałego miejsca.  
@@ -86,6 +88,20 @@ UniCAD ma już silny backend (PartDesign, Sketcher, OpenCASCADE) i zaczątki war
 **Zmiana:**  
 - Aktywny komponent: pełna nieprzezroczystość
 - Rodzeństwo i rodzic: półprzezroczyste (opacity ~30%)
+
+### 2.5 Fusion 360 kolorystyka elementów [P0] ✅ ZAIMPLEMENTOWANE
+**Problem:** Kolory zaznaczenia i preselekcji odbiegają od Fusion 360.  
+**Zmiana:**  
+- Zaznaczenie szkicu: magenta (#FF1493) zamiast zielonego
+- Preselekcja: cyan (#00E5FF) zamiast żółtego
+- Geometria konstrukcyjna: pomarańcz (#FF8C00) zamiast niebieskiego
+- Geometria zewnętrzna: cyan (#00D4FF) zamiast magenty
+- Mniejsze punkty wierzchołków (5px zamiast 8px)
+- Grubsze linie zaznaczenia (4px zamiast 3px)
+- Manipulatory: cyan (#00D4FF) zamiast czerwonego
+- Podgląd extrude: niebieski Fusion (#0696D7)
+
+**Implementacja:** Zmiany w `EditModeCoinManagerParameters`, `SoFCUnifiedSelection`, `GizmoStyleParameters`, `PartDesign/StyleParameters`
 - Elementy spoza aktywnego Body: stonowane kolory
 - Jasne wizualne wyróżnienie „co jest aktywne" w nagłówku 3D view
 
@@ -113,12 +129,14 @@ UniCAD ma już silny backend (PartDesign, Sketcher, OpenCASCADE) i zaczątki war
 - Tryby: `Linked` (powiązane, aktualizują się) / `Unlinked` (jednorazowa kopia)
 - Wizualne odróżnienie: lined = niebieskie, unlinked = zielone
 
-### 3.3 DOF meter w obszarze roboczym [P0]
+### 3.3 DOF meter w obszarze roboczym [P0] ✅ ZAIMPLEMENTOWANE
 **Problem:** Informacja o stopniach swobody ukryta w task panelu.  
 **Zmiana:**  
 - Pasek/badge w canvas: „Fully Constrained" / „3 DOF remaining"
 - Kliknięcie na badge: podświetlenie niedowiązanych elementów
 - Nadmiarowe więzy: badge ostrzegawczy + podświetlenie na czerwono
+
+**Implementacja:** `FusionSketchPalette::updateDOF()` z kolorową wizualizacją stanu (zielony/żółty/czerwony/pomarańczowy)
 
 ### 3.4 Dimensioning on the go [P0]
 **Problem:** Wymiarowanie wymaga osobnego narzędzia po narysowaniu geometrii.  
@@ -338,7 +356,7 @@ UniCAD ma już silny backend (PartDesign, Sketcher, OpenCASCADE) i zaczątki war
 - Dolna sekcja: Pan / Zoom / Orbit / Fit / Isolate + Saved Shortcuts
 - Obsługa gestów: szybkie przeciągnięcie w kierunku komendy bez czekania na pełne wyświetlenie
 
-### 8.2 Command Palette pod `S` [P0]
+### 8.2 Command Palette pod `S` [P0] ✅ ZAIMPLEMENTOWANE
 **Problem:** Brak szybkiego wyszukiwania komend w jednym miejscu.  
 **Zmiana:**  
 - Popup przy kursorze: pole wyszukiwania + siatka ikon najczęściej używanych
@@ -346,6 +364,8 @@ UniCAD ma już silny backend (PartDesign, Sketcher, OpenCASCADE) i zaczątki war
 - Możliwość przypinania ulubionych (pin/unpin)
 - Sekcja „Recent Commands"
 - Kontekstowe — wyniki filtrowane wg aktywnego workspace'u
+
+**Implementacja:** `FusionCommandPalette` - pełna funkcjonalność z pinowaniem, historią i wyszukiwaniem
 
 ### 8.3 Stała logika potwierdzania [P0]
 **Problem:** Niespójna obsługa Enter/Esc między komendami.  

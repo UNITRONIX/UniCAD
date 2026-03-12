@@ -78,8 +78,10 @@
 #include "ViewProviderSphereParametric.h"
 #include "ViewProviderSpline.h"
 #include "ViewProviderTorusParametric.h"
+#include "ViewProviderClearanceVolume.h"
 #include "Workbench.h"
 #include "WorkbenchManipulator.h"
+#include "SnapPointManager.h"
 
 
 // use a different name to CreateCommand()
@@ -87,6 +89,7 @@ void CreatePartCommands();
 void CreateSimplePartCommands();
 void CreateParamPartCommands();
 void CreatePartSelectCommands();
+void CreateClearanceVolumeCommands();
 
 void loadPartResource()
 {
@@ -206,6 +209,7 @@ PyMOD_INIT_FUNC(PartGui)
     PartGui::ViewProviderThickness                  ::init();
     PartGui::ViewProviderRefine                     ::init();
     PartGui::ViewProviderReverse                    ::init();
+    PartGui::ViewProviderClearanceVolume            ::init();
     PartGui::ViewProviderCustom                     ::init();
     PartGui::ViewProviderCustomPython               ::init();
     PartGui::ViewProviderBoolean                    ::init();
@@ -234,11 +238,16 @@ PyMOD_INIT_FUNC(PartGui)
 
     Base::registerServiceImplementation<Part::PreviewUpdateScheduler>(new PartGui::QtPreviewUpdateScheduler);
 
+    // Initialize snap point manager for automatic geometry recognition (Fusion 360-style)
+    // The singleton will attach to selection observer automatically
+    (void)PartGui::SnapPointManager::instance();
+
     // instantiating the commands
     CreatePartCommands();
     CreateSimplePartCommands();
     CreateParamPartCommands();
     CreatePartSelectCommands();
+    CreateClearanceVolumeCommands();
     try {
         const char* cmd = "__import__('AttachmentEditor.Commands').Commands";
         Py::Object ae = Base::Interpreter().runStringObject(cmd);

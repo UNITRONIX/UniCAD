@@ -506,6 +506,7 @@ Gui::MenuItem* Workbench::setupMenuBar() const
             << "PartDesign_Chamfer"
             << "PartDesign_Draft"
             << "PartDesign_Thickness"
+            << "Part_ClearanceVolume"
             << "Separator"
             << "PartDesign_OffsetFace"
             << "PartDesign_DeleteFace"

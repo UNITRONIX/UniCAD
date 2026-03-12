@@ -243,6 +243,7 @@ void FusionTabToolbar::buildUnifiedTabs()
     m_tabs = {
         buildSketchTab(),
         buildSolidTab(),
+        buildModifyTab(),   // NEW: Transform/Move/Scale tools
         buildSurfaceTab(),
         buildSheetMetalTab(),
         buildMeshTab(),
@@ -373,7 +374,9 @@ bool FusionTabToolbar::addCommandButton(QLayout* layout, const char* cmdName)
     }
 
     // Build tooltip: Name (Shortcut)
+    // Remove '&' accelerator markers from menu text (e.g., "Trans&form" -> "Transform")
     QString tooltip = QString::fromUtf8(cmd->getMenuText());
+    tooltip.remove(QLatin1Char('&'));
     QString accel = QString::fromUtf8(cmd->getAccel());
     if (!accel.isEmpty()) {
         tooltip += QStringLiteral(" (") + accel + QStringLiteral(")");
@@ -560,6 +563,56 @@ FusionTabToolbar::TabDefinition FusionTabToolbar::buildSolidTab() const
             QStringLiteral("PartDesign_Line"),
             QStringLiteral("PartDesign_Point"),
             QStringLiteral("PartDesign_CoordinateSystem"),
+        }
+    };
+}
+
+FusionTabToolbar::TabDefinition FusionTabToolbar::buildModifyTab() const
+{
+    return {
+        tr("MODIFY"),
+        {
+            // Transform - Move/Rotate (Fusion 360 style)
+            QStringLiteral("Group:Transform"),
+            QStringLiteral("Std_TransformManip"),
+            QStringLiteral("Std_Placement"),
+            QStringLiteral("Std_Transform"),
+            QStringLiteral("Separator"),
+            
+            // Align
+            QStringLiteral("Group:Align"),
+            QStringLiteral("Std_Alignment"),
+            QStringLiteral("Separator"),
+            
+            // Organize
+            QStringLiteral("Group:Organize"),
+            QStringLiteral("Std_MergeToContainer"),
+            QStringLiteral("Std_Part"),
+            QStringLiteral("Std_Group"),
+            QStringLiteral("Std_LinkMake"),
+            QStringLiteral("Separator"),
+            
+            // Copy/Clone
+            QStringLiteral("Group:Copy"),
+            QStringLiteral("Std_Copy"),
+            QStringLiteral("Std_Paste"),
+            QStringLiteral("Std_DuplicateSelection"),
+            QStringLiteral("Separator"),
+            
+            // Part operations
+            QStringLiteral("Group:Combine"),
+            QStringLiteral("Part_Fuse"),
+            QStringLiteral("Part_Cut"),
+            QStringLiteral("Part_Common"),
+            QStringLiteral("Part_Compound"),
+            QStringLiteral("Separator"),
+            
+            // Scale/Offset
+            QStringLiteral("Group:Scale"),
+            QStringLiteral("Part_Scale"),
+            QStringLiteral("Part_Offset"),
+            QStringLiteral("Part_Offset3D"),
+            QStringLiteral("Part_Mirror"),
         }
     };
 }

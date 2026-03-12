@@ -54,6 +54,7 @@
 #include "Workbench.h"
 #include "WorkbenchManager.h"
 #include "CommandSearchDialog.h"
+#include "FusionCommandPalette.h"
 #include "App/GeoFeature.h"
 #include "App/Annotation.h"
 
@@ -1073,6 +1074,34 @@ void StdCmdSearchCommands::activated(int iMsg)
     dlg->showCentered();
 }
 
+//===========================================================================
+// Std_FusionCommandPalette
+//===========================================================================
+DEF_STD_CMD(StdCmdFusionCommandPalette)
+
+StdCmdFusionCommandPalette::StdCmdFusionCommandPalette()
+    : Command("Std_FusionCommandPalette")
+{
+    sGroup = "Tools";
+    sMenuText = QT_TR_NOOP("Command Palette");
+    sToolTipText = QT_TR_NOOP("Show command palette with pinned and recent commands");
+    sWhatsThis = "Std_FusionCommandPalette";
+    sStatusTip = sToolTipText;
+    sPixmap = "applications-accessories";
+    sAccel = "S";
+    eType = 0;
+}
+
+void StdCmdFusionCommandPalette::activated(int iMsg)
+{
+    Q_UNUSED(iMsg);
+    static QPointer<FusionCommandPalette> palette;
+    if (!palette) {
+        palette = new FusionCommandPalette(getMainWindow());
+    }
+    palette->showAtCursor();
+}
+
 namespace Gui
 {
 
@@ -1109,6 +1138,7 @@ void CreateStdCommands()
     // rcCmdMgr.addCommand(new StdCmdDescription());
     rcCmdMgr.addCommand(new StdCmdAnnotationLabel());
     rcCmdMgr.addCommand(new StdCmdSearchCommands());
+    rcCmdMgr.addCommand(new StdCmdFusionCommandPalette());
 }
 
 }  // namespace Gui

@@ -87,6 +87,7 @@ target_include_directories(
     ${Boost_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
     ${3DCONNEXION_INCLUDE_DIR}
+    ${OCC_INCLUDE_DIR}
 )
 
 if(MSVC)
@@ -539,6 +540,7 @@ SET(Command_CPP_SRCS
     CommandCompleter.cpp
     CommandActionPy.cpp
     CommandSearchDialog.cpp
+    FusionCommandPalette.cpp
 )
 SET(Command_SRCS
     ${Command_CPP_SRCS}
@@ -550,6 +552,7 @@ SET(Command_SRCS
     CommandCompleter.h
     CommandActionPy.h
     CommandSearchDialog.h
+    FusionCommandPalette.h
 )
 SOURCE_GROUP("Command" FILES ${Command_SRCS})
 
@@ -1140,6 +1143,7 @@ SET(Inventor_CPP_SRCS
     Inventor/SoFCPlacementIndicatorKit.cpp
     Inventor/SoDrawingGrid.cpp
     Inventor/SoFCBackgroundGradient.cpp
+    Inventor/SoFCUniversalGrid.cpp
     Inventor/SoFCBoundingBox.cpp
     Inventor/SoMouseWheelEvent.cpp
     Inventor/SoFCTransform.cpp
@@ -1180,6 +1184,7 @@ SET(Inventor_SRCS
     Inventor/SoFCPlacementIndicatorKit.h
     Inventor/SoDrawingGrid.h
     Inventor/SoFCBackgroundGradient.h
+    Inventor/SoFCUniversalGrid.h
     Inventor/SoFCBoundingBox.h
     Inventor/SoMouseWheelEvent.h
     Inventor/SoFCTransform.h
@@ -1243,6 +1248,7 @@ SET(Widget_CPP_SRCS
     FusionMarkingMenu.cpp
     FusionTimeline.cpp
     FusionNavigationBar.cpp
+    FusionSelectionBar.cpp
     FusionUIManager.cpp
 )
 SET(Widget_HPP_SRCS
@@ -1274,6 +1280,7 @@ SET(Widget_HPP_SRCS
     FusionMarkingMenu.h
     FusionTimeline.h
     FusionNavigationBar.h
+    FusionSelectionBar.h
     FusionUIManager.h
 )
 SET(Widget_SRCS

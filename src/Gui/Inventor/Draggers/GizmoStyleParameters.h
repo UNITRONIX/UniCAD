@@ -29,13 +29,14 @@
 
 namespace Gui::StyleParameters
 {
-DEFINE_STYLE_PARAMETER(LinearGizmoBaseColor, Base::Color(1.0F, 0.0F, 0.0F));
-DEFINE_STYLE_PARAMETER(LinearGizmoActiveColor, Base::Color(1.0F, 1.0F, 0.0F));
+// UniCAD: Fusion 360-style manipulator colors
+DEFINE_STYLE_PARAMETER(LinearGizmoBaseColor, Base::Color(0.0F, 0.83F, 1.0F));       // Cyan #00D4FF
+DEFINE_STYLE_PARAMETER(LinearGizmoActiveColor, Base::Color(0.0F, 1.0F, 1.0F));      // Bright cyan #00FFFF
 
-DEFINE_STYLE_PARAMETER(RotationGizmoBaseColor, Base::Color(1.0F, 0.0F, 0.0F));
-DEFINE_STYLE_PARAMETER(RotationGizmoActiveColor, Base::Color(1.0F, 1.0F, 0.0F));
+DEFINE_STYLE_PARAMETER(RotationGizmoBaseColor, Base::Color(0.0F, 0.83F, 1.0F));     // Cyan #00D4FF
+DEFINE_STYLE_PARAMETER(RotationGizmoActiveColor, Base::Color(0.0F, 1.0F, 1.0F));    // Bright cyan #00FFFF
 
-DEFINE_STYLE_PARAMETER(DimensionVisualizerColor, Base::Color(0.214F, 0.560F, 0.930F));
+DEFINE_STYLE_PARAMETER(DimensionVisualizerColor, Base::Color(0.024F, 0.588F, 0.843F));  // Fusion blue #0696D7
 }  // namespace Gui::StyleParameters
 
 #endif /* GUI_GIZMO_STYLE_PARAMETERS_H */

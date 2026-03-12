@@ -91,6 +91,7 @@ private:
     /// Tab builders for each category
     TabDefinition buildSketchTab() const;
     TabDefinition buildSolidTab() const;
+    TabDefinition buildModifyTab() const;
     TabDefinition buildSurfaceTab() const;
     TabDefinition buildSheetMetalTab() const;
     TabDefinition buildMeshTab() const;

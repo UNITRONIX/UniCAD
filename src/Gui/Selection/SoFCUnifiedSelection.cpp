@@ -125,8 +125,8 @@ SoFCUnifiedSelection::SoFCUnifiedSelection()
     // UniCAD: Fusion 360-style selection colors
     // Highlight (preselect/hover): light blue (#4FC3F7 â†’ 0.31, 0.76, 0.97)
     // Selection: Fusion blue (#0696D7 â†’ 0.024, 0.588, 0.843)
-    SO_NODE_ADD_FIELD(colorHighlight, (SbColor(0.31f, 0.76f, 0.97f)));
-    SO_NODE_ADD_FIELD(colorSelection, (SbColor(0.024f, 0.588f, 0.843f)));
+    SO_NODE_ADD_FIELD(colorHighlight, (SbColor(0.0f, 0.90f, 1.0f)));   // Bright cyan #00E5FF
+    SO_NODE_ADD_FIELD(colorSelection, (SbColor(0.024f, 0.588f, 0.843f)));  // Fusion blue #0696D7
     SO_NODE_ADD_FIELD(preselectionMode, (AUTO));
     SO_NODE_ADD_FIELD(selectionMode, (ON));
     SO_NODE_ADD_FIELD(selectionEnabled, (true));

@@ -67,31 +67,32 @@ Base::Color Vcolor = Base::Color(static_cast<uint32_t>(VColorLong));
 SbColor DrawingParameters::CrossColorH(Hcolor.r, Hcolor.g, Hcolor.b);
 SbColor DrawingParameters::CrossColorV(Vcolor.r, Vcolor.g, Vcolor.b);
 
+// UniCAD Fusion 360-style colors
 SbColor DrawingParameters::InvalidSketchColor(1.0f, 0.42f, 0.0f);    // #FF6D00 -> (255,109,  0)
-SbColor DrawingParameters::FullyConstrainedColor(0.0f, 1.0f, 0.0f);  // #00FF00 -> (  0,255,  0)
+SbColor DrawingParameters::FullyConstrainedColor(0.0f, 0.90f, 0.46f);  // #00E676 -> (  0,230,118) - Fusion green
 SbColor DrawingParameters::FullyConstraintInternalAlignmentColor(
-    0.87f,
-    0.87f,
-    0.78f
-);                                                                     // #DEDEC8 -> (222,222,200)
-SbColor DrawingParameters::InternalAlignedGeoColor(0.7f, 0.7f, 0.5f);  // #B2B27F -> (178,178,127)
+    0.75f,
+    0.85f,
+    0.75f
+);                                                                     // #BFD9BF -> (191,217,191)
+SbColor DrawingParameters::InternalAlignedGeoColor(0.6f, 0.7f, 0.6f);  // #99B399 -> (153,179,153)
 SbColor DrawingParameters::FullyConstraintElementColor(
-    0.50f,
-    0.81f,
-    0.62f
-);                                                                       // #80D0A0 -> (128,208,160)
-SbColor DrawingParameters::CurveColor(1.0f, 1.0f, 1.0f);                 // #FFFFFF -> (255,255,255)
-SbColor DrawingParameters::PreselectColor(0.88f, 0.88f, 0.0f);           // #E1E100 -> (225,225,  0)
-SbColor DrawingParameters::SelectColor(0.11f, 0.68f, 0.11f);             // #1CAD1C -> ( 28,173, 28)
-SbColor DrawingParameters::PreselectSelectedColor(0.36f, 0.48f, 0.11f);  // #5D7B1C -> ( 93,123, 28)
-SbColor DrawingParameters::CurveExternalColor(0.8f, 0.2f, 0.6f);         // #CC3399 -> (204, 51,153)
-SbColor DrawingParameters::CurveExternalDefiningColor(0.8f, 0.2f, 0.6f);  // #CC3399 -> (204, 51,153)
-SbColor DrawingParameters::CurveDraftColor(0.0f, 0.0f, 0.86f);  // #0000DC -> (  0,  0,220)
+    0.0f,
+    0.83f,
+    0.53f
+);                                                                       // #00D488 -> (  0,212,136) - Fusion constrained
+SbColor DrawingParameters::CurveColor(1.0f, 1.0f, 1.0f);                 // #FFFFFF -> (255,255,255) - white edges
+SbColor DrawingParameters::PreselectColor(0.0f, 0.90f, 1.0f);            // #00E5FF -> (  0,229,255) - Fusion cyan preselect
+SbColor DrawingParameters::SelectColor(1.0f, 0.08f, 0.58f);              // #FF1493 -> (255, 20,147) - Fusion magenta select
+SbColor DrawingParameters::PreselectSelectedColor(1.0f, 0.41f, 0.71f);   // #FF69B4 -> (255,105,180) - hot pink
+SbColor DrawingParameters::CurveExternalColor(0.0f, 0.83f, 1.0f);        // #00D4FF -> (  0,212,255) - Fusion cyan external
+SbColor DrawingParameters::CurveExternalDefiningColor(0.0f, 0.75f, 0.95f);  // #00BFF2 -> (  0,191,242)
+SbColor DrawingParameters::CurveDraftColor(1.0f, 0.55f, 0.0f);  // #FF8C00 -> (255,140,  0) - Fusion orange construction
 SbColor DrawingParameters::FullyConstraintConstructionElementColor(
-    0.56f,
-    0.66f,
-    0.99f
-);  // #8FA9FD -> (143,169,253)
+    1.0f,
+    0.70f,
+    0.30f
+);  // #FFB34D -> (255,179, 77) - Fusion orange constrained construction
 
 SbColor DrawingParameters::ConstrDimColor(1.0f, 0.149f, 0.0f);  // #FF2600 -> (255, 38,  0)
 SbColor DrawingParameters::ConstrIcoColor(1.0f, 0.149f, 0.0f);  // #FF2600 -> (255, 38,  0)

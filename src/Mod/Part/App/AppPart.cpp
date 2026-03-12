@@ -75,6 +75,7 @@
 #include "FeatureGeometrySet.h"
 #include "FeatureMirroring.h"
 #include "FeatureOffset.h"
+#include "FeatureClearanceVolume.h"
 #include "FeaturePartBoolean.h"
 #include "FeaturePartBox.h"
 #include "FeaturePartCircle.h"
@@ -500,6 +501,7 @@ PyMOD_INIT_FUNC(Part)
     Part::Thickness             ::init();
     Part::Refine                ::init();
     Part::Reverse               ::init();
+    Part::ClearanceVolume       ::init();
 
     // Geometry types
     Part::GeometryExtension       	::init();

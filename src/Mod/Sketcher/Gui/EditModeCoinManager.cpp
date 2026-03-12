@@ -993,8 +993,8 @@ void EditModeCoinManager::createEditModeInventorNodes()
 
     editModeScenegraphNodes.OriginPointDrawStyle = new SoDrawStyle;
     editModeScenegraphNodes.OriginPointDrawStyle->setName("OriginPointDrawStyle");
-    editModeScenegraphNodes.OriginPointDrawStyle->pointSize = 8
-        * drawingParameters.pixelScalingFactor;
+    editModeScenegraphNodes.OriginPointDrawStyle->pointSize = 6
+        * drawingParameters.pixelScalingFactor;  // UniCAD: Smaller origin point (Fusion style)
     originPointRoot->addChild(editModeScenegraphNodes.OriginPointDrawStyle);
 
     editModeScenegraphNodes.OriginPointCoordinate = new SoCoordinate3;
@@ -1022,8 +1022,8 @@ void EditModeCoinManager::createEditModeInventorNodes()
 
     editModeScenegraphNodes.EditCurvesDrawStyle = new SoDrawStyle;
     editModeScenegraphNodes.EditCurvesDrawStyle->setName("EditCurvesDrawStyle");
-    editModeScenegraphNodes.EditCurvesDrawStyle->lineWidth = 3
-        * drawingParameters.pixelScalingFactor;  // Default value will be overridden in drawEdit()
+    editModeScenegraphNodes.EditCurvesDrawStyle->lineWidth = 4
+        * drawingParameters.pixelScalingFactor;  // UniCAD: Thicker selection lines (Fusion style)
     editCurvesRoot->addChild(editModeScenegraphNodes.EditCurvesDrawStyle);
 
     editModeScenegraphNodes.EditCurveSet = new SoLineSet;
@@ -1043,8 +1043,8 @@ void EditModeCoinManager::createEditModeInventorNodes()
 
     editModeScenegraphNodes.EditMarkersDrawStyle = new SoDrawStyle;
     editModeScenegraphNodes.EditMarkersDrawStyle->setName("EditMarkersDrawStyle");
-    editModeScenegraphNodes.EditMarkersDrawStyle->pointSize = 8
-        * drawingParameters.pixelScalingFactor;
+    editModeScenegraphNodes.EditMarkersDrawStyle->pointSize = 6
+        * drawingParameters.pixelScalingFactor;  // UniCAD: Smaller points (Fusion style)
     editMarkersRoot->addChild(editModeScenegraphNodes.EditMarkersDrawStyle);
 
     editModeScenegraphNodes.EditMarkerSet = new SoMarkerSet;
@@ -1257,8 +1257,9 @@ void EditModeCoinManager::updateInventorNodeSizes()
 
     updateInventorWidths();
 
+    // UniCAD: Fusion 360-style point sizes (smaller, less intrusive)
     for (int l = 0; l < geometryLayerParameters.getCoinLayerCount(); l++) {
-        editModeScenegraphNodes.PointsDrawStyle[l]->pointSize = 8
+        editModeScenegraphNodes.PointsDrawStyle[l]->pointSize = 5
             * drawingParameters.pixelScalingFactor;
         editModeScenegraphNodes.PointSet[l]->markerIndex = Gui::Inventor::MarkerBitmaps::getMarkerIndex(
             "CIRCLE_FILLED",
@@ -1266,14 +1267,14 @@ void EditModeCoinManager::updateInventorNodeSizes()
         );
     }
 
-    editModeScenegraphNodes.OriginPointDrawStyle->pointSize = 8
+    editModeScenegraphNodes.OriginPointDrawStyle->pointSize = 6
         * drawingParameters.pixelScalingFactor;
     editModeScenegraphNodes.OriginPointSet->markerIndex
         = Gui::Inventor::MarkerBitmaps::getMarkerIndex("CIRCLE_FILLED", drawingParameters.markerSize);
 
     editModeScenegraphNodes.RootCrossDrawStyle->lineWidth = 2 * drawingParameters.pixelScalingFactor;
-    editModeScenegraphNodes.EditCurvesDrawStyle->lineWidth = 3 * drawingParameters.pixelScalingFactor;
-    editModeScenegraphNodes.EditMarkersDrawStyle->pointSize = 8
+    editModeScenegraphNodes.EditCurvesDrawStyle->lineWidth = 4 * drawingParameters.pixelScalingFactor;  // UniCAD: Thicker selection
+    editModeScenegraphNodes.EditMarkersDrawStyle->pointSize = 6
         * drawingParameters.pixelScalingFactor;
     editModeScenegraphNodes.EditMarkerSet->markerIndex
         = Gui::Inventor::MarkerBitmaps::getMarkerIndex("CIRCLE_LINE", drawingParameters.markerSize);

@@ -93,6 +93,7 @@ namespace Gui
 class NavigationAnimation;
 class ViewProvider;
 class SoFCBackgroundGradient;
+class SoFCUniversalGrid;
 class NavigationStyle;
 class SoFCUnifiedSelection;
 class Document;
@@ -484,6 +485,14 @@ public:
         const SbColor& toColor,
         const SbColor& midColor
     );
+    
+    // Universal Grid control
+    void setUniversalGridVisible(bool on);
+    bool isUniversalGridVisible() const;
+    void setUniversalGridOriginVisible(bool on);
+    bool isUniversalGridOriginVisible() const;
+    SoFCUniversalGrid* getUniversalGrid() const;
+    
     void setNavigationType(Base::Type);
 
     void setAxisLetterColor(const SbColor& color);
@@ -562,6 +571,7 @@ private:
     std::list<GLGraphicsItem*> graphicsItems;
     ViewProvider* editViewProvider;
     SoFCBackgroundGradient* pcBackGround;
+    SoFCUniversalGrid* pcUniversalGrid;
     SoSeparator* backgroundroot;
     SoSeparator* foregroundroot;
 

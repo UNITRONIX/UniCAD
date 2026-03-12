@@ -216,6 +216,8 @@ SET(Features_SRCS
     PartFeature.h
     PartFeatureReference.cpp
     PartFeatureReference.h
+    FeatureClearanceVolume.cpp
+    FeatureClearanceVolume.h
     Part2DObject.cpp
     Part2DObject.h
     PrimitiveFeature.cpp

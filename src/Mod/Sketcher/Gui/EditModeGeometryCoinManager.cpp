@@ -656,8 +656,8 @@ void EditModeGeometryCoinManager::createEditModePointInventorNodes()
         auto drawstyle = new SoDrawStyle;
         editModeScenegraphNodes.PointsDrawStyle.push_back(drawstyle);
         editModeScenegraphNodes.PointsDrawStyle[i]->setName(concat("PointsDrawStyle", i).c_str());
-        editModeScenegraphNodes.PointsDrawStyle[i]->pointSize = 8
-            * drawingParameters.pixelScalingFactor;
+        editModeScenegraphNodes.PointsDrawStyle[i]->pointSize = 5
+            * drawingParameters.pixelScalingFactor;  // UniCAD: Smaller points (Fusion style)
         sep->addChild(editModeScenegraphNodes.PointsDrawStyle[i]);
 
         auto pointset = new SoMarkerSet;

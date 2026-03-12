@@ -147,6 +147,7 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "Part_Offset"
           << "Part_Offset2D"
           << "Part_Thickness"
+          << "Part_ClearanceVolume"
           << "Part_ProjectionOnSurface"
           << "Part_SectionCut"
           << "Separator"

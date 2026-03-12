@@ -89,6 +89,88 @@ Singleton that orchestrates all Fusion UI components:
 - Hides traditional toolbars and menu bars when Fusion UI is active
 - Preference toggle: `BaseApp/Preferences/View/FusionUIEnabled`
 
+### 1.7 Sketch Palette DOF Meter (`FusionSketchPalette`)
+
+The floating sketch toolbar now displays a color-coded DOF (Degrees of Freedom) status:
+
+| State | Color | Meaning |
+|---|---|---|
+| Fully Constrained | Green `#28A745` | Sketch is complete |
+| Under Constrained | Yellow `#FFC107` | More constraints needed |
+| Over Constrained | Red `#DC3545` | Too many constraints |
+| Conflicting | Orange `#FF8C00` | Constraint conflicts |
+| Redundant | Gray `#6C757D` | Redundant constraints |
+
+- Real-time updates via `ViewProviderSketch::signalSetUp`
+- Displays constraint message and DOF count
+
+### 1.8 Contextual SKETCH Tab Highlight
+
+When entering sketch edit mode:
+- The SKETCH tab in the ribbon is automatically highlighted with blue accent background
+- `FusionTabToolbar::setSketchMode()` handles the visual state transition
+- The "Finish Sketch" button appears in the toolbar
+
+### 1.9 Command Palette (`FusionCommandPalette`)
+
+Fusion 360-style command palette triggered by pressing **S**:
+
+- Appears near cursor position (not centered)
+- **Pinned Commands**: Grid of favorite commands (right-click to pin/unpin)
+- **Recent Commands**: Last 12 used commands
+- **Search Field**: Filter commands by name or tooltip
+- Persistent settings stored in `FusionUI/CommandPalette` parameter group
+- Maximum 24 search results in 6-column grid layout
+
+### 1.10 Fusion 360 Visual Styling
+
+Comprehensive color scheme update to match Fusion 360 aesthetics:
+
+**Sketch Colors (`EditModeCoinManagerParameters`):**
+
+| Element | Old Color | New Color | Hex |
+|---|---|---|---|
+| Selection | Green `#1CAD1C` | Magenta `#FF1493` | Fusion-style selection |
+| Preselection | Yellow `#E1E100` | Cyan `#00E5FF` | Hover highlight |
+| Construction | Blue `#0000DC` | Orange `#FF8C00` | Construction geometry |
+| Fully Constrained | Green `#00FF00` | Mint Green `#00E676` | Lighter, less harsh |
+| External Geometry | Magenta `#CC3399` | Cyan `#00D4FF` | External references |
+
+**Point and Line Sizes:**
+
+| Element | Old | New |
+|---|---|---|
+| Vertex points | 8px | 5px (smaller, less intrusive) |
+| Marker size | 7 | 5 |
+| Selection line width | 3px | 4px (thicker for visibility) |
+| Construction line width | 1px | 2px |
+| External line width | 1px | 2px |
+
+**3D Selection Colors (`SoFCUnifiedSelection`):**
+
+| Element | Color | Hex |
+|---|---|---|
+| Highlight (hover) | Bright Cyan | `#00E5FF` |
+| Selection | Fusion Blue | `#0696D7` |
+
+**Manipulator Colors (`GizmoStyleParameters`):**
+
+| Element | Color | Hex |
+|---|---|---|
+| Linear Gizmo Base | Cyan | `#00D4FF` |
+| Linear Gizmo Active | Bright Cyan | `#00FFFF` |
+| Rotation Gizmo Base | Cyan | `#00D4FF` |
+| Dimension Visualizer | Fusion Blue | `#0696D7` |
+
+**PartDesign Preview Colors (`StyleParameters`):**
+
+| Element | Color | Usage |
+|---|---|---|
+| Additive Preview | Fusion Blue `#0696D7` | Extrude, Pad |
+| Subtractive Preview | Red `#FF3333` | Pocket, Cut |
+| DressUp Preview | Cyan `#00D4FF` | Fillet, Chamfer |
+| Shape Opacity | 25% | More visible preview |
+
 ---
 
 ## 2. Fusion 360 Navigation Style
@@ -263,6 +345,8 @@ The main feature commit (`b70db7ee`) added **150 files** with **+12,734 lines**.
 - `FusionNavigationBar.cpp / .h` — Bottom navigation bar
 - `FusionUIManager.cpp / .h` — UI orchestration singleton
 - `FusionMarkingMenu.cpp / .h` — Radial context menu
+- `FusionSketchPalette.cpp / .h` — Floating sketch toolbar with DOF meter
+- `FusionCommandPalette.cpp / .h` — Command palette (S key)
 - `CommandSearchDialog.cpp / .h` — Command search bar
 - `Navigation/FusionNavigationStyle.cpp` — Fusion 360 mouse navigation
 - `Stylesheets/UniCAD Dark.qss` — Dark theme stylesheet
