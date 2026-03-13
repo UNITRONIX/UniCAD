@@ -96,8 +96,14 @@ public:
     /// Use face normal as direction (if true, Direction is ignored)
     App::PropertyBool UseNormal;
     
+    /// Flip/reverse the extrusion direction (useful when normal points wrong way)
+    App::PropertyBool FlipDirection;
+    
     /// If true, this volume will auto-subtract from solids during operations
     App::PropertyBool AutoSubtract;
+    
+    /// Target body to automatically subtract clearance from
+    App::PropertyLink TargetBody;
     
     /// Name/label for identification (e.g., "USB-C Port", "HDMI")
     App::PropertyString PortName;

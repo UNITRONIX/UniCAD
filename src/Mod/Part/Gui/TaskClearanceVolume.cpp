@@ -38,6 +38,11 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QMessageBox>
+
+#include <BRepAlgoAPI_Cut.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopAbs_ShapeEnum.hxx>
 
 using namespace PartGui;
 
@@ -169,26 +174,66 @@ void TaskClearanceVolumePanel::setupUi()
     connect(m_symmetricCheck, &QCheckBox::toggled,
             this, &TaskClearanceVolumePanel::onSymmetricChanged);
     
+    m_flipDirectionCheck = new QCheckBox(tr("Flip direction"));
+    m_flipDirectionCheck->setToolTip(tr("Reverse the extrusion direction.\n"
+                                         "Use this if the clearance volume goes the wrong way."));
+    extrudeLayout->addRow(m_flipDirectionCheck);
+    connect(m_flipDirectionCheck, &QCheckBox::toggled,
+            this, &TaskClearanceVolumePanel::onFlipDirectionChanged);
+    
     mainLayout->addWidget(extrudeGroup);
     
     // Behavior group  
-    auto* behaviorGroup = new QGroupBox(tr("Behavior"));
-    auto* behaviorLayout = new QVBoxLayout(behaviorGroup);
+    auto* behaviorGroup = new QGroupBox(tr("Cutting"));
+    auto* behaviorLayout = new QFormLayout(behaviorGroup);
     
-    m_autoSubtractCheck = new QCheckBox(tr("Auto-subtract from solids"));
-    m_autoSubtractCheck->setToolTip(tr("Automatically cut this clearance volume from any solid\n"
-                                        "that intersects with it during extrusion operations."));
-    behaviorLayout->addWidget(m_autoSubtractCheck);
+    // Target body selector
+    m_targetBodyCombo = new QComboBox();
+    m_targetBodyCombo->setToolTip(tr("Select the solid body to cut the clearance hole from"));
+    behaviorLayout->addRow(tr("Target Body:"), m_targetBodyCombo);
+    connect(m_targetBodyCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &TaskClearanceVolumePanel::onTargetBodyChanged);
+    
+    // Populate target body combo with available solids
+    if (m_feature && m_feature->getDocument()) {
+        m_targetBodyCombo->addItem(tr("(None)"), QVariant());
+        auto* doc = m_feature->getDocument();
+        for (auto* obj : doc->getObjects()) {
+            if (obj == m_feature) continue;  // Skip self
+            auto* partFeat = dynamic_cast<Part::Feature*>(obj);
+            if (partFeat && !partFeat->Shape.getValue().IsNull()) {
+                // Check if it's a solid
+                TopAbs_ShapeEnum shapeType = partFeat->Shape.getValue().ShapeType();
+                if (shapeType == TopAbs_SOLID || shapeType == TopAbs_COMPOUND || 
+                    shapeType == TopAbs_COMPSOLID) {
+                    QString label = QString::fromStdString(obj->Label.getValue());
+                    m_targetBodyCombo->addItem(label, QVariant::fromValue(
+                        reinterpret_cast<quintptr>(obj)));
+                }
+            }
+        }
+    }
+    
+    m_autoSubtractCheck = new QCheckBox(tr("Auto-subtract when exporting"));
+    m_autoSubtractCheck->setToolTip(tr("Automatically cut this clearance volume when exporting to STL/STEP"));
+    behaviorLayout->addRow(m_autoSubtractCheck);
     connect(m_autoSubtractCheck, &QCheckBox::toggled,
             this, &TaskClearanceVolumePanel::onAutoSubtractChanged);
+    
+    // Apply Cut button
+    m_applyCutBtn = new QPushButton(tr("Apply Cut Now"));
+    m_applyCutBtn->setToolTip(tr("Create a new object with the clearance volume cut from the target body"));
+    m_applyCutBtn->setIcon(QIcon::fromTheme(QStringLiteral("edit-cut")));
+    behaviorLayout->addRow(m_applyCutBtn);
+    connect(m_applyCutBtn, &QPushButton::clicked,
+            this, &TaskClearanceVolumePanel::onApplyCutClicked);
     
     mainLayout->addWidget(behaviorGroup);
     
     // Info label
     auto* infoLabel = new QLabel(tr(
-        "<b>Tip:</b> Create clearance volumes for all ports on your PCB, "
-        "then design the enclosure. The clearance zones will automatically "
-        "cut holes with the correct tolerance for 3D printing."));
+        "<b>Tip:</b> Select a target body above and click 'Apply Cut Now' to create "
+        "a new object with the clearance hole cut out, ready for 3D printing."));
     infoLabel->setWordWrap(true);
     infoLabel->setStyleSheet(QStringLiteral("color: #666; font-size: 11px; padding: 8px;"));
     mainLayout->addWidget(infoLabel);
@@ -209,7 +254,23 @@ void TaskClearanceVolumePanel::loadFromFeature()
     m_depthSpin->setValue(m_feature->Depth.getValue());
     m_depthReverseSpin->setValue(m_feature->DepthReverse.getValue());
     m_symmetricCheck->setChecked(m_feature->Symmetric.getValue());
+    m_flipDirectionCheck->setChecked(m_feature->FlipDirection.getValue());
     m_autoSubtractCheck->setChecked(m_feature->AutoSubtract.getValue());
+    
+    // Set target body combo
+    App::DocumentObject* targetBody = m_feature->TargetBody.getValue();
+    if (targetBody) {
+        for (int i = 0; i < m_targetBodyCombo->count(); ++i) {
+            QVariant data = m_targetBodyCombo->itemData(i);
+            if (!data.isNull()) {
+                auto* obj = reinterpret_cast<App::DocumentObject*>(data.value<quintptr>());
+                if (obj == targetBody) {
+                    m_targetBodyCombo->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+    }
     
     // Update face label
     App::DocumentObject* source = m_feature->SourceFaces.getValue();
@@ -359,10 +420,111 @@ void TaskClearanceVolumePanel::onSymmetricChanged(bool checked)
     }
 }
 
+void TaskClearanceVolumePanel::onFlipDirectionChanged(bool checked)
+{
+    if (m_feature) {
+        m_feature->FlipDirection.setValue(checked);
+        updatePreview();
+    }
+}
+
 void TaskClearanceVolumePanel::onAutoSubtractChanged(bool checked)
 {
     if (m_feature) {
         m_feature->AutoSubtract.setValue(checked);
+    }
+}
+
+void TaskClearanceVolumePanel::onTargetBodyChanged(int index)
+{
+    if (!m_feature || index < 0) {
+        return;
+    }
+    
+    QVariant data = m_targetBodyCombo->itemData(index);
+    if (data.isNull()) {
+        m_feature->TargetBody.setValue(nullptr);
+    }
+    else {
+        auto* obj = reinterpret_cast<App::DocumentObject*>(data.value<quintptr>());
+        m_feature->TargetBody.setValue(obj);
+    }
+}
+
+void TaskClearanceVolumePanel::onApplyCutClicked()
+{
+    if (!m_feature) {
+        return;
+    }
+    
+    // Get target body
+    App::DocumentObject* targetObj = m_feature->TargetBody.getValue();
+    if (!targetObj) {
+        // Try to get from combo
+        int index = m_targetBodyCombo->currentIndex();
+        if (index > 0) {
+            QVariant data = m_targetBodyCombo->itemData(index);
+            if (!data.isNull()) {
+                targetObj = reinterpret_cast<App::DocumentObject*>(data.value<quintptr>());
+            }
+        }
+    }
+    
+    if (!targetObj) {
+        QMessageBox::warning(this, tr("No Target"), 
+            tr("Please select a target body to cut from."));
+        return;
+    }
+    
+    auto* targetPart = dynamic_cast<Part::Feature*>(targetObj);
+    if (!targetPart) {
+        QMessageBox::warning(this, tr("Invalid Target"), 
+            tr("Target must be a Part feature with a solid shape."));
+        return;
+    }
+    
+    // Get shapes
+    TopoDS_Shape targetShape = targetPart->Shape.getValue();
+    TopoDS_Shape clearanceShape = m_feature->Shape.getValue();
+    
+    if (targetShape.IsNull() || clearanceShape.IsNull()) {
+        QMessageBox::warning(this, tr("Invalid Shapes"), 
+            tr("One or both shapes are invalid."));
+        return;
+    }
+    
+    // Perform Boolean Cut
+    BRepAlgoAPI_Cut cutOp(targetShape, clearanceShape);
+    cutOp.Build();
+    
+    if (!cutOp.IsDone()) {
+        QMessageBox::warning(this, tr("Cut Failed"), 
+            tr("Boolean cut operation failed."));
+        return;
+    }
+    
+    TopoDS_Shape resultShape = cutOp.Shape();
+    
+    // Create new Part::Feature with result
+    App::Document* doc = m_feature->getDocument();
+    auto* resultFeature = dynamic_cast<Part::Feature*>(
+        doc->addObject("Part::Feature", "CutResult"));
+    
+    if (resultFeature) {
+        QString label = QString::fromStdString(targetObj->Label.getValue()) + 
+                        QStringLiteral("_Cut");
+        resultFeature->Label.setValue(label.toStdString().c_str());
+        resultFeature->Shape.setValue(resultShape);
+        
+        // Hide original and clearance volume
+        targetObj->Visibility.setValue(false);
+        m_feature->Visibility.setValue(false);
+        
+        doc->recompute();
+        
+        QMessageBox::information(this, tr("Cut Applied"), 
+            tr("Created new object '%1' with clearance hole cut out.\n\n"
+               "Original objects have been hidden.").arg(label));
     }
 }
 

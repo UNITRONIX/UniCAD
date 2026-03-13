@@ -67,8 +67,11 @@ private Q_SLOTS:
     void onDepthChanged(double value);
     void onDepthReverseChanged(double value);
     void onSymmetricChanged(bool checked);
+    void onFlipDirectionChanged(bool checked);
     void onAutoSubtractChanged(bool checked);
     void onPortNameChanged(const QString& text);
+    void onTargetBodyChanged(int index);
+    void onApplyCutClicked();
 
 private:
     void setupUi();
@@ -84,7 +87,10 @@ private:
     QDoubleSpinBox* m_depthSpin;
     QDoubleSpinBox* m_depthReverseSpin;
     QCheckBox* m_symmetricCheck;
+    QCheckBox* m_flipDirectionCheck;
     QCheckBox* m_autoSubtractCheck;
+    QComboBox* m_targetBodyCombo;
+    QPushButton* m_applyCutBtn;
     QLineEdit* m_portNameEdit;
     QPushButton* m_selectFaceBtn;
     QLabel* m_faceLabel;
