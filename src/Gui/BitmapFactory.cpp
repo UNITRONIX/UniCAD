@@ -347,6 +347,16 @@ QPixmap BitmapFactoryInst::pixmapFromSvg(
         QString toColorString = QStringLiteral("#%1").arg(toColor, 6, 16, QChar::fromLatin1('0'));
         stringContents = stringContents.replace(fromColorString, toColorString);
     }
+
+    // Resolve "currentColor" to the application palette's text color so that
+    // Material Design icons (which use fill="currentColor") adapt to the theme.
+    if (stringContents.contains(QLatin1String("currentColor"))) {
+        QColor textColor = QApplication::palette().text().color();
+        QString hexColor = QStringLiteral("#%1").arg(
+            textColor.rgb() & 0xffffffU, 6, 16, QChar::fromLatin1('0'));
+        stringContents.replace(QLatin1String("currentColor"), hexColor);
+    }
+
     QByteArray contents = stringContents.toUtf8();
 
     QImage image(size.toSize(), QImage::Format_ARGB32_Premultiplied);

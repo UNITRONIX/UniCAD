@@ -68,6 +68,11 @@ set(CompoundTools_Scripts
     CompoundTools/Explode.py
 )
 
+set(PartScriptsDir_Scripts
+    Scripts/__init__.py
+    Scripts/QuickPortCutout.py
+)
+
 set(Part_tests
     parttests/__init__.py
     parttests/BRep_tests.py
@@ -88,6 +93,7 @@ add_custom_target(PartScripts ALL SOURCES
     ${BasicShapes_Scripts}
     ${BOPTools_Scripts}
     ${CompoundTools_Scripts}
+    ${PartScriptsDir_Scripts}
     ${Part_tests}
 )
 
@@ -99,6 +105,7 @@ fc_target_copy_resource(PartScripts
     ${BasicShapes_Scripts}
     ${BOPTools_Scripts}
     ${CompoundTools_Scripts}
+    ${PartScriptsDir_Scripts}
     ${Part_tests}
 )
 
@@ -135,6 +142,13 @@ INSTALL(
         ${CompoundTools_Scripts}
     DESTINATION
         Mod/Part/CompoundTools
+)
+
+INSTALL(
+    FILES
+        ${PartScriptsDir_Scripts}
+    DESTINATION
+        Mod/Part/Scripts
 )
 
 INSTALL(

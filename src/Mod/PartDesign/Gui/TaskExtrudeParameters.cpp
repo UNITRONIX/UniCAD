@@ -641,6 +641,17 @@ std::vector<std::string> PartDesignGui::TaskExtrudeParameters::getShapeFaces(
 
 void TaskExtrudeParameters::onLengthChanged(double len, Side side)
 {
+    // UniCAD: Negative length = reverse extrusion direction.
+    // The Operation (Join/Cut) stays unchanged; user controls it explicitly.
+    // The sign is passed through to buildExtrusion() which handles dir.Reverse().
+    getSideController(side).Length->setValue(len);
+    setGizmoPositions();
+    if (std::abs(len) >= 0.001) {
+        tryRecomputeFeature();
+    }
+}
+
+#if 0  // Dead code: old auto-Operation-switch on negative drag
     // UniCAD: Fusion 360-style behavior â€” dragging below zero auto-switches
     // between Join and Cut operation. Operation=Cut already reverses the
     // profile normal (like Pocket), so no Reversed flip needed.
@@ -684,13 +695,12 @@ void TaskExtrudeParameters::onLengthChanged(double len, Side side)
     }
 
     getSideController(side).Length->setValue(len);
-    if (!_crossedZero) {
-        setGizmoPositions();
-    }
+    setGizmoPositions();
     if (len >= 0.001) {
         tryRecomputeFeature();
     }
 }
+#endif  // Dead code: old auto-Operation-switch
 
 void TaskExtrudeParameters::onOffsetChanged(double len, Side side)
 {

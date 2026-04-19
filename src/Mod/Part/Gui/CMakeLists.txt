@@ -263,6 +263,7 @@ SET(PartGui_SRCS
     TaskClearanceVolume.cpp
     TaskClearanceVolume.h
     CommandClearanceVolume.cpp
+    CommandQuickPortCutout.cpp
 )
 
 SET(PartGuiIcon_SVG

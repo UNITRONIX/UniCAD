@@ -23,7 +23,10 @@
  ***************************************************************************/
 
 
+#include <algorithm>
+
 #include <App/Document.h>
+#include <App/DocumentObjectGroup.h>
 #include <App/VarSet.h>
 #include <App/Origin.h>
 #include <Base/Placement.h>
@@ -213,6 +216,8 @@ bool Body::isAllowed(const App::DocumentObject* obj)
         // allow VarSets for parameterization
         obj->isDerivedFrom<App::VarSet>() || obj->isDerivedFrom<App::DatumElement>()
         || obj->isDerivedFrom<App::LocalCoordinateSystem>()
+        // UniCAD: allow DocumentObjectGroup for organized tree folders (Sketches, etc.)
+        || obj->isDerivedFrom<App::DocumentObjectGroup>()
     );
 }
 
@@ -241,6 +246,20 @@ std::vector<App::DocumentObject*> Body::addObject(App::DocumentObject* feature)
         group->getExtensionByType<GroupExtension>()->removeObject(feature);
     }
 
+    // UniCAD: Route sketches to the Sketches folder for organized tree
+    // Use direct Group property manipulation to avoid GroupExtension::addObject
+    // which would remove the sketch from Body.Group.
+    if (feature->isDerivedFrom<Part::Part2DObject>()) {
+        auto* folderObj = getSketchFolder(/*createIfMissing=*/true);
+        if (folderObj) {
+            auto* folder = static_cast<App::DocumentObjectGroup*>(folderObj);
+            auto vals = folder->Group.getValues();
+            if (std::find(vals.begin(), vals.end(), feature) == vals.end()) {
+                vals.push_back(feature);
+                folder->Group.setValues(vals);
+            }
+        }
+    }
 
     insertObject(feature, getNextSolidFeature(), /*after = */ false);
     // Move the Tip if we added a solid
@@ -372,6 +391,21 @@ std::vector<App::DocumentObject*> Body::removeObject(App::DocumentObject* featur
         model.erase(it);
         Group.setValues(model);
     }
+
+    // UniCAD: Also remove sketch from the Sketches folder
+    if (feature->isDerivedFrom<Part::Part2DObject>()) {
+        auto* folderObj = getSketchFolder(/*createIfMissing=*/false);
+        if (folderObj) {
+            auto* skFolder = static_cast<App::DocumentObjectGroup*>(folderObj);
+            auto folderVals = skFolder->Group.getValues();
+            auto fit = std::find(folderVals.begin(), folderVals.end(), feature);
+            if (fit != folderVals.end()) {
+                folderVals.erase(fit);
+                skFolder->Group.setValues(folderVals);
+            }
+        }
+    }
+
     std::vector<App::DocumentObject*> result = {feature};
     return result;
 }
@@ -502,6 +536,38 @@ void Body::onChanged(const App::Property* prop)
 void Body::setupObject()
 {
     Part::BodyBase::setupObject();
+
+    // UniCAD: Create a "Sketches" folder for organized tree layout
+    getSketchFolder(/*createIfMissing=*/true);
+}
+
+// UniCAD: Get or create the "Sketches" folder inside this Body
+App::DocumentObject* Body::getSketchFolder(bool createIfMissing)
+{
+    // Look for existing sketch folder in the Group
+    for (auto* obj : Group.getValues()) {
+        if (obj && obj->isDerivedFrom<App::DocumentObjectGroup>()
+            && strcmp(obj->Label.getValue(), "Sketches") == 0) {
+            return obj;
+        }
+    }
+
+    if (!createIfMissing || !getDocument()) {
+        return nullptr;
+    }
+
+    // Create a new folder
+    auto* folder = static_cast<App::DocumentObjectGroup*>(
+        getDocument()->addObject("App::DocumentObjectGroup", "Sketches"));
+    if (folder) {
+        folder->Label.setValue("Sketches");
+
+        // Insert folder at the beginning of Group (after Origin if present)
+        std::vector<App::DocumentObject*> model = Group.getValues();
+        model.insert(model.begin(), folder);
+        Group.setValues(model);
+    }
+    return folder;
 }
 
 void Body::unsetupObject()
@@ -601,6 +667,25 @@ void Body::onDocumentRestored()
         }
     }
     _GroupTouched.setStatus(App::Property::Output, true);
+
+    // UniCAD: Migrate existing sketches into the Sketches folder
+    // Use direct Group property manipulation to keep sketch in Body.Group too.
+    auto* folderObj = getSketchFolder(/*createIfMissing=*/true);
+    if (folderObj) {
+        auto* skFolder = static_cast<App::DocumentObjectGroup*>(folderObj);
+        auto folderVals = skFolder->Group.getValues();
+        bool changed = false;
+        for (auto* obj : Group.getValues()) {
+            if (obj && obj->isDerivedFrom<Part::Part2DObject>()
+                && std::find(folderVals.begin(), folderVals.end(), obj) == folderVals.end()) {
+                folderVals.push_back(obj);
+                changed = true;
+            }
+        }
+        if (changed) {
+            skFolder->Group.setValues(folderVals);
+        }
+    }
 
     // trigger ViewProviderBody::copyColorsfromTip
     if (Tip.getValue()) {

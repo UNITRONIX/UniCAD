@@ -1681,12 +1681,17 @@ StdCmdTransform::StdCmdTransform()
 void StdCmdTransform::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
+    // UniCAD: Close any existing dialog first to allow Transform to work
+    if (Gui::Control().activeDialog()) {
+        Gui::Control().closeDialog();
+    }
     Gui::Control().showDialog(new Gui::Dialog::TaskTransform());
 }
 
 bool StdCmdTransform::isActive()
 {
-    return (Gui::Control().activeDialog() == nullptr);
+    // UniCAD: Always allow Transform if document is active - we'll close other dialogs
+    return hasActiveDocument();
 }
 
 //===========================================================================
@@ -1712,6 +1717,10 @@ StdCmdPlacement::StdCmdPlacement()
 void StdCmdPlacement::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
+    // UniCAD: Close any existing dialog first to allow Placement to work
+    if (Gui::Control().activeDialog()) {
+        Gui::Control().closeDialog();
+    }
     std::vector<App::DocumentObject*> sel = Gui::Selection().getObjectsOfType(
         App::GeoFeature::getClassTypeId()
     );
@@ -1766,6 +1775,10 @@ StdCmdTransformManip::StdCmdTransformManip()
 void StdCmdTransformManip::activated(int iMsg)
 {
     Q_UNUSED(iMsg);
+    // UniCAD: Close any existing dialog first to allow manipulators to work
+    if (Gui::Control().activeDialog()) {
+        Gui::Control().closeDialog();
+    }
     if (getActiveGuiDocument()->getInEdit()) {
         getActiveGuiDocument()->resetEdit();
     }

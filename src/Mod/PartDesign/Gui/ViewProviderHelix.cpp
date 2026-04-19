@@ -75,11 +75,6 @@ QIcon ViewProviderHelix::getIcon() const
 
 std::vector<App::DocumentObject*> ViewProviderHelix::claimChildren() const
 {
-    std::vector<App::DocumentObject*> temp;
-    App::DocumentObject* sketch = getObject<PartDesign::ProfileBased>()->Profile.getValue();
-    if (sketch && sketch->isDerivedFrom<Part::Part2DObject>()) {
-        temp.push_back(sketch);
-    }
-
-    return temp;
+    // UniCAD: Sketches are organised under the Body's "Sketches" folder.
+    return {};
 }

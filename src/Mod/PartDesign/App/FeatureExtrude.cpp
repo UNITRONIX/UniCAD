@@ -343,13 +343,12 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
                                                                     : 0.0
                                           : 0.0;
 
-    // UniCAD: Fusion 360-style negative extrusion.
-    // Negative Length on a Pad â†’ reverse direction + Cut (drills into base).
-    // Negative Length on a Pocket â†’ reverse direction + Fuse (adds material).
+    // UniCAD: Negative length = reverse extrusion direction only.
+    // The boolean operation (Fuse/Cut) is determined solely by addSubType.
     bool isNegativeExtrusion = false;
     if (Sidemethod == "One side" && method == "Length" && L < 0) {
         isNegativeExtrusion = true;
-        L = std::abs(L);  // Use positive length; direction will be reversed below
+        L = std::abs(L);
     }
 
     if ((Sidemethod == "One side" && method == "Length")
@@ -482,9 +481,8 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
             dir.Reverse();
         }
 
-        // UniCAD: For negative extrusion, reverse the direction.
-        // L was already made positive above; reversing dir makes the prism
-        // go in the opposite direction (into the base for Pad, out for Pocket).
+        // UniCAD: Negative length reverses extrusion direction.
+        // L is already positive; only the geometric direction flips.
         if (isNegativeExtrusion) {
             dir.Reverse();
         }
@@ -758,16 +756,15 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
             // Let's call algorithm computing a fuse operation:
             TopoShape result(0, getDocument()->getStringHasher());
             try {
-                // UniCAD: Fusion 360-style negative extrusion flips the boolean op.
-                // Pad with negative Length â†’ Cut (drills into base).
-                // Pocket with negative Length â†’ Fuse (adds material).
+                // UniCAD: Boolean operation determined solely by addSubType.
+                // Negative length only reverses direction, never changes the operation.
                 const char* maker;
                 switch (getAddSubType()) {
                     case Subtractive:
-                        maker = isNegativeExtrusion ? Part::OpCodes::Fuse : Part::OpCodes::Cut;
+                        maker = Part::OpCodes::Cut;
                         break;
                     default:
-                        maker = isNegativeExtrusion ? Part::OpCodes::Cut : Part::OpCodes::Fuse;
+                        maker = Part::OpCodes::Fuse;
                 }
                 result.makeElementBoolean(maker, {base, prism});
             }

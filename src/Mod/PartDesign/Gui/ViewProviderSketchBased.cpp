@@ -76,13 +76,9 @@ ViewProviderSketchBased::~ViewProviderSketchBased() = default;
 
 std::vector<App::DocumentObject*> ViewProviderSketchBased::claimChildren() const
 {
-    std::vector<App::DocumentObject*> temp;
-    App::DocumentObject* sketch = getObject<PartDesign::ProfileBased>()->Profile.getValue();
-    if (sketch && !sketch->isDerivedFrom<PartDesign::Feature>()) {
-        temp.push_back(sketch);
-    }
-
-    return temp;
+    // UniCAD: Sketches are organised under the Body's "Sketches" folder.
+    // Returning empty so the sketch is not duplicated as a child of features.
+    return {};
 }
 
 void ViewProviderSketchBased::attach(App::DocumentObject* pcObject)

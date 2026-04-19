@@ -44,32 +44,8 @@ ViewProviderPipe::~ViewProviderPipe() = default;
 
 std::vector<App::DocumentObject*> ViewProviderPipe::claimChildren() const
 {
-    std::vector<App::DocumentObject*> temp;
-
-    PartDesign::Pipe* pcPipe = getObject<PartDesign::Pipe>();
-
-    App::DocumentObject* sketch = pcPipe->getVerifiedSketch(true);
-    if (sketch) {
-        temp.push_back(sketch);
-    }
-
-    for (App::DocumentObject* obj : pcPipe->Sections.getValues()) {
-        if (obj && obj->isDerivedFrom<Part::Part2DObject>()) {
-            temp.push_back(obj);
-        }
-    }
-
-    App::DocumentObject* spine = pcPipe->Spine.getValue();
-    if (spine && spine->isDerivedFrom<Part::Part2DObject>()) {
-        temp.push_back(spine);
-    }
-
-    App::DocumentObject* auxspine = pcPipe->AuxiliarySpine.getValue();
-    if (auxspine && auxspine->isDerivedFrom<Part::Part2DObject>()) {
-        temp.push_back(auxspine);
-    }
-
-    return temp;
+    // UniCAD: Sketches are organised under the Body's "Sketches" folder.
+    return {};
 }
 
 void ViewProviderPipe::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)

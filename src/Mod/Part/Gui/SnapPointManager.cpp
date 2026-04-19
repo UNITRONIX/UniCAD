@@ -178,6 +178,28 @@ void SnapPointManager::analyzePreselection(const Gui::SelectionChanges& msg)
     TopoDS_Face face = getPreselectedFace(msg);
     if (!face.IsNull()) {
         m_currentFeatures = m_recognizer.analyzeFace(face);
+        
+        // Also check adjacent faces for holes (cylindrical surfaces)
+        // This allows detecting hole centers when hovering "through" a hole
+        TopoDS_Shape parentShape = getPreselectedShape(msg);
+        if (!parentShape.IsNull()) {
+            auto adjacentFeatures = m_recognizer.analyzeAdjacentFaces(face, parentShape);
+            
+            // Add adjacent features, avoiding duplicates
+            for (const auto& adjFeature : adjacentFeatures) {
+                bool duplicate = false;
+                for (const auto& existing : m_currentFeatures) {
+                    double dist = (existing.position - adjFeature.position).Length();
+                    if (dist < 0.01) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate) {
+                    m_currentFeatures.push_back(adjFeature);
+                }
+            }
+        }
     }
     else {
         // Try to get an edge

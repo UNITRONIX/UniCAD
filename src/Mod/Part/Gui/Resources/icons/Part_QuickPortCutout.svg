@@ -1,0 +1,8 @@
+<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
+  <!-- Box representing enclosure wall -->
+  <rect x="120" y="-760" width="720" height="560" fill="none" stroke="currentColor" stroke-width="40" rx="20"/>
+  <!-- Port cutout hole -->
+  <rect x="340" y="-620" width="280" height="280" fill="currentColor" rx="10"/>
+  <!-- Arrow pointing into the cutout -->
+  <path d="M480-240 l0-120 l-60 0 l100-120 l100 120 l-60 0 l0 120 z" fill="currentColor"/>
+</svg>

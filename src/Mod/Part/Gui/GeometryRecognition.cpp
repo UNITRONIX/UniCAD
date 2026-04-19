@@ -43,8 +43,11 @@
 
 #include <TopoDS.hxx>
 #include <TopoDS_Iterator.hxx>
+#include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+#include <TopTools_IndexedDataMapOfShapeListOfShape.hxx>
+#include <TopTools_ListIteratorOfListOfShape.hxx>
 
 #include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
@@ -113,34 +116,157 @@ std::vector<RecognizedFeature> GeometryRecognition::analyzeFace(const TopoDS_Fac
         return features;
     }
     
-    // Try each surface type
+    // Try each surface type - these are the primary circular features
     if (auto cyl = getCylinderAxis(face)) {
         features.push_back(*cyl);
-    }
-    else if (auto cone = getConeApex(face)) {
-        features.push_back(*cone);
-    }
-    else if (auto sphere = getSphereCenter(face)) {
-        features.push_back(*sphere);
+        return features;  // Cylinder found - no need to check edges
     }
     
-    // Also analyze edges of the face for circular features
-    TopExp_Explorer edgeExp(face, TopAbs_EDGE);
-    for (; edgeExp.More(); edgeExp.Next()) {
-        TopoDS_Edge edge = TopoDS::Edge(edgeExp.Current());
-        auto edgeFeatures = analyzeEdge(edge);
-        for (auto& ef : edgeFeatures) {
-            // Avoid duplicates - check if similar position already exists
+    if (auto cone = getConeApex(face)) {
+        features.push_back(*cone);
+        return features;
+    }
+    
+    if (auto sphere = getSphereCenter(face)) {
+        features.push_back(*sphere);
+        return features;
+    }
+    
+    // For planar faces, detect centers of all full circular edges (holes)
+    // This includes: circular disks, washers, AND rectangular faces with circular holes
+    BRepAdaptor_Surface surface(face);
+    if (surface.GetType() == GeomAbs_Plane) {
+        // Find ALL full circles (inner wires = holes in the face)
+        TopExp_Explorer edgeExp(face, TopAbs_EDGE);
+        for (; edgeExp.More(); edgeExp.Next()) {
+            TopoDS_Edge edge = TopoDS::Edge(edgeExp.Current());
+            
+            BRepAdaptor_Curve curve(edge);
+            if (curve.GetType() != GeomAbs_Circle) {
+                continue;  // Skip non-circular edges (rectangles, lines, arcs)
+            }
+            
+            // Check if it's a full circle (not an arc)
+            double paramRange = curve.LastParameter() - curve.FirstParameter();
+            if (paramRange < 6.0) {  // ~2*PI = 6.28 (full circle)
+                continue;  // Skip partial arcs
+            }
+            
+            // It's a full circle - get its center
+            auto circleFeature = getCircleCenter(edge);
+            if (!circleFeature) {
+                continue;
+            }
+            
+            // Avoid duplicates (e.g., shared edges)
             bool duplicate = false;
             for (const auto& existing : features) {
-                double dist = (existing.position - ef.position).Length();
-                if (dist < 0.01) { // 0.01mm tolerance
+                double dist = (existing.position - circleFeature->position).Length();
+                if (dist < 0.01) {  // 0.01mm tolerance
                     duplicate = true;
                     break;
                 }
             }
             if (!duplicate) {
-                features.push_back(ef);
+                features.push_back(*circleFeature);
+            }
+        }
+        
+        return features;
+    }
+    
+    // For other surface types (torus, etc.), analyze edges cautiously
+    // Only add FULL circles (complete boundaries), skip arcs
+    TopExp_Explorer edgeExp(face, TopAbs_EDGE);
+    for (; edgeExp.More(); edgeExp.Next()) {
+        TopoDS_Edge edge = TopoDS::Edge(edgeExp.Current());
+        
+        // Only process full circles, not arcs
+        BRepAdaptor_Curve curve(edge);
+        if (curve.GetType() != GeomAbs_Circle) {
+            continue;
+        }
+        
+        double paramRange = curve.LastParameter() - curve.FirstParameter();
+        if (paramRange < 6.0) {  // Not a full circle
+            continue;
+        }
+        
+        auto circleFeature = getCircleCenter(edge);
+        if (!circleFeature) {
+            continue;
+        }
+        
+        // Avoid duplicates - check if similar position already exists
+        bool duplicate = false;
+        for (const auto& existing : features) {
+            double dist = (existing.position - circleFeature->position).Length();
+            if (dist < 0.01) { // 0.01mm tolerance
+                duplicate = true;
+                break;
+            }
+        }
+        if (!duplicate) {
+            features.push_back(*circleFeature);
+        }
+    }
+    
+    return features;
+}
+
+std::vector<RecognizedFeature> GeometryRecognition::analyzeAdjacentFaces(
+    const TopoDS_Face& face,
+    const TopoDS_Shape& parentShape) const
+{
+    std::vector<RecognizedFeature> features;
+    
+    if (face.IsNull() || parentShape.IsNull()) {
+        return features;
+    }
+    
+    // Build a map of edges to faces for fast adjacency lookup
+    TopTools_IndexedDataMapOfShapeListOfShape edgeToFaces;
+    TopExp::MapShapesAndAncestors(parentShape, TopAbs_EDGE, TopAbs_FACE, edgeToFaces);
+    
+    // Get all edges of the current face
+    TopExp_Explorer edgeExp(face, TopAbs_EDGE);
+    for (; edgeExp.More(); edgeExp.Next()) {
+        TopoDS_Edge edge = TopoDS::Edge(edgeExp.Current());
+        
+        // Find all faces that share this edge
+        if (!edgeToFaces.Contains(edge)) {
+            continue;
+        }
+        
+        const TopTools_ListOfShape& adjacentFaces = edgeToFaces.FindFromKey(edge);
+        
+        for (TopTools_ListIteratorOfListOfShape it(adjacentFaces); it.More(); it.Next()) {
+            TopoDS_Face adjFace = TopoDS::Face(it.Value());
+            
+            // Skip the original face
+            if (adjFace.IsSame(face)) {
+                continue;
+            }
+            
+            // Check if this adjacent face is cylindrical (hole wall)
+            BRepAdaptor_Surface surface(adjFace);
+            if (surface.GetType() == GeomAbs_Cylinder) {
+                auto cylFeature = getCylinderAxis(adjFace);
+                if (cylFeature) {
+                    // Avoid duplicates
+                    bool duplicate = false;
+                    for (const auto& existing : features) {
+                        double dist = (existing.position - cylFeature->position).Length();
+                        if (dist < 0.01) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        cylFeature->isInternalFeature = true;  // Mark as hole
+                        features.push_back(*cylFeature);
+                    }
+                }
             }
         }
     }

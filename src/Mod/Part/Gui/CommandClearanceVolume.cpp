@@ -22,6 +22,8 @@
 
 #include <QMessageBox>
 
+#include <BRepAlgoAPI_Cut.hxx>
+
 #include <Gui/Application.h>
 #include <Gui/Command.h>
 #include <Gui/Document.h>
@@ -166,22 +168,32 @@ void CmdPartApplyClearanceVolumes::activated(int /*iMsg*/)
         return;
     }
     
-    // Create cuts for each clearance volume
+    // UniCAD: Apply all clearance volumes in-place (Fusion 360 style).
+    // Instead of creating a chain of Part::Cut objects, we subtract each
+    // clearance shape directly from the target, keeping the tree clean.
     openCommand("Apply Clearance Volumes");
     
-    std::string currentShape = targetObj->getNameInDocument();
+    TopoDS_Shape currentShape = targetObj->Shape.getValue();
+    int appliedCount = 0;
     
-    for (size_t i = 0; i < toApply.size(); ++i) {
-        std::string cutName = doc->getUniqueObjectName("ClearanceCut");
-        doCommand(Doc, "App.ActiveDocument.addObject('Part::Cut', '%s')", cutName.c_str());
-        doCommand(Doc, "App.ActiveDocument.%s.Base = App.ActiveDocument.%s", 
-                  cutName.c_str(), currentShape.c_str());
-        doCommand(Doc, "App.ActiveDocument.%s.Tool = App.ActiveDocument.%s",
-                  cutName.c_str(), toApply[i]->getNameInDocument());
-        doCommand(Doc, "App.ActiveDocument.%s.Label = 'Enclosure with %s'",
-                  cutName.c_str(), toApply[i]->PortName.getValue());
+    for (auto* cv : toApply) {
+        TopoDS_Shape cvShape = cv->Shape.getValue();
+        if (cvShape.IsNull()) {
+            continue;
+        }
         
-        currentShape = cutName;
+        BRepAlgoAPI_Cut cutOp(currentShape, cvShape);
+        cutOp.Build();
+        
+        if (cutOp.IsDone()) {
+            currentShape = cutOp.Shape();
+            cv->Visibility.setValue(false);
+            appliedCount++;
+        }
+    }
+    
+    if (appliedCount > 0) {
+        targetObj->Shape.setValue(currentShape);
     }
     
     commitCommand();
@@ -189,8 +201,9 @@ void CmdPartApplyClearanceVolumes::activated(int /*iMsg*/)
     
     QMessageBox::information(Gui::getMainWindow(),
                             QObject::tr("Clearances Applied"),
-                            QObject::tr("Applied %1 clearance volume(s) to create holes with tolerance.")
-                                .arg(static_cast<int>(toApply.size())));
+                            QObject::tr("Applied %1 clearance volume(s) to '%2'.")
+                                .arg(appliedCount)
+                                .arg(QString::fromUtf8(targetObj->Label.getValue())));
 }
 
 bool CmdPartApplyClearanceVolumes::isActive()

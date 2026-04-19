@@ -71,6 +71,12 @@ class PartDesignWorkbench(Workbench):
         except ImportError:
             FreeCAD.Console.PrintLog("FusionCAD: FusionSketchHelpers not available\n")
 
+        # Quick Hole command - create holes at face centers
+        try:
+            from PartDesign.Scripts import QuickHole
+        except ImportError:
+            FreeCAD.Console.PrintLog("QuickHole command not available\n")
+
     def GetClassName(self):
         return "PartDesignGui::Workbench"
 

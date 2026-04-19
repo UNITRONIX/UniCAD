@@ -90,6 +90,7 @@ void CreateSimplePartCommands();
 void CreateParamPartCommands();
 void CreatePartSelectCommands();
 void CreateClearanceVolumeCommands();
+void CreateQuickPortCutoutCommands();
 
 void loadPartResource()
 {
@@ -248,6 +249,7 @@ PyMOD_INIT_FUNC(PartGui)
     CreateParamPartCommands();
     CreatePartSelectCommands();
     CreateClearanceVolumeCommands();
+    CreateQuickPortCutoutCommands();
     try {
         const char* cmd = "__import__('AttachmentEditor.Commands').Commands";
         Py::Object ae = Base::Interpreter().runStringObject(cmd);

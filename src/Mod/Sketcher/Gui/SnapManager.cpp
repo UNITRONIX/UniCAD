@@ -116,8 +116,8 @@ void SnapManager::ParameterObserver::updateAutoAngleSnapParameter(const std::str
 {
     ParameterGrp::handle hGrp = getParameterGrpHandle();
 
-    // UniCAD: Auto angle snap without requiring Ctrl key
-    client.autoAngleSnapEnabled = hGrp->GetBool(parametername.c_str(), true);
+    // UniCAD: Auto angle snap disabled by default; hold Ctrl for angle snap
+    client.autoAngleSnapEnabled = hGrp->GetBool(parametername.c_str(), false);
 }
 
 void SnapManager::ParameterObserver::updateSnapAngleParameter(const std::string& parametername)
@@ -178,7 +178,7 @@ ParameterGrp::handle SnapManager::ParameterObserver::getParameterGrpHandle()
 SnapManager::SnapManager(ViewProviderSketch& vp)
     : viewProvider(vp)
     , angleSnapRequested(false)
-    , autoAngleSnapEnabled(true)  // UniCAD: Auto angle snap enabled by default
+    , autoAngleSnapEnabled(false)  // UniCAD: Auto angle snap disabled by default; use Ctrl for angle snap
     , referencePoint(Base::Vector2d(0., 0.))
     , lastMouseAngle(0.0)
     , lastSnapType(SnapIndicatorType::None)  // UniCAD: Initialize snap type
@@ -200,10 +200,48 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
 
     Base::Vector2d snapPos = inputPos;
 
-    // In order of priority:
+    // UniCAD: Snap priority order:
+    // 1. Point/face center snap (exact geometric targets)
+    // 2. Object/edge snap
+    // 3. Grid snap (structural alignment)
+    // 4. Angle snap (lowest — only with Ctrl or preference)
 
-    // 1 - Snap at an angle
-    // UniCAD: Support both Ctrl-triggered and automatic angle snap
+    // 1 - UniCAD: Snap to face center (important for finding rectangle/polygon centers)
+    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Point)) && snapToObjectsRequested) {
+        if (snapToFaceCenter(inputPos, snapPos)) {
+            lastSnapType = SnapIndicatorType::FaceCenter;
+            viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
+            return snapPos;
+        }
+    }
+
+    // 2 - Snap to objects (may partially snap to axis, leaving other coordinate for grid)
+    if ((static_cast<int>(mask)
+         & (static_cast<int>(SnapType::Point) | static_cast<int>(SnapType::Edge)))
+        && snapToObjectsRequested) {
+        if (snapToObject(inputPos, snapPos, mask)) {
+            // lastSnapType is set inside snapToObject
+            viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
+            return snapPos;  // Full snap (point or curve) - done
+        }
+        // if false was returned but snapPos was modified (axis case), continue to grid snap
+    }
+
+    // 3 - Snap to grid (will work on coordinates not already locked by axis snap)
+    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Grid)) && snapToGridRequested) {
+        Base::Vector2d gridSnapResult = snapPos;
+        if (snapToGrid(snapPos, gridSnapResult)) {
+            lastSnapType = SnapIndicatorType::Grid;
+            viewProvider.drawSnapIndicator(gridSnapResult, static_cast<int>(lastSnapType));
+            return gridSnapResult;
+        }
+        // if axis locked a coordinate, snapPos already had it, and grid snap respected it
+        lastSnapType = SnapIndicatorType::None;
+        viewProvider.clearSnapIndicator();
+        return snapPos;
+    }
+
+    // 4 - Snap at an angle (lowest priority — Ctrl key or preference)
     bool angleSnapActive = (autoAngleSnapEnabled || QApplication::keyboardModifiers() == Qt::ControlModifier);
     if ((static_cast<int>(mask) & static_cast<int>(SnapType::Angle)) && angleSnapRequested
         && angleSnapActive
@@ -214,48 +252,6 @@ Base::Vector2d SnapManager::snap(Base::Vector2d inputPos, SnapType mask)
     }
     else {
         lastMouseAngle = 0.0;
-    }
-
-    // 1.5 - UniCAD: Snap to face center (important for finding rectangle/polygon centers)
-    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Point)) && snapToObjectsRequested) {
-        if (snapToFaceCenter(inputPos, snapPos)) {
-            lastSnapType = SnapIndicatorType::FaceCenter;
-            viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
-            return snapPos;
-        }
-    }
-
-    // 2 - Snap to objects (may partially snap to axis, leaving other coordinate for grid)
-    bool snappedToObject = false;
-    if ((static_cast<int>(mask)
-         & (static_cast<int>(SnapType::Point) | static_cast<int>(SnapType::Edge)))
-        && snapToObjectsRequested) {
-        snappedToObject = snapToObject(inputPos, snapPos, mask);
-        if (snappedToObject) {
-            // lastSnapType is set inside snapToObject
-            viewProvider.drawSnapIndicator(snapPos, static_cast<int>(lastSnapType));
-            return snapPos;  // Full snap (point or curve) - done
-        }
-        // if false was returned but snapPos was modified (axis case), continue to grid snap
-    }
-
-    // 3 - Snap to grid (will work on coordinates not already locked by axis snap)
-    if ((static_cast<int>(mask) & static_cast<int>(SnapType::Grid)) && snapToGridRequested
-        /*&& viewProvider.ShowGrid.getValue() */) {  // Snap to grid is enabled
-                                                     // even if the grid is not visible.
-
-        // use snapPos as input (which may have one coordinate locked by axis)
-        Base::Vector2d gridSnapResult = snapPos;
-        if (snapToGrid(snapPos, gridSnapResult)) {
-            lastSnapType = SnapIndicatorType::Grid;
-            viewProvider.drawSnapIndicator(gridSnapResult, static_cast<int>(lastSnapType));
-            return gridSnapResult;
-        }
-        // if grid snap happened, return the result which combines axis + grid
-        // if axis locked a coordinate, snapPos already had it, and grid snap respected it
-        lastSnapType = SnapIndicatorType::None;
-        viewProvider.clearSnapIndicator();
-        return snapPos;
     }
 
     lastSnapType = SnapIndicatorType::None;

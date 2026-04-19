@@ -104,6 +104,21 @@ public:
     std::vector<RecognizedFeature> analyzeFace(const TopoDS_Face& face) const;
     
     /**
+     * @brief Analyze faces adjacent to the given face (sharing edges)
+     * 
+     * This is used to detect hole centers when the cursor is "through" a hole
+     * and lands on a back face. The adjacent cylindrical faces (hole walls)
+     * will be detected efficiently without scanning the entire shape.
+     * 
+     * @param face The face to find neighbors for
+     * @param parentShape The parent shape containing the face
+     * @return Vector of features from adjacent cylindrical/circular faces
+     */
+    std::vector<RecognizedFeature> analyzeAdjacentFaces(
+        const TopoDS_Face& face,
+        const TopoDS_Shape& parentShape) const;
+    
+    /**
      * @brief Get the center/axis point of a cylindrical face
      * @param face The face to analyze
      * @return Feature with cylinder axis info, or empty if not cylindrical

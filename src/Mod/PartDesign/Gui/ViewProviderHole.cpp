@@ -50,14 +50,8 @@ ViewProviderHole::~ViewProviderHole() = default;
 
 std::vector<App::DocumentObject*> ViewProviderHole::claimChildren() const
 {
-    std::vector<App::DocumentObject*> temp;
-
-    if (App::DocumentObject* profile = getObject<PartDesign::Hole>()->Profile.getValue();
-        profile && !profile->isDerivedFrom<PartDesign::Feature>()) {
-        temp.push_back(profile);
-    }
-
-    return temp;
+    // UniCAD: Sketches are organised under the Body's "Sketches" folder.
+    return {};
 }
 
 void ViewProviderHole::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)

@@ -204,7 +204,6 @@ void Workbench::activated()
     ));
 
     const char* Face[] = {
-        "PartDesign_PressPull",
         "PartDesign_Extrude",
         "PartDesign_NewSketch",
         "PartDesign_Fillet",
@@ -212,6 +211,7 @@ void Workbench::activated()
         "PartDesign_Draft",
         "PartDesign_Thickness",
         "Part_ClearanceVolume",
+        "Part_QuickPortCutout",
         "PartDesign_OffsetFace",
         "PartDesign_DeleteFace",
         "PartDesign_ReplaceFace",
@@ -363,7 +363,6 @@ void Workbench::activated()
     );
 
     const char* Faces[] = {
-        "PartDesign_PressPull",
         "PartDesign_Extrude",
         "PartDesign_Fillet",
         "PartDesign_Chamfer",
@@ -386,7 +385,6 @@ void Workbench::activated()
 
     const char* Sketch[] = {
         "PartDesign_NewSketch",
-        "PartDesign_PressPull",
         "PartDesign_Extrude",
         "PartDesign_Revolve",
         "PartDesign_Sweep",
@@ -414,7 +412,6 @@ void Workbench::activated()
     ));
 
     const char* ShapeBinder[] = {
-        "PartDesign_PressPull",
         "PartDesign_Extrude",
         "PartDesign_Revolve",
         "PartDesign_Sweep",
@@ -430,7 +427,6 @@ void Workbench::activated()
     ));
 
     const char* SubShapeBinder[] = {
-        "PartDesign_PressPull",
         "PartDesign_Extrude",
         "PartDesign_Revolve",
         "PartDesign_Sweep",
@@ -530,7 +526,6 @@ Gui::MenuItem* Workbench::setupMenuBar() const
           << "Separator"
           << "PartDesign_NewSketch"
           << "Separator"
-          << "PartDesign_PressPull"
           << "PartDesign_Extrude"
           << "PartDesign_Revolve"
           << "PartDesign_Sweep"
@@ -594,8 +589,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     part->setCommand("Create");
 
     // UniCAD: Unified commands only (Fusion 360 style workflow)
-    *part << "PartDesign_PressPull"
-          << "PartDesign_Extrude"
+    *part << "PartDesign_Extrude"
           << "PartDesign_Revolve"
           << "PartDesign_Sweep"
           << "PartDesign_Loft"

@@ -44,22 +44,8 @@ ViewProviderLoft::~ViewProviderLoft() = default;
 
 std::vector<App::DocumentObject*> ViewProviderLoft::claimChildren() const
 {
-    std::vector<App::DocumentObject*> temp;
-
-    PartDesign::Loft* pcLoft = getObject<PartDesign::Loft>();
-
-    App::DocumentObject* sketch = pcLoft->getVerifiedSketch(true);
-    if (sketch) {
-        temp.push_back(sketch);
-    }
-
-    for (App::DocumentObject* obj : pcLoft->Sections.getValues()) {
-        if (obj && obj->isDerivedFrom<Part::Part2DObject>()) {
-            temp.push_back(obj);
-        }
-    }
-
-    return temp;
+    // UniCAD: Sketches are organised under the Body's "Sketches" folder.
+    return {};
 }
 
 void ViewProviderLoft::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)

@@ -505,27 +505,20 @@ void TaskClearanceVolumePanel::onApplyCutClicked()
     
     TopoDS_Shape resultShape = cutOp.Shape();
     
-    // Create new Part::Feature with result
-    App::Document* doc = m_feature->getDocument();
-    auto* resultFeature = dynamic_cast<Part::Feature*>(
-        doc->addObject("Part::Feature", "CutResult"));
+    // UniCAD: Update the target in-place instead of creating a new object.
+    // This avoids accumulating "_Cut" suffixes and keeps the tree clean —
+    // the user can cut as many clearance volumes as they want from the same
+    // part without cluttering the model browser (Fusion 360 style).
+    targetPart->Shape.setValue(resultShape);
     
-    if (resultFeature) {
-        QString label = QString::fromStdString(targetObj->Label.getValue()) + 
-                        QStringLiteral("_Cut");
-        resultFeature->Label.setValue(label.toStdString().c_str());
-        resultFeature->Shape.setValue(resultShape);
-        
-        // Hide original and clearance volume
-        targetObj->Visibility.setValue(false);
-        m_feature->Visibility.setValue(false);
-        
-        doc->recompute();
-        
-        QMessageBox::information(this, tr("Cut Applied"), 
-            tr("Created new object '%1' with clearance hole cut out.\n\n"
-               "Original objects have been hidden.").arg(label));
-    }
+    // Hide clearance volume only
+    m_feature->Visibility.setValue(false);
+    
+    m_feature->getDocument()->recompute();
+    
+    QMessageBox::information(this, tr("Cut Applied"), 
+        tr("Clearance volume has been subtracted from '%1'.")
+            .arg(QString::fromStdString(targetObj->Label.getValue())));
 }
 
 void TaskClearanceVolumePanel::onPortNameChanged(const QString& text)

@@ -149,6 +149,13 @@ public:
     // a body is solid if it has features that are solid according to member isSolidFeature.
     bool isSolid();
 
+    /**
+     * UniCAD: Get (or create) the "Sketches" folder inside this Body.
+     * All Part2DObject (sketch) items are organized under this folder
+     * for a cleaner Fusion 360-style tree layout.
+     */
+    App::DocumentObject* getSketchFolder(bool createIfMissing = false);
+
 protected:
     void onSettingDocument() override;
 

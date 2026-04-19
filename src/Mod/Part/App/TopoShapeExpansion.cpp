@@ -2047,6 +2047,18 @@ TopoShape TopoShape::getSubTopoShape(const char* Type, bool silent) const
     }
     auto res = shapeTypeAndIndex(mapped.index);
     if (res.second <= 0) {
+        // UniCAD: If the element name has the MISSING_PREFIX ('?'), the TNP
+        // mapping was lost but the indexed name (e.g. "Face2") may still be
+        // valid.  Strip the prefix and retry before giving up.
+        if (Data::hasMissingElement(Type)) {
+            const char* stripped = Type + strlen(Data::MISSING_PREFIX);
+            Data::MappedElement fallback = getElementName(stripped);
+            auto fallbackRes = shapeTypeAndIndex(fallback.index);
+            if (fallbackRes.second > 0) {
+                FC_WARN("Recovering missing element reference: " << Type << " -> " << stripped);
+                return getSubTopoShape(fallbackRes.first, fallbackRes.second, silent);
+            }
+        }
         if (!silent) {
             FC_THROWM(Base::ValueError, "Invalid shape name " << (Type ? Type : ""));
         }
