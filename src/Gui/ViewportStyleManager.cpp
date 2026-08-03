@@ -136,6 +136,12 @@ void ViewportStyleManager::ensureDefaultApplied()
     if (!hGrp->GetBool("ViewportStyleInitialized", false)) {
         applyPreset(StyleShaprDark);
         hGrp->SetBool("ViewportStyleInitialized", true);
+        hGrp->SetInt("ShaprEdgeStyleVersion", 2);
+    }
+    else if (hGrp->GetInt("ShaprEdgeStyleVersion", 0) < 2) {
+        // Upgrade edge readability (thicker BREP lines + stronger outline)
+        applyPreset(activePreset());
+        hGrp->SetInt("ShaprEdgeStyleVersion", 2);
     }
     else {
         // Re-apply runtime viewer bits (grid / post-FX) without rewriting all prefs
