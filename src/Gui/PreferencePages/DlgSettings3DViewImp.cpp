@@ -34,6 +34,7 @@
 #include <Gui/Multisample.h>
 #include <Gui/View3DInventorViewer.h>
 #include <Gui/ViewParams.h>
+#include <Gui/ViewportStyleManager.h>
 
 #include "DlgSettings3DViewImp.h"
 #include "ui_DlgSettings3DView.h"
@@ -74,6 +75,9 @@ void DlgSettings3DViewImp::saveSettings()
     ui->xAxisColor->onSave();
     ui->yAxisColor->onSave();
     ui->zAxisColor->onSave();
+
+    // Style preset first, then checkbox overrides, then push to viewers
+    saveViewportStyle();
 }
 
 void DlgSettings3DViewImp::loadSettings()
@@ -93,10 +97,14 @@ void DlgSettings3DViewImp::loadSettings()
     ui->xAxisColor->onRestore();
     ui->yAxisColor->onRestore();
     ui->zAxisColor->onRestore();
+    ui->checkEnableSSAO->onRestore();
+    ui->checkEnableEdgeOutline->onRestore();
+    ui->checkShowUniversalGrid->onRestore();
 
     loadAntiAliasing();
     loadRenderCache();
     loadMarkerSize();
+    loadViewportStyle();
 }
 
 void DlgSettings3DViewImp::addAntiAliasing()
@@ -195,6 +203,37 @@ void DlgSettings3DViewImp::loadMarkerSize()
     }
     ui->boxMarkerSize->setCurrentIndex(marker);
     // NOLINTEND
+}
+
+void DlgSettings3DViewImp::saveViewportStyle()
+{
+    const int index = ui->comboViewportStyle->currentIndex();
+    const QString id = ui->comboViewportStyle->itemData(index).toString();
+    if (!id.isEmpty()) {
+        ViewportStyleManager::instance().applyPreset(id.toStdString());
+    }
+
+    // Checkbox overrides after preset defaults
+    ui->checkEnableSSAO->onSave();
+    ui->checkEnableEdgeOutline->onSave();
+    ui->checkShowUniversalGrid->onSave();
+    ViewportStyleManager::instance().applyPreferencesToViewers();
+}
+
+void DlgSettings3DViewImp::loadViewportStyle()
+{
+    ui->comboViewportStyle->clear();
+    for (const auto& id : ViewportStyleManager::availablePresets()) {
+        ui->comboViewportStyle->addItem(
+            QString::fromUtf8(ViewportStyleManager::presetLabel(id)),
+            QString::fromStdString(id)
+        );
+    }
+    const std::string active = ViewportStyleManager::instance().activePreset();
+    const int index = ui->comboViewportStyle->findData(QString::fromStdString(active));
+    if (index >= 0) {
+        ui->comboViewportStyle->setCurrentIndex(index);
+    }
 }
 
 void DlgSettings3DViewImp::resetSettingsToDefaults()

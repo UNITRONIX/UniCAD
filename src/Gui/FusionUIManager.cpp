@@ -26,14 +26,11 @@
 #include "View3DInventor.h"
 #include "View3DInventorViewer.h"
 #include "ViewProviderDocumentObject.h"
-#include "Inventor/SoFCUniversalGrid.h"
+#include "ViewportStyleManager.h"
 
 #include "WorkbenchManager.h"
 
 #include <App/Application.h>
-
-#include <Inventor/SbColor.h>
-#include <Inventor/SoRenderManager.h>
 
 #include <QToolBar>
 #include <QMenuBar>
@@ -143,7 +140,7 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
         }
     );
 
-    // Connect to view activation signal - configure Blueprint style for new views
+    // Connect to view activation signal - apply Shapr viewport style for new views
     Application::Instance->signalActivateView.connect(
         [this](const MDIView* view) {
             if (m_enabled && view) {
@@ -170,6 +167,9 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
 
     // Apply Fusion mode
     setEnabled(m_enabled);
+
+    // Ensure Shapr Dark viewport style is the default on first run
+    ViewportStyleManager::instance().ensureDefaultApplied();
 }
 
 void FusionUIManager::setEnabled(bool enabled)
@@ -334,72 +334,19 @@ void FusionUIManager::showTraditionalToolbars()
 
 void FusionUIManager::configureBlueprintStyle()
 {
-    if (!m_mainWindow) {
-        return;
-    }
-
-    // Find all 3D viewers and configure Blueprint-style background + grid
-    auto views = m_mainWindow->findChildren<View3DInventor*>();
-    for (auto* view3d : views) {
-        if (!view3d) {
-            continue;
-        }
-        auto* viewer = view3d->getViewer();
-        if (!viewer) {
-            continue;
-        }
-
-        // Universal Grid disabled for now - needs more work on camera/projection alignment
-        // TODO: Fix grid rendering to properly align with viewport
-        viewer->setUniversalGridVisible(false);
-        viewer->setUniversalGridOriginVisible(false);
-
-        // Set Blueprint-style gradient background
-        // Fusion 360 uses a blue gradient that looks like a blueprint
-        // Top: darker blue (#1a3a52) -> Bottom: slightly lighter (#2d5a78)
-        SbColor topColor(0.102f, 0.227f, 0.322f);      // #1a3a52
-        SbColor bottomColor(0.176f, 0.353f, 0.471f);   // #2d5a78
-        SbColor midColor(0.133f, 0.282f, 0.388f);      // #224862
-        
-        viewer->setGradientBackground(View3DInventorViewer::Background::LinearGradient);
-        viewer->setGradientBackgroundColor(topColor, bottomColor, midColor);
-        
-        // Force redraw to apply changes
-        viewer->getSoRenderManager()->scheduleRedraw();
-    }
+    // Delegate to ViewportStyleManager (Shapr Dark/Light) instead of
+    // hardcoding the old Fusion blueprint gradient.
+    ViewportStyleManager::instance().applyPreset(
+        ViewportStyleManager::instance().activePreset()
+    );
 }
 
 void FusionUIManager::restoreOriginalStyle()
 {
-    if (!m_mainWindow) {
-        return;
-    }
-
-    // Find all 3D viewers and restore original style
-    auto views = m_mainWindow->findChildren<View3DInventor*>();
-    for (auto* view3d : views) {
-        if (!view3d) {
-            continue;
-        }
-        auto* viewer = view3d->getViewer();
-        if (!viewer) {
-            continue;
-        }
-
-        // Disable Universal Grid
-        viewer->setUniversalGridVisible(false);
-        viewer->setUniversalGridOriginVisible(false);
-
-        // Restore original FreeCAD gradient (gray tones)
-        SbColor topColor(0.098f, 0.098f, 0.098f);      // Dark gray
-        SbColor bottomColor(0.333f, 0.333f, 0.333f);   // Medium gray
-        
-        viewer->setGradientBackground(View3DInventorViewer::Background::LinearGradient);
-        viewer->setGradientBackgroundColor(topColor, bottomColor);
-        
-        // Force redraw to apply changes
-        viewer->getSoRenderManager()->scheduleRedraw();
-    }
+    // Keep Shapr style when leaving Fusion chrome — only re-apply active preset
+    ViewportStyleManager::instance().applyPreset(
+        ViewportStyleManager::instance().activePreset()
+    );
 }
 
 void FusionUIManager::onInEdit(const ViewProviderDocumentObject& vp)

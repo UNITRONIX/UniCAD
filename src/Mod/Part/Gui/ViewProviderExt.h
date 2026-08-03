@@ -100,6 +100,7 @@ public:
     void setDisplayMode(const char* ModeName) override;
     /// returns a list of all possible modes
     std::vector<std::string> getDisplayModes() const override;
+    const char* getDefaultDisplayMode() const override;
     /// Update the view representation
     void reload();
     /// If no other task is pending it opens a dialog to allow one to change face colors

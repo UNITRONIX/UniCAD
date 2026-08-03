@@ -546,6 +546,86 @@ bounding box size of the 3D object that is currently displayed.</string>
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBoxViewportStyle">
+     <property name="title">
+      <string>Viewport Style (Shapr)</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayoutViewportStyle">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelViewportStyle">
+        <property name="text">
+         <string>Preset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboViewportStyle">
+        <property name="toolTip">
+         <string>Shapr Dark (recommended) or Shapr Light viewport appearance</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="Gui::PrefCheckBox" name="checkEnableSSAO">
+        <property name="toolTip">
+         <string>Screen-space ambient occlusion for depth in crevices</string>
+        </property>
+        <property name="text">
+         <string>Ambient occlusion (SSAO)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>EnableSSAO</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>View</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="Gui::PrefCheckBox" name="checkEnableEdgeOutline">
+        <property name="toolTip">
+         <string>Screen-space silhouette / depth outline over shaded models</string>
+        </property>
+        <property name="text">
+         <string>Edge outline</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>EnableEdgeOutline</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>View</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="Gui::PrefCheckBox" name="checkShowUniversalGrid">
+        <property name="toolTip">
+         <string>Show the ground-plane grid in the 3D view</string>
+        </property>
+        <property name="text">
+         <string>Show ground grid</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>ShowUniversalGrid</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>View</cstring>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBoxCamera">
      <property name="title">
       <string>Camera Type</string>

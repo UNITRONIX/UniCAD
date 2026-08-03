@@ -499,7 +499,10 @@ void ViewProviderPartExt::attach(App::DocumentObject* pcFeat)
 
     // Avoid any Z-buffer artifacts, so that the lines always appear on top of the faces
     // The correct order is Edges, Polygon offset, Faces.
+    // Slightly stronger offset improves Shapr-style thin edge readability.
     SoPolygonOffset* offset = new SoPolygonOffset();
+    offset->factor = 1.0f;
+    offset->units = 1.0f;
 
     // wireframe node
     wireframe->setName("Edge");
@@ -563,6 +566,11 @@ void ViewProviderPartExt::setDisplayMode(const char* ModeName)
     }
 
     ViewProviderGeometryObject::setDisplayMode(ModeName);
+}
+
+const char* ViewProviderPartExt::getDefaultDisplayMode() const
+{
+    return "Flat Lines";
 }
 
 std::vector<std::string> ViewProviderPartExt::getDisplayModes() const

@@ -309,11 +309,12 @@ void Material::setType(MaterialType MatType)
         case USER_DEFINED:
             break;
         default:
-            ambientColor.set(0.3333F, 0.3333F, 0.3333F);
-            diffuseColor.set(0.8000F, 0.8000F, 0.9000F);
-            specularColor.set(0.5333F, 0.5333F, 0.5333F);
+            // Matte clay defaults (Shapr-inspired); preferences may override via getDefaultAppearance()
+            ambientColor.set(0.2200F, 0.2200F, 0.2300F);
+            diffuseColor.set(0.7137F, 0.7216F, 0.7373F);  // ~182,184,188
+            specularColor.set(0.0700F, 0.0700F, 0.0800F);
             emissiveColor.set(0.0000F, 0.0000F, 0.0000F);
-            shininess = 0.9000F;
+            shininess = 0.0800F;
             transparency = 0.0000F;
             break;
     }

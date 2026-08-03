@@ -94,6 +94,7 @@ class NavigationAnimation;
 class ViewProvider;
 class SoFCBackgroundGradient;
 class SoFCUniversalGrid;
+class SsaoPostProcessor;
 class NavigationStyle;
 class SoFCUnifiedSelection;
 class Document;
@@ -492,7 +493,17 @@ public:
     void setUniversalGridOriginVisible(bool on);
     bool isUniversalGridOriginVisible() const;
     SoFCUniversalGrid* getUniversalGrid() const;
-    
+
+    // Shapr-style post-process (SSAO + outline)
+    void setPostProcessEnabled(bool on);
+    bool isPostProcessEnabled() const;
+    void setSSAOEnabled(bool on);
+    bool isSSAOEnabled() const;
+    void setEdgeOutlineEnabled(bool on);
+    bool isEdgeOutlineEnabled() const;
+    void setEdgeOutlineColor(float r, float g, float b);
+    void setEdgeOutlineThreshold(float threshold);
+
     void setNavigationType(Base::Type);
 
     void setAxisLetterColor(const SbColor& color);
@@ -632,6 +643,9 @@ private:
     ViewerEventFilter* viewerEventFilter;
 
     PyObject* _viewerPy;
+
+    std::unique_ptr<SsaoPostProcessor> postProcessor;
+    bool postProcessEnabled = false;
 
     static unsigned char XPM_pixel_data[YPM_WIDTH * YPM_HEIGHT * YPM_BYTES_PER_PIXEL + 1];
     static unsigned char YPM_pixel_data[YPM_WIDTH * YPM_HEIGHT * YPM_BYTES_PER_PIXEL + 1];

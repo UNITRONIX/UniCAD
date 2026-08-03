@@ -115,6 +115,7 @@
 #include "MainWindow.h"
 #include "Multisample.h"
 #include "NaviCube.h"
+#include "SsaoPostProcessor.h"
 #include "Navigation/NavigationStyle.h"
 #include "Navigation/GestureNavigationStyle.h"
 #include "Navigation/SiemensNXNavigationStyle.h"
@@ -796,10 +797,14 @@ void View3DInventorViewer::createStandardCursors()
 
 void View3DInventorViewer::aboutToDestroyGLContext()
 {
+    if (auto gl = qobject_cast<QOpenGLWidget*>(this->viewport())) {
+        gl->makeCurrent();
+    }
+    if (postProcessor) {
+        postProcessor->release();
+        postProcessor.reset();
+    }
     if (naviCube) {
-        if (auto gl = qobject_cast<QOpenGLWidget*>(this->viewport())) {
-            gl->makeCurrent();
-        }
         delete naviCube;
         naviCube = nullptr;
         naviCubeEnabled = false;
@@ -1435,6 +1440,67 @@ bool View3DInventorViewer::isUniversalGridOriginVisible() const
 SoFCUniversalGrid* View3DInventorViewer::getUniversalGrid() const
 {
     return pcUniversalGrid;
+}
+
+void View3DInventorViewer::setPostProcessEnabled(bool on)
+{
+    postProcessEnabled = on;
+    if (on && !postProcessor) {
+        postProcessor = std::make_unique<SsaoPostProcessor>();
+    }
+}
+
+bool View3DInventorViewer::isPostProcessEnabled() const
+{
+    return postProcessEnabled;
+}
+
+void View3DInventorViewer::setSSAOEnabled(bool on)
+{
+    if (!postProcessor) {
+        postProcessor = std::make_unique<SsaoPostProcessor>();
+    }
+    postProcessor->setSSAOEnabled(on);
+    if (on) {
+        postProcessEnabled = true;
+    }
+}
+
+bool View3DInventorViewer::isSSAOEnabled() const
+{
+    return postProcessor && postProcessor->isSSAOEnabled();
+}
+
+void View3DInventorViewer::setEdgeOutlineEnabled(bool on)
+{
+    if (!postProcessor) {
+        postProcessor = std::make_unique<SsaoPostProcessor>();
+    }
+    postProcessor->setOutlineEnabled(on);
+    if (on) {
+        postProcessEnabled = true;
+    }
+}
+
+bool View3DInventorViewer::isEdgeOutlineEnabled() const
+{
+    return postProcessor && postProcessor->isOutlineEnabled();
+}
+
+void View3DInventorViewer::setEdgeOutlineColor(float r, float g, float b)
+{
+    if (!postProcessor) {
+        postProcessor = std::make_unique<SsaoPostProcessor>();
+    }
+    postProcessor->setOutlineColor(r, g, b);
+}
+
+void View3DInventorViewer::setEdgeOutlineThreshold(float threshold)
+{
+    if (!postProcessor) {
+        postProcessor = std::make_unique<SsaoPostProcessor>();
+    }
+    postProcessor->setOutlineThreshold(threshold);
 }
 
 void View3DInventorViewer::setEnabledFPSCounter(bool on)
@@ -2614,6 +2680,30 @@ void View3DInventorViewer::renderScene()
 
     if (!this->shading) {
         state->pop();
+    }
+
+    // Depth-based SSAO + screen-space outline (Shapr-style), after main scene,
+    // before overlays / axis / navi cube.
+    if (postProcessEnabled && postProcessor
+        && (postProcessor->isSSAOEnabled() || postProcessor->isOutlineEnabled())) {
+        SoCamera* cam = this->getSoRenderManager()->getCamera();
+        if (cam) {
+            float aspect = vp.getViewportAspectRatio();
+            SbViewVolume vv = cam->getViewVolume(aspect);
+            SbMatrix affine, projMat;
+            vv.getMatrices(affine, projMat);
+            // Coin SbMatrix is row-major; OpenGL wants column-major — transpose
+            float proj[16];
+            const SbMat& mat = projMat.getValue();
+            for (int r = 0; r < 4; ++r) {
+                for (int c = 0; c < 4; ++c) {
+                    proj[c * 4 + r] = mat[r][c];
+                }
+            }
+            float zNear = cam->nearDistance.getValue();
+            float zFar = cam->farDistance.getValue();
+            postProcessor->apply(size[0], size[1], proj, zNear, zFar);
+        }
     }
 
 #if defined(ENABLE_GL_DEPTH_RANGE)

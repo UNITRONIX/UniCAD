@@ -81,6 +81,7 @@
 #include "View3DInventor.h"
 #include "View3DInventorViewer.h"
 #include "ViewParams.h"
+#include "ViewportStyleManager.h"
 #include "ViewProviderGeometryObject.h"
 #include "WaitCursor.h"
 
@@ -706,6 +707,80 @@ StdCmdDrawStyle::StdCmdDrawStyle()
     this->getGuiApplication()->signalActivateView.connect([this](auto view) {
         this->updateIcon(view);
     });
+}
+
+//===========================================================================
+// StdCmdViewportStyle
+//===========================================================================
+class StdCmdViewportStyle: public Gui::Command
+{
+public:
+    StdCmdViewportStyle();
+    ~StdCmdViewportStyle() override = default;
+    const char* className() const override
+    {
+        return "StdCmdViewportStyle";
+    }
+
+protected:
+    void activated(int iMsg) override;
+    bool isActive() override;
+    Gui::Action* createAction() override;
+};
+
+StdCmdViewportStyle::StdCmdViewportStyle()
+    : Command("Std_ViewportStyle")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Viewport &Style");
+    sToolTipText = QT_TR_NOOP("Shapr Dark / Shapr Light viewport appearance");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_ViewportStyle";
+    sPixmap = "view-fullscreen";
+    eType = Alter3DView;
+}
+
+Gui::Action* StdCmdViewportStyle::createAction()
+{
+    auto pcAction = new Gui::ActionGroup(this, Gui::getMainWindow());
+    pcAction->setDropDownMenu(true);
+    pcAction->setIsMode(true);
+    applyCommandData(this->className(), pcAction);
+
+    QAction* dark = pcAction->addAction(QString::fromUtf8("Shapr Dark (recommended)"));
+    dark->setCheckable(true);
+    dark->setData(QString::fromLatin1(ViewportStyleManager::StyleShaprDark));
+
+    QAction* light = pcAction->addAction(QString::fromUtf8("Shapr Light"));
+    light->setCheckable(true);
+    light->setData(QString::fromLatin1(ViewportStyleManager::StyleShaprLight));
+
+    const std::string active = ViewportStyleManager::instance().activePreset();
+    if (active == ViewportStyleManager::StyleShaprLight) {
+        light->setChecked(true);
+        pcAction->setCheckedAction(1);
+    }
+    else {
+        dark->setChecked(true);
+        pcAction->setCheckedAction(0);
+    }
+
+    return pcAction;
+}
+
+void StdCmdViewportStyle::activated(int iMsg)
+{
+    if (iMsg == 1) {
+        ViewportStyleManager::instance().applyPreset(ViewportStyleManager::StyleShaprLight);
+    }
+    else {
+        ViewportStyleManager::instance().applyPreset(ViewportStyleManager::StyleShaprDark);
+    }
+}
+
+bool StdCmdViewportStyle::isActive()
+{
+    return hasActiveDocument();
 }
 
 Gui::Action* StdCmdDrawStyle::createAction()
@@ -4436,6 +4511,7 @@ void CreateViewStdCommands()
     rcCmdMgr.addCommand(new StdPerspectiveCamera());
     rcCmdMgr.addCommand(new StdCmdToggleClipPlane());
     rcCmdMgr.addCommand(new StdCmdDrawStyle());
+    rcCmdMgr.addCommand(new StdCmdViewportStyle());
     rcCmdMgr.addCommand(new StdCmdViewSaveCamera());
     rcCmdMgr.addCommand(new StdCmdViewRestoreCamera());
     rcCmdMgr.addCommand(new StdCmdFreezeViews());

@@ -59,6 +59,7 @@
 
 #include "View3DInventor.h"
 #include "View3DSettings.h"
+#include "ViewportStyleManager.h"
 #include "Application.h"
 #include "BitmapFactory.h"
 #include "Camera.h"
@@ -238,6 +239,9 @@ void View3DInventor::applySettings()
     );
     viewSettings->applySettings();
     naviSettings->applySettings();
+
+    // Apply active Shapr viewport style (grid + post-FX) to this viewer
+    ViewportStyleManager::instance().applyToViewer(_viewer);
 }
 
 void View3DInventor::onRename(Gui::Document* pDoc)

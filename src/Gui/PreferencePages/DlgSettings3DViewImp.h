@@ -66,6 +66,8 @@ private:
     void loadRenderCache();
     void saveMarkerSize();
     void loadMarkerSize();
+    void saveViewportStyle();
+    void loadViewportStyle();
 
 private:
     std::unique_ptr<Ui_DlgSettings3DView> ui;
