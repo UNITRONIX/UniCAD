@@ -27,22 +27,54 @@
 #include <QLabel>
 #include <QFrame>
 #include <QPushButton>
+#include <QMenu>
 #include <QTimer>
 #include <QDebug>
+#include <QSizePolicy>
 
 using namespace Gui;
 
+namespace {
+const char* kToolButtonStyle = R"(
+QToolButton {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px;
+  color: #CCCCCC;
+  font-size: 9px;
+  font-weight: bold;
+}
+QToolButton:hover {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+QToolButton:pressed, QToolButton:checked {
+  background: #0696D7;
+  border: 1px solid #0580B5;
+}
+QToolButton::menu-indicator {
+  subcontrol-origin: padding;
+  subcontrol-position: bottom right;
+  width: 8px;
+  height: 8px;
+}
+)";
+} // namespace
+
 // ---------------------------------------------------------------------------
-// FusionTabToolbar - Fusion 360-style unified tab toolbar
+// FusionTabToolbar - Fusion 360-style panel ribbon
 // ---------------------------------------------------------------------------
-// Based on UniCAD design document PROPOZYCJA_ZMIAN_UI_FUNKCJE.md:
-// - Fixed tabs: SKETCH, SOLID, SURFACE, SHEET METAL, MESH, INSPECT, TOOLS
-// - Tabs organize commands from multiple workbenches into logical groups
-// - Contextual highlighting when in sketch mode
-// ---------------------------------------------------------------------------
+
+FusionTabToolbar::ToolItem FusionTabToolbar::tool(const QString& primary,
+                                                   const QStringList& variants)
+{
+    return {primary, variants};
+}
 
 FusionTabToolbar::FusionTabToolbar(QWidget* parent)
     : QWidget(parent)
+    , m_workspaceBtn(nullptr)
     , m_tabBar(new QTabBar(this))
     , m_stack(new QStackedWidget(this))
     , m_finishSketchBtn(nullptr)
@@ -53,28 +85,54 @@ FusionTabToolbar::FusionTabToolbar(QWidget* parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
-    // Left side: tabs and content
+    // Workspace dropdown (DESIGN) — left of tabs, Fusion layout
+    m_workspaceBtn = new QToolButton(this);
+    m_workspaceBtn->setText(tr("DESIGN"));
+    m_workspaceBtn->setPopupMode(QToolButton::InstantPopup);
+    m_workspaceBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    m_workspaceBtn->setMinimumHeight(64);
+    m_workspaceBtn->setMinimumWidth(88);
+    m_workspaceBtn->setStyleSheet(QStringLiteral(
+        "QToolButton {"
+        "  background: #3A3A3A;"
+        "  color: #FFFFFF;"
+        "  border: none;"
+        "  border-right: 1px solid #1A1A1A;"
+        "  padding: 8px 14px;"
+        "  font-size: 12px;"
+        "  font-weight: bold;"
+        "}"
+        "QToolButton:hover { background: #454545; }"
+        "QToolButton::menu-indicator { subcontrol-position: right center; padding-right: 4px; }"
+    ));
+    auto* wsMenu = new QMenu(m_workspaceBtn);
+    QAction* designAct = wsMenu->addAction(tr("Design"));
+    designAct->setEnabled(false);
+    designAct->setCheckable(true);
+    designAct->setChecked(true);
+    m_workspaceBtn->setMenu(wsMenu);
+    mainLayout->addWidget(m_workspaceBtn);
+
+    // Tabs + tool panels
     auto* tabsContainer = new QWidget();
     auto* tabsLayout = new QVBoxLayout(tabsContainer);
     tabsLayout->setContentsMargins(0, 0, 0, 0);
     tabsLayout->setSpacing(0);
 
-    // Tab bar setup - Fusion 360 style
     m_tabBar->setExpanding(false);
     m_tabBar->setDrawBase(false);
     m_tabBar->setDocumentMode(true);
     m_tabBar->setUsesScrollButtons(true);
-    m_tabBar->setMinimumHeight(32);
+    m_tabBar->setMinimumHeight(28);
     tabsLayout->addWidget(m_tabBar);
 
-    // Stacked widget for tool pages
-    m_stack->setMinimumHeight(40);
-    m_stack->setMaximumHeight(48);
+    m_stack->setMinimumHeight(56);
+    m_stack->setMaximumHeight(64);
     tabsLayout->addWidget(m_stack, 1);
 
     mainLayout->addWidget(tabsContainer, 1);
 
-    // Right side: Finish Sketch button (contextual)
+    // Finish Sketch (contextual)
     m_finishSketchBtn = new QPushButton(tr("Finish Sketch"));
     m_finishSketchBtn->setMinimumWidth(100);
     m_finishSketchBtn->setMinimumHeight(28);
@@ -89,26 +147,19 @@ FusionTabToolbar::FusionTabToolbar(QWidget* parent)
         "  font-weight: bold;"
         "  margin: 4px 8px;"
         "}"
-        "QPushButton:hover {"
-        "  background-color: #07A8F0;"
-        "}"
-        "QPushButton:pressed {"
-        "  background-color: #0580B5;"
-        "}"
+        "QPushButton:hover { background-color: #07A8F0; }"
+        "QPushButton:pressed { background-color: #0580B5; }"
     ));
     connect(m_finishSketchBtn, &QPushButton::clicked, this, &FusionTabToolbar::onFinishSketchClicked);
     mainLayout->addWidget(m_finishSketchBtn);
 
-    // Set minimum size for the whole toolbar
-    setMinimumHeight(72);
-    setMaximumHeight(80);
+    setMinimumHeight(88);
+    setMaximumHeight(96);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     connect(m_tabBar, &QTabBar::currentChanged, this, &FusionTabToolbar::onTabChanged);
 
     setupStyle();
-    // Don't build tabs here - commands may not be loaded yet
-    // Tabs will be built in setActive() or onWorkbenchActivated()
 }
 
 FusionTabToolbar::~FusionTabToolbar() = default;
@@ -117,7 +168,6 @@ void FusionTabToolbar::setupStyle()
 {
     setObjectName(QStringLiteral("FusionTabToolbar"));
 
-    // Fusion 360-like styling: dark tabs with blue accent
     setStyleSheet(QStringLiteral(
         "QWidget#FusionTabToolbar {"
         "  background-color: #2D2D2D;"
@@ -129,7 +179,7 @@ void FusionTabToolbar::setupStyle()
         "QTabBar::tab {"
         "  background: transparent;"
         "  color: #A0A0A0;"
-        "  padding: 8px 20px;"
+        "  padding: 6px 16px;"
         "  margin-right: 0px;"
         "  border: none;"
         "  font-size: 11px;"
@@ -146,22 +196,24 @@ void FusionTabToolbar::setupStyle()
         "QStackedWidget {"
         "  background-color: #2D2D2D;"
         "}"
+        "QLabel#FusionPanelLabel {"
+        "  color: #888888;"
+        "  font-size: 9px;"
+        "  font-weight: bold;"
+        "}"
     ));
 }
 
 void FusionTabToolbar::setActive(bool active)
 {
     m_active = active;
-    
+
     if (active) {
-        // Use deferred build to ensure workbenches and commands are loaded
-        // Multiple retries to catch late-loading commands
         QTimer::singleShot(200, this, [this]() {
             buildUnifiedTabs();
             setVisible(true);
         });
         QTimer::singleShot(1000, this, [this]() {
-            // Rebuild again after 1 second to catch more commands
             int currentTab = m_tabBar->currentIndex();
             buildUnifiedTabs();
             if (currentTab >= 0 && currentTab < m_tabBar->count()) {
@@ -178,10 +230,8 @@ void FusionTabToolbar::setSketchMode(bool inSketch)
 {
     m_inSketchMode = inSketch;
     m_finishSketchBtn->setVisible(inSketch);
-    
-    // Highlight SKETCH tab when in sketch mode
+
     if (inSketch && m_tabBar->count() > 0) {
-        // Switch to SKETCH tab and highlight it
         m_tabBar->setCurrentIndex(0);
         m_tabBar->setStyleSheet(m_tabBar->styleSheet() + QStringLiteral(
             "QTabBar::tab:first-child {"
@@ -191,32 +241,25 @@ void FusionTabToolbar::setSketchMode(bool inSketch)
         ));
     }
     else {
-        // Reset style
         setupStyle();
     }
 }
 
 void FusionTabToolbar::onFinishSketchClicked()
 {
-    // Execute Sketcher_LeaveSketch command
-    auto& mgr = Application::Instance->commandManager();
-    Command* cmd = mgr.getCommandByName("Sketcher_LeaveSketch");
-    if (cmd) {
-        cmd->invoke(0);
-    }
+    invokeCommand(QStringLiteral("Sketcher_LeaveSketch"));
 }
 
 void FusionTabToolbar::onWorkbenchActivated(const QString& workbenchName)
 {
     Q_UNUSED(workbenchName)
-    // Rebuild tabs to pick up newly available commands from activated workbench
-    // Save current tab index
     int currentTab = m_tabBar->currentIndex();
-    if (currentTab < 0) currentTab = 1; // Default to SOLID
-    
+    if (currentTab < 0) {
+        currentTab = 1;
+    }
+
     buildUnifiedTabs();
-    
-    // Restore tab selection
+
     if (currentTab >= 0 && currentTab < m_tabBar->count()) {
         m_tabBar->setCurrentIndex(currentTab);
     }
@@ -226,8 +269,6 @@ void FusionTabToolbar::buildUnifiedTabs()
 {
     clearTabs();
 
-    // Ensure workbench modules are loaded to register their commands
-    // This imports the Python modules which register C++ commands
     try {
         Base::Interpreter().runString("import PartDesignGui");
         Base::Interpreter().runString("import SketcherGui");
@@ -235,15 +276,12 @@ void FusionTabToolbar::buildUnifiedTabs()
         Base::Interpreter().runString("import MeshGui");
     }
     catch (...) {
-        // Ignore errors - modules may already be loaded or not available
     }
 
-    // Build unified tabs according to Fusion 360 design document
-    // These tabs aggregate commands from multiple workbenches
     m_tabs = {
         buildSketchTab(),
         buildSolidTab(),
-        buildModifyTab(),   // NEW: Transform/Move/Scale tools
+        buildModifyTab(),
         buildSurfaceTab(),
         buildSheetMetalTab(),
         buildMeshTab(),
@@ -251,48 +289,23 @@ void FusionTabToolbar::buildUnifiedTabs()
         buildToolsTab()
     };
 
-    // Add tabs to tab bar
     for (int i = 0; i < m_tabs.size(); ++i) {
         m_tabBar->addTab(m_tabs[i].name);
-        
-        // Create scrollable page for each tab
+
         auto* scrollArea = new QScrollArea();
         scrollArea->setWidgetResizable(true);
-        scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         scrollArea->setFrameShape(QFrame::NoFrame);
         scrollArea->setStyleSheet(QStringLiteral("background: transparent; border: none;"));
 
         auto* page = new QWidget();
         auto* hLayout = new QHBoxLayout(page);
-        hLayout->setContentsMargins(8, 4, 8, 4);
-        hLayout->setSpacing(4);
+        hLayout->setContentsMargins(4, 2, 4, 2);
+        hLayout->setSpacing(0);
+        hLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-        // Populate with command buttons - track last added type
-        bool lastWasSeparator = true;  // Start true to skip leading separators
-        int buttonsAdded = 0;
-        
-        for (const auto& cmd : m_tabs[i].commands) {
-            if (cmd == QStringLiteral("Separator")) {
-                // Only add separator if we have buttons before and it's not consecutive
-                if (!lastWasSeparator && buttonsAdded > 0) {
-                    addSeparator(hLayout);
-                    lastWasSeparator = true;
-                }
-            }
-            else if (cmd.startsWith(QStringLiteral("Group:"))) {
-                // Group label
-                QString groupName = cmd.mid(6);
-                addGroupLabel(hLayout, groupName);
-                lastWasSeparator = false;
-            }
-            else {
-                if (addCommandButton(hLayout, cmd.toLatin1().constData())) {
-                    buttonsAdded++;
-                    lastWasSeparator = false;
-                }
-            }
-        }
+        populatePage(hLayout, m_tabs[i]);
 
         hLayout->addStretch();
         scrollArea->setWidget(page);
@@ -300,7 +313,19 @@ void FusionTabToolbar::buildUnifiedTabs()
     }
 
     if (m_tabBar->count() > 0) {
-        m_tabBar->setCurrentIndex(1); // Default to SOLID tab
+        m_tabBar->setCurrentIndex(1); // Default SOLID
+    }
+}
+
+void FusionTabToolbar::populatePage(QLayout* layout, const TabDefinition& tab)
+{
+    bool first = true;
+    for (const auto& panel : tab.panels) {
+        if (!first) {
+            addSeparator(layout);
+        }
+        addPanel(layout, panel);
+        first = false;
     }
 }
 
@@ -327,95 +352,259 @@ void FusionTabToolbar::onTabChanged(int index)
     }
 }
 
-bool FusionTabToolbar::addCommandButton(QLayout* layout, const char* cmdName)
+bool FusionTabToolbar::commandExists(const char* cmdName) const
 {
-    auto& mgr = Application::Instance->commandManager();
-    Command* cmd = mgr.getCommandByName(cmdName);
-    if (!cmd) {
-        // Command not available in current context - skip silently
+    if (!cmdName || !cmdName[0]) {
         return false;
     }
+    return Application::Instance->commandManager().getCommandByName(cmdName) != nullptr;
+}
 
-    auto* btn = new QToolButton();
-    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
-    btn->setAutoRaise(true);
-    btn->setIconSize(QSize(22, 22));
-    btn->setMinimumSize(32, 32);
-    btn->setMaximumSize(36, 36);
-
-    // Get icon - try multiple methods
-    bool hasIcon = false;
+QIcon FusionTabToolbar::iconForCommand(const char* cmdName) const
+{
+    Command* cmd = Application::Instance->commandManager().getCommandByName(cmdName);
+    if (!cmd) {
+        return {};
+    }
     const char* pixmap = cmd->getPixmap();
-    if (pixmap && pixmap[0]) {
-        // Try theme icon first
-        QIcon icon = BitmapFactory().iconFromTheme(pixmap);
-        if (!icon.isNull()) {
-            btn->setIcon(icon);
-            hasIcon = true;
-        }
-        else {
-            // Try pixmap directly
-            QPixmap pm = BitmapFactory().pixmap(pixmap);
-            if (!pm.isNull()) {
-                btn->setIcon(QIcon(pm));
-                hasIcon = true;
-            }
-        }
+    if (!pixmap || !pixmap[0]) {
+        return {};
     }
-    
-    // Fallback: show first 2 letters of command name
-    if (!hasIcon) {
-        QString cmdStr = QString::fromLatin1(cmdName);
-        // Extract short name (e.g., "Pad" from "PartDesign_Pad")
-        int idx = cmdStr.lastIndexOf(QLatin1Char('_'));
-        QString shortName = (idx >= 0) ? cmdStr.mid(idx + 1, 2) : cmdStr.left(2);
-        btn->setText(shortName.toUpper());
-        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    QIcon icon = BitmapFactory().iconFromTheme(pixmap);
+    if (!icon.isNull()) {
+        return icon;
     }
+    QPixmap pm = BitmapFactory().pixmap(pixmap);
+    if (!pm.isNull()) {
+        return QIcon(pm);
+    }
+    return {};
+}
 
-    // Build tooltip: Name (Shortcut)
-    // Remove '&' accelerator markers from menu text (e.g., "Trans&form" -> "Transform")
+QString FusionTabToolbar::tooltipForCommand(const char* cmdName) const
+{
+    Command* cmd = Application::Instance->commandManager().getCommandByName(cmdName);
+    if (!cmd) {
+        return QString::fromLatin1(cmdName);
+    }
     QString tooltip = QString::fromUtf8(cmd->getMenuText());
     tooltip.remove(QLatin1Char('&'));
     QString accel = QString::fromUtf8(cmd->getAccel());
     if (!accel.isEmpty()) {
         tooltip += QStringLiteral(" (") + accel + QStringLiteral(")");
     }
-    btn->setToolTip(tooltip);
+    return tooltip;
+}
 
-    btn->setStyleSheet(QStringLiteral(
-        "QToolButton {"
-        "  background: transparent;"
-        "  border: none;"
-        "  border-radius: 4px;"
-        "  padding: 4px;"
-        "  color: #CCCCCC;"
-        "  font-size: 9px;"
-        "  font-weight: bold;"
-        "}"
-        "QToolButton:hover {"
-        "  background: rgba(255,255,255,0.1);"
-        "}"
-        "QToolButton:pressed {"
-        "  background: #0696D7;"
-        "}"
-        "QToolButton:checked {"
-        "  background: #0696D7;"
-        "}"
-    ));
+void FusionTabToolbar::invokeCommand(const QString& cmdName)
+{
+    Command* c = Application::Instance->commandManager().getCommandByName(
+        cmdName.toLatin1().constData());
+    if (c) {
+        c->invoke(0);
+    }
+}
 
-    // Connect to command execution - capture command name as QString (by value)
+QToolButton* FusionTabToolbar::createCommandButton(const char* cmdName)
+{
+    if (!commandExists(cmdName)) {
+        return nullptr;
+    }
+
+    auto* btn = new QToolButton();
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setAutoRaise(true);
+    btn->setIconSize(QSize(22, 22));
+    btn->setFixedSize(34, 34);
+    btn->setStyleSheet(QString::fromUtf8(kToolButtonStyle));
+    btn->setToolTip(tooltipForCommand(cmdName));
+
+    QIcon icon = iconForCommand(cmdName);
+    if (!icon.isNull()) {
+        btn->setIcon(icon);
+    }
+    else {
+        QString cmdStr = QString::fromLatin1(cmdName);
+        int idx = cmdStr.lastIndexOf(QLatin1Char('_'));
+        QString shortName = (idx >= 0) ? cmdStr.mid(idx + 1, 2) : cmdStr.left(2);
+        btn->setText(shortName.toUpper());
+        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    }
+
     QString cmdNameStr = QString::fromLatin1(cmdName);
-    connect(btn, &QToolButton::clicked, this, [cmdNameStr]() {
-        auto& cmdMgr = Application::Instance->commandManager();
-        Command* c = cmdMgr.getCommandByName(cmdNameStr.toLatin1().constData());
-        if (c) {
-            c->invoke(0);
+    connect(btn, &QToolButton::clicked, this, [this, cmdNameStr]() {
+        invokeCommand(cmdNameStr);
+    });
+    return btn;
+}
+
+QToolButton* FusionTabToolbar::createFlyoutButton(const ToolItem& toolItem)
+{
+    if (!commandExists(toolItem.primary.toLatin1().constData())) {
+        // Try first available variant as primary
+        for (const auto& v : toolItem.variants) {
+            if (commandExists(v.toLatin1().constData())) {
+                ToolItem alt = toolItem;
+                alt.primary = v;
+                alt.variants.removeAll(v);
+                return createFlyoutButton(alt);
+            }
         }
+        return nullptr;
+    }
+
+    // Collect available variants (excluding primary)
+    QStringList availableVariants;
+    for (const auto& v : toolItem.variants) {
+        if (v != toolItem.primary && commandExists(v.toLatin1().constData())) {
+            availableVariants << v;
+        }
+    }
+
+    if (availableVariants.isEmpty()) {
+        return createCommandButton(toolItem.primary.toLatin1().constData());
+    }
+
+    auto* btn = new QToolButton();
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    btn->setAutoRaise(true);
+    btn->setIconSize(QSize(22, 22));
+    btn->setFixedSize(34, 34);
+    btn->setPopupMode(QToolButton::MenuButtonPopup);
+    btn->setStyleSheet(QString::fromUtf8(kToolButtonStyle));
+    btn->setToolTip(tooltipForCommand(toolItem.primary.toLatin1().constData()));
+
+    QIcon icon = iconForCommand(toolItem.primary.toLatin1().constData());
+    if (!icon.isNull()) {
+        btn->setIcon(icon);
+    }
+    else {
+        btn->setText(toolItem.primary.section(QLatin1Char('_'), -1).left(2).toUpper());
+        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    }
+
+    auto* menu = new QMenu(btn);
+    QString primaryName = toolItem.primary;
+    QAction* primaryAct = menu->addAction(tooltipForCommand(primaryName.toLatin1().constData()));
+    primaryAct->setData(primaryName);
+    QIcon primaryIcon = iconForCommand(primaryName.toLatin1().constData());
+    if (!primaryIcon.isNull()) {
+        primaryAct->setIcon(primaryIcon);
+    }
+    menu->addSeparator();
+
+    for (const auto& v : availableVariants) {
+        QAction* act = menu->addAction(tooltipForCommand(v.toLatin1().constData()));
+        act->setData(v);
+        QIcon vIcon = iconForCommand(v.toLatin1().constData());
+        if (!vIcon.isNull()) {
+            act->setIcon(vIcon);
+        }
+    }
+    btn->setMenu(menu);
+
+    // Remember last-used command on the button (Fusion-style flyout)
+    btn->setProperty("fusionCmd", primaryName);
+
+    connect(btn, &QToolButton::clicked, this, [this, btn]() {
+        invokeCommand(btn->property("fusionCmd").toString());
+    });
+    connect(menu, &QMenu::triggered, this, [this, btn](QAction* act) {
+        QString cmd = act->data().toString();
+        if (cmd.isEmpty()) {
+            return;
+        }
+        invokeCommand(cmd);
+        btn->setProperty("fusionCmd", cmd);
+        QIcon ic = iconForCommand(cmd.toLatin1().constData());
+        if (!ic.isNull()) {
+            btn->setIcon(ic);
+        }
+        btn->setToolTip(tooltipForCommand(cmd.toLatin1().constData()));
     });
 
-    layout->addWidget(btn);
-    return true;
+    return btn;
+}
+
+void FusionTabToolbar::addPanel(QLayout* layout, const PanelDefinition& panel)
+{
+    auto* panelWidget = new QWidget();
+    auto* panelLayout = new QVBoxLayout(panelWidget);
+    panelLayout->setContentsMargins(6, 2, 6, 2);
+    panelLayout->setSpacing(1);
+
+    auto* toolsRow = new QWidget();
+    auto* toolsLayout = new QHBoxLayout(toolsRow);
+    toolsLayout->setContentsMargins(0, 0, 0, 0);
+    toolsLayout->setSpacing(2);
+    toolsLayout->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
+    int toolsAdded = 0;
+    for (const auto& t : panel.tools) {
+        QToolButton* btn = t.variants.isEmpty()
+            ? createCommandButton(t.primary.toLatin1().constData())
+            : createFlyoutButton(t);
+        if (btn) {
+            toolsLayout->addWidget(btn);
+            ++toolsAdded;
+        }
+    }
+
+    // Overflow dropdown for remaining commands
+    QStringList availableOverflow;
+    for (const auto& cmd : panel.overflow) {
+        if (commandExists(cmd.toLatin1().constData())) {
+            availableOverflow << cmd;
+        }
+    }
+
+    if (!availableOverflow.isEmpty()) {
+        auto* moreBtn = new QToolButton();
+        moreBtn->setText(QStringLiteral("▾"));
+        moreBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        moreBtn->setPopupMode(QToolButton::InstantPopup);
+        moreBtn->setAutoRaise(true);
+        moreBtn->setFixedSize(22, 34);
+        moreBtn->setToolTip(tr("More %1 tools").arg(panel.name));
+        moreBtn->setStyleSheet(QString::fromUtf8(kToolButtonStyle));
+
+        auto* menu = new QMenu(moreBtn);
+        for (const auto& cmd : availableOverflow) {
+            QAction* act = menu->addAction(tooltipForCommand(cmd.toLatin1().constData()));
+            act->setData(cmd);
+            QIcon ic = iconForCommand(cmd.toLatin1().constData());
+            if (!ic.isNull()) {
+                act->setIcon(ic);
+            }
+        }
+        moreBtn->setMenu(menu);
+        connect(menu, &QMenu::triggered, this, [this](QAction* act) {
+            invokeCommand(act->data().toString());
+        });
+        toolsLayout->addWidget(moreBtn);
+        ++toolsAdded;
+    }
+
+    if (toolsAdded == 0) {
+        delete panelWidget;
+        return;
+    }
+
+    panelLayout->addWidget(toolsRow, 0, Qt::AlignHCenter);
+
+    auto* labelRow = new QWidget();
+    auto* labelLayout = new QHBoxLayout(labelRow);
+    labelLayout->setContentsMargins(0, 0, 0, 0);
+    labelLayout->setSpacing(2);
+    labelLayout->setAlignment(Qt::AlignHCenter);
+
+    auto* lbl = new QLabel(panel.name);
+    lbl->setObjectName(QStringLiteral("FusionPanelLabel"));
+    lbl->setAlignment(Qt::AlignCenter);
+    labelLayout->addWidget(lbl);
+    panelLayout->addWidget(labelRow);
+
+    layout->addWidget(panelWidget);
 }
 
 void FusionTabToolbar::addSeparator(QLayout* layout)
@@ -424,237 +613,255 @@ void FusionTabToolbar::addSeparator(QLayout* layout)
     line->setFrameShape(QFrame::VLine);
     line->setFrameShadow(QFrame::Plain);
     line->setFixedWidth(1);
-    line->setFixedHeight(28);
+    line->setFixedHeight(48);
     line->setStyleSheet(QStringLiteral("background: #444444;"));
     layout->addWidget(line);
 }
 
-void FusionTabToolbar::addGroupLabel(QLayout* layout, const QString& label)
-{
-    auto* lbl = new QLabel(label);
-    lbl->setStyleSheet(QStringLiteral(
-        "QLabel {"
-        "  color: #888888;"
-        "  font-size: 9px;"
-        "  font-weight: bold;"
-        "  padding: 0 4px;"
-        "}"
-    ));
-    layout->addWidget(lbl);
-}
-
 // ---------------------------------------------------------------------------
-// Tab Definitions - Fusion 360-style unified tabs
-// Commands are aggregated from multiple workbenches
+// Tab / panel definitions — one function per visible icon; variants in flyouts
 // ---------------------------------------------------------------------------
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildSketchTab() const
 {
-    return {
-        tr("SKETCH"),
+    PanelDefinition create{
+        tr("CREATE"),
         {
-            // Create sketch
-            QStringLiteral("PartDesign_NewSketch"),
-            QStringLiteral("Sketcher_NewSketch"),
-            QStringLiteral("Separator"),
-            
-            // Draw geometry
-            QStringLiteral("Sketcher_CreateLine"),
-            QStringLiteral("Sketcher_CreateRectangle"),
-            QStringLiteral("Sketcher_CreateOblong"),
-            QStringLiteral("Sketcher_CreateCircle"),
-            QStringLiteral("Sketcher_Create3PointCircle"),
-            QStringLiteral("Sketcher_CreateArc"),
-            QStringLiteral("Sketcher_Create3PointArc"),
+            tool(QStringLiteral("PartDesign_NewSketch")),
+            tool(QStringLiteral("Sketcher_CreateLine")),
+            tool(QStringLiteral("Sketcher_CreateRectangle"),
+                 {QStringLiteral("Sketcher_CreateOblong")}),
+            tool(QStringLiteral("Sketcher_CreateCircle"),
+                 {QStringLiteral("Sketcher_Create3PointCircle")}),
+            tool(QStringLiteral("Sketcher_CreateArc"),
+                 {QStringLiteral("Sketcher_Create3PointArc")}),
+            tool(QStringLiteral("Sketcher_CreatePolyline")),
+        },
+        {
+            QStringLiteral("Sketcher_CreatePoint"),
             QStringLiteral("Sketcher_CreateEllipseByCenter"),
-            QStringLiteral("Sketcher_CreatePolyline"),
-            QStringLiteral("Sketcher_CreateBSpline"),
             QStringLiteral("Sketcher_CreateSlot"),
             QStringLiteral("Sketcher_CreateRegularPolygon"),
-            QStringLiteral("Sketcher_CreatePoint"),
-            QStringLiteral("Separator"),
-            
-            // Constraints - Geometric
-            QStringLiteral("Sketcher_ConstrainCoincident"),
+            QStringLiteral("Sketcher_CreateBSpline"),
+        }
+    };
+
+    PanelDefinition constrain{
+        tr("CONSTRAIN"),
+        {
+            tool(QStringLiteral("Sketcher_ConstrainCoincident")),
+            tool(QStringLiteral("Sketcher_ConstrainHorizontal")),
+            tool(QStringLiteral("Sketcher_ConstrainVertical")),
+            tool(QStringLiteral("Sketcher_ConstrainParallel")),
+            tool(QStringLiteral("Sketcher_ConstrainPerpendicular")),
+            tool(QStringLiteral("Sketcher_ConstrainDistance"),
+                 {QStringLiteral("Sketcher_ConstrainDistanceX"),
+                  QStringLiteral("Sketcher_ConstrainDistanceY")}),
+        },
+        {
             QStringLiteral("Sketcher_ConstrainPointOnObject"),
-            QStringLiteral("Sketcher_ConstrainHorizontal"),
-            QStringLiteral("Sketcher_ConstrainVertical"),
-            QStringLiteral("Sketcher_ConstrainParallel"),
-            QStringLiteral("Sketcher_ConstrainPerpendicular"),
             QStringLiteral("Sketcher_ConstrainTangent"),
             QStringLiteral("Sketcher_ConstrainEqual"),
             QStringLiteral("Sketcher_ConstrainSymmetric"),
-            QStringLiteral("Separator"),
-            
-            // Constraints - Dimensional
             QStringLiteral("Sketcher_ConstrainLock"),
-            QStringLiteral("Sketcher_ConstrainDistanceX"),
-            QStringLiteral("Sketcher_ConstrainDistanceY"),
-            QStringLiteral("Sketcher_ConstrainDistance"),
             QStringLiteral("Sketcher_ConstrainRadius"),
             QStringLiteral("Sketcher_ConstrainDiameter"),
             QStringLiteral("Sketcher_ConstrainAngle"),
-            QStringLiteral("Separator"),
-            
-            // Edit tools
-            QStringLiteral("Sketcher_Trimming"),
-            QStringLiteral("Sketcher_Extend"),
+        }
+    };
+
+    PanelDefinition modify{
+        tr("MODIFY"),
+        {
+            tool(QStringLiteral("Sketcher_Trimming")),
+            tool(QStringLiteral("Sketcher_Extend")),
+            tool(QStringLiteral("Sketcher_Offset")),
+            tool(QStringLiteral("Sketcher_Move")),
+        },
+        {
             QStringLiteral("Sketcher_Split"),
             QStringLiteral("Sketcher_External"),
             QStringLiteral("Sketcher_CarbonCopy"),
-            QStringLiteral("Sketcher_Offset"),
-            QStringLiteral("Sketcher_Move"),
             QStringLiteral("Sketcher_RectangularArray"),
         }
     };
+
+    return {tr("SKETCH"), {create, constrain, modify}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildSolidTab() const
 {
-    return {
-        tr("SOLID"),
+    PanelDefinition create{
+        tr("CREATE"),
         {
-            // Body management
+            tool(QStringLiteral("PartDesign_NewSketch")),
+            tool(QStringLiteral("PartDesign_Extrude")),
+            tool(QStringLiteral("PartDesign_Revolve")),
+            tool(QStringLiteral("PartDesign_Hole")),
+            tool(QStringLiteral("PartDesign_LinearPattern"),
+                 {QStringLiteral("PartDesign_PolarPattern"),
+                  QStringLiteral("PartDesign_Mirrored"),
+                  QStringLiteral("PartDesign_MultiTransform")}),
+        },
+        {
             QStringLiteral("PartDesign_Body"),
-            QStringLiteral("PartDesign_NewSketch"),
-            QStringLiteral("Separator"),
-            
-            // Additive features (Extrude/Join)
-            QStringLiteral("PartDesign_Pad"),
-            QStringLiteral("PartDesign_Revolution"),
-            QStringLiteral("PartDesign_AdditiveLoft"),
-            QStringLiteral("PartDesign_AdditivePipe"),
+            QStringLiteral("PartDesign_Sweep"),
+            QStringLiteral("PartDesign_Loft"),
             QStringLiteral("PartDesign_AdditiveHelix"),
+            QStringLiteral("PartDesign_Emboss"),
             QStringLiteral("PartDesign_AdditiveBox"),
             QStringLiteral("PartDesign_AdditiveCylinder"),
             QStringLiteral("PartDesign_AdditiveSphere"),
-            QStringLiteral("Separator"),
-            
-            // Subtractive features (Cut)
-            QStringLiteral("PartDesign_Pocket"),
-            QStringLiteral("PartDesign_Hole"),
-            QStringLiteral("PartDesign_Groove"),
-            QStringLiteral("PartDesign_SubtractiveLoft"),
-            QStringLiteral("PartDesign_SubtractivePipe"),
-            QStringLiteral("PartDesign_SubtractiveHelix"),
-            QStringLiteral("PartDesign_SubtractiveBox"),
-            QStringLiteral("Separator"),
-            
-            // Dress-up features
-            QStringLiteral("PartDesign_Fillet"),
-            QStringLiteral("PartDesign_Chamfer"),
-            QStringLiteral("PartDesign_Draft"),
-            QStringLiteral("PartDesign_Thickness"),
-            QStringLiteral("Separator"),
-            
-            // Patterns
-            QStringLiteral("PartDesign_Mirrored"),
-            QStringLiteral("PartDesign_LinearPattern"),
-            QStringLiteral("PartDesign_PolarPattern"),
-            QStringLiteral("PartDesign_MultiTransform"),
-            QStringLiteral("Separator"),
-            
-            // Boolean
-            QStringLiteral("PartDesign_Boolean"),
-            
-            // Reference geometry
-            QStringLiteral("Separator"),
-            QStringLiteral("PartDesign_Plane"),
-            QStringLiteral("PartDesign_Line"),
-            QStringLiteral("PartDesign_Point"),
-            QStringLiteral("PartDesign_CoordinateSystem"),
         }
     };
+
+    PanelDefinition modify{
+        tr("MODIFY"),
+        {
+            tool(QStringLiteral("PartDesign_Fillet")),
+            tool(QStringLiteral("PartDesign_Chamfer")),
+            tool(QStringLiteral("PartDesign_Thickness")),
+            tool(QStringLiteral("PartDesign_Boolean")),
+            tool(QStringLiteral("Std_TransformManip")),
+            tool(QStringLiteral("PartDesign_OffsetFace")),
+        },
+        {
+            QStringLiteral("PartDesign_Draft"),
+            QStringLiteral("PartDesign_DeleteFace"),
+            QStringLiteral("PartDesign_MoveFace"),
+            QStringLiteral("PartDesign_SplitFace"),
+            QStringLiteral("PartDesign_ReplaceFace"),
+        }
+    };
+
+    PanelDefinition construct{
+        tr("CONSTRUCT"),
+        {
+            tool(QStringLiteral("PartDesign_Plane"),
+                 {QStringLiteral("PartDesign_Line"),
+                  QStringLiteral("PartDesign_Point"),
+                  QStringLiteral("PartDesign_CoordinateSystem")}),
+        },
+        {}
+    };
+
+    PanelDefinition inspect{
+        tr("INSPECT"),
+        {
+            tool(QStringLiteral("Std_MeasureDistance"),
+                 {QStringLiteral("Part_Measure_Linear"),
+                  QStringLiteral("Part_Measure_Angular"),
+                  QStringLiteral("Part_CheckGeometry")}),
+        },
+        {}
+    };
+
+    PanelDefinition select{
+        tr("SELECT"),
+        {
+            tool(QStringLiteral("Std_BoxSelection"),
+                 {QStringLiteral("Std_BoxElementSelection"),
+                  QStringLiteral("Std_SelectAll"),
+                  QStringLiteral("Std_SelectVisibleObjects")}),
+        },
+        {}
+    };
+
+    return {tr("SOLID"), {create, modify, construct, inspect, select}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildModifyTab() const
 {
-    return {
-        tr("MODIFY"),
+    // Transform / organize only — no Fillet/Chamfer (those live on SOLID)
+    PanelDefinition transform{
+        tr("TRANSFORM"),
         {
-            // Transform - Move/Rotate (Fusion 360 style)
-            QStringLiteral("Group:Transform"),
-            QStringLiteral("Std_TransformManip"),
-            QStringLiteral("Std_Placement"),
+            tool(QStringLiteral("Std_TransformManip")),
+            tool(QStringLiteral("Std_Placement")),
+            tool(QStringLiteral("Std_Alignment")),
+        },
+        {
             QStringLiteral("Std_Transform"),
-            QStringLiteral("Separator"),
-            
-            // Align
-            QStringLiteral("Group:Align"),
-            QStringLiteral("Std_Alignment"),
-            QStringLiteral("Separator"),
-            
-            // Organize
-            QStringLiteral("Group:Organize"),
+        }
+    };
+
+    PanelDefinition organize{
+        tr("ORGANIZE"),
+        {
+            tool(QStringLiteral("Std_Part")),
+            tool(QStringLiteral("Std_Group")),
+            tool(QStringLiteral("Std_LinkMake")),
+        },
+        {
             QStringLiteral("Std_MergeToContainer"),
-            QStringLiteral("Std_Part"),
-            QStringLiteral("Std_Group"),
-            QStringLiteral("Std_LinkMake"),
-            QStringLiteral("Separator"),
-            
-            // Copy/Clone
-            QStringLiteral("Group:Copy"),
             QStringLiteral("Std_Copy"),
             QStringLiteral("Std_Paste"),
             QStringLiteral("Std_DuplicateSelection"),
-            QStringLiteral("Separator"),
-            
-            // Part operations
-            QStringLiteral("Group:Combine"),
+        }
+    };
+
+    PanelDefinition scale{
+        tr("SCALE"),
+        {
+            tool(QStringLiteral("Part_Scale")),
+            tool(QStringLiteral("Part_Mirror")),
+        },
+        {
+            QStringLiteral("Part_Offset"),
+            QStringLiteral("Part_Offset3D"),
             QStringLiteral("Part_Fuse"),
             QStringLiteral("Part_Cut"),
             QStringLiteral("Part_Common"),
-            QStringLiteral("Part_Compound"),
-            QStringLiteral("Separator"),
-            
-            // Scale/Offset
-            QStringLiteral("Group:Scale"),
-            QStringLiteral("Part_Scale"),
-            QStringLiteral("Part_Offset"),
-            QStringLiteral("Part_Offset3D"),
-            QStringLiteral("Part_Mirror"),
         }
     };
+
+    return {tr("MODIFY"), {transform, organize, scale}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildSurfaceTab() const
 {
-    return {
-        tr("SURFACE"),
+    // Surface tools only — no PartDesign Extrude duplication
+    PanelDefinition create{
+        tr("CREATE"),
         {
-            // Surface creation (from Part/Surface workbench)
-            QStringLiteral("Surface_Filling"),
-            QStringLiteral("Surface_GeomFillSurface"),
-            QStringLiteral("Surface_Sections"),
+            tool(QStringLiteral("Surface_Filling")),
+            tool(QStringLiteral("Surface_GeomFillSurface")),
+            tool(QStringLiteral("Surface_Sections")),
+            tool(QStringLiteral("Part_RuledSurface")),
+        },
+        {
             QStringLiteral("Surface_ExtendFace"),
-            QStringLiteral("Separator"),
-            
-            // Part surfaces
-            QStringLiteral("Part_Extrude"),
-            QStringLiteral("Part_Revolve"),
             QStringLiteral("Part_Loft"),
             QStringLiteral("Part_Sweep"),
-            QStringLiteral("Part_RuledSurface"),
-            QStringLiteral("Separator"),
-            
-            // Modification
-            QStringLiteral("Part_Offset"),
-            QStringLiteral("Part_Thickness"),
+            QStringLiteral("Part_Revolve"),
+        }
+    };
+
+    PanelDefinition modify{
+        tr("MODIFY"),
+        {
+            tool(QStringLiteral("Part_Offset")),
+            tool(QStringLiteral("Part_Thickness")),
+        },
+        {
             QStringLiteral("Surface_CurveOnMesh"),
         }
     };
+
+    return {tr("SURFACE"), {create, modify}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildSheetMetalTab() const
 {
-    return {
-        tr("SHEET METAL"),
+    PanelDefinition create{
+        tr("CREATE"),
         {
-            // Sheet metal commands (if SheetMetal workbench is available)
-            QStringLiteral("SheetMetal_AddBase"),
-            QStringLiteral("SheetMetal_AddWall"),
-            QStringLiteral("SheetMetal_AddFoldWall"),
-            QStringLiteral("SheetMetal_Unfold"),
+            tool(QStringLiteral("SheetMetal_AddBase")),
+            tool(QStringLiteral("SheetMetal_AddWall")),
+            tool(QStringLiteral("SheetMetal_AddFoldWall")),
+            tool(QStringLiteral("SheetMetal_Unfold")),
+        },
+        {
             QStringLiteral("SheetMetal_AddCornerRelief"),
             QStringLiteral("SheetMetal_AddRelief"),
             QStringLiteral("SheetMetal_AddJunction"),
@@ -663,121 +870,115 @@ FusionTabToolbar::TabDefinition FusionTabToolbar::buildSheetMetalTab() const
             QStringLiteral("SheetMetal_Forming"),
         }
     };
+
+    return {tr("SHEET METAL"), {create}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildMeshTab() const
 {
-    return {
-        tr("MESH"),
+    PanelDefinition create{
+        tr("CREATE"),
         {
-            // Mesh workbench commands
-            QStringLiteral("Mesh_Import"),
-            QStringLiteral("Mesh_Export"),
-            QStringLiteral("Separator"),
-            QStringLiteral("Mesh_FromPartShape"),
+            tool(QStringLiteral("Mesh_Import")),
+            tool(QStringLiteral("Mesh_FromPartShape")),
+            tool(QStringLiteral("Mesh_Export")),
+        },
+        {
             QStringLiteral("Mesh_RemeshGmsh"),
-            QStringLiteral("Separator"),
-            QStringLiteral("Mesh_VertexCurvature"),
-            QStringLiteral("Mesh_HarmonizeNormals"),
+        }
+    };
+
+    PanelDefinition modify{
+        tr("MODIFY"),
+        {
+            tool(QStringLiteral("Mesh_Smoothing")),
+            tool(QStringLiteral("Mesh_Decimating")),
+            tool(QStringLiteral("Mesh_FillupHoles")),
+            tool(QStringLiteral("Mesh_HarmonizeNormals")),
+        },
+        {
             QStringLiteral("Mesh_FlipNormals"),
-            QStringLiteral("Separator"),
-            QStringLiteral("Mesh_FillupHoles"),
             QStringLiteral("Mesh_FillInteractiveHole"),
             QStringLiteral("Mesh_RemoveComponents"),
-            QStringLiteral("Mesh_Smoothing"),
-            QStringLiteral("Mesh_Decimating"),
-            QStringLiteral("Separator"),
+            QStringLiteral("Mesh_VertexCurvature"),
             QStringLiteral("Mesh_BoundingBox"),
             QStringLiteral("Mesh_Evaluation"),
         }
     };
+
+    return {tr("MESH"), {create, modify}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildInspectTab() const
 {
-    return {
-        tr("INSPECT"),
+    PanelDefinition measure{
+        tr("MEASURE"),
         {
-            // Measurement
-            QStringLiteral("Std_MeasureDistance"),
-            QStringLiteral("Part_Measure_Linear"),
-            QStringLiteral("Part_Measure_Angular"),
-            QStringLiteral("Separator"),
-            
-            // Analysis
-            QStringLiteral("Part_CheckGeometry"),
-            QStringLiteral("Sketcher_ValidateSketch"),
-            QStringLiteral("Part_SectionCut"),
-            QStringLiteral("Separator"),
-            
-            // Info
+            tool(QStringLiteral("Std_MeasureDistance")),
+            tool(QStringLiteral("Part_Measure_Linear")),
+            tool(QStringLiteral("Part_Measure_Angular")),
+        },
+        {
             QStringLiteral("Std_MeasureToggleAll"),
             QStringLiteral("Part_Measure_Refresh"),
             QStringLiteral("Part_Measure_Clear_All"),
         }
     };
+
+    PanelDefinition analyze{
+        tr("ANALYZE"),
+        {
+            tool(QStringLiteral("Part_CheckGeometry")),
+            tool(QStringLiteral("Sketcher_ValidateSketch")),
+            tool(QStringLiteral("Part_SectionCut")),
+        },
+        {}
+    };
+
+    return {tr("INSPECT"), {measure, analyze}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildToolsTab() const
 {
-    return {
-        tr("TOOLS"),
+    PanelDefinition file{
+        tr("FILE"),
         {
-            // File operations
-            QStringLiteral("Std_New"),
-            QStringLiteral("Std_Open"),
-            QStringLiteral("Std_Save"),
+            tool(QStringLiteral("Std_New")),
+            tool(QStringLiteral("Std_Open")),
+            tool(QStringLiteral("Std_Save")),
+        },
+        {
             QStringLiteral("Std_SaveAs"),
-            QStringLiteral("Separator"),
-            
-            // Import/Export
             QStringLiteral("Std_Import"),
             QStringLiteral("Std_Export"),
-            QStringLiteral("Separator"),
-            
-            // Edit
-            QStringLiteral("Std_Undo"),
-            QStringLiteral("Std_Redo"),
-            QStringLiteral("Separator"),
-            
-            // View
-            QStringLiteral("Std_ViewFitAll"),
-            QStringLiteral("Std_ViewHome"),
-            QStringLiteral("Separator"),
-            
-            // Settings
-            QStringLiteral("Std_DlgPreferences"),
-            QStringLiteral("Std_DlgParameter"),
-            QStringLiteral("Separator"),
-            
-            // Macros
-            QStringLiteral("Std_DlgMacroRecord"),
-            QStringLiteral("Std_DlgMacroExecute"),
-            QStringLiteral("Std_DlgMacroExecuteDirect"),
         }
     };
-}
 
-// Legacy methods for compatibility
-void FusionTabToolbar::populateTab(int index)
-{
-    Q_UNUSED(index)
-    // Not needed with unified tabs
-}
+    PanelDefinition edit{
+        tr("EDIT"),
+        {
+            tool(QStringLiteral("Std_Undo")),
+            tool(QStringLiteral("Std_Redo")),
+        },
+        {}
+    };
 
-QList<FusionTabToolbar::TabDefinition> FusionTabToolbar::buildPartDesignTabs() const
-{
-    return { buildSolidTab() };
-}
+    PanelDefinition settings{
+        tr("SETTINGS"),
+        {
+            tool(QStringLiteral("Std_DlgPreferences")),
+            tool(QStringLiteral("Std_DlgMacroExecute")),
+        },
+        {
+            QStringLiteral("Std_DlgParameter"),
+            QStringLiteral("Std_DlgMacroRecord"),
+            QStringLiteral("Std_DlgMacroExecuteDirect"),
+            QStringLiteral("Std_ViewFitAll"),
+            QStringLiteral("Std_ViewHome"),
+        }
+    };
 
-QList<FusionTabToolbar::TabDefinition> FusionTabToolbar::buildPartTabs() const
-{
-    return { buildSolidTab() };
-}
-
-QList<FusionTabToolbar::TabDefinition> FusionTabToolbar::buildGenericTabs() const
-{
-    return { buildToolsTab() };
+    return {tr("TOOLS"), {file, edit, settings}};
 }
 
 #include "moc_FusionTabToolbar.cpp"

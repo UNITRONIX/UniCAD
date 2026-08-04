@@ -55,6 +55,14 @@
         <file>icons/NavigationTinkerCAD_dark.svg</file>
         <file>icons/NavigationTouchpad_light.svg</file>
         <file>icons/NavigationTouchpad_dark.svg</file>
+        <file>icons/NavigationFusion_light.svg</file>
+        <file>icons/NavigationFusion_dark.svg</file>
+        <file>icons/NavigationAutodeskInventor_light.svg</file>
+        <file>icons/NavigationAutodeskInventor_dark.svg</file>
+        <file>icons/NavigationAlias_light.svg</file>
+        <file>icons/NavigationAlias_dark.svg</file>
+        <file>icons/NavigationPowerMill_light.svg</file>
+        <file>icons/NavigationPowerMill_dark.svg</file>
         <file>icons/NavigationUndefined.svg</file>
         <file>translations/Tux_af.qm</file>
         <file>translations/Tux_zh-CN.qm</file>

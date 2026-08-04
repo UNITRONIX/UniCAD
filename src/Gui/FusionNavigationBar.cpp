@@ -19,6 +19,8 @@
 
 #include <QLabel>
 #include <QFrame>
+#include <QWidget>
+#include <QSizePolicy>
 
 using namespace Gui;
 
@@ -75,13 +77,12 @@ void FusionNavigationBar::setupStyle()
 
 void FusionNavigationBar::setupActions()
 {
-    // View presets section
+    // Compact icon-only nav (Fusion-like density)
     addNavButton("Std_ViewFitAll",    tr("Fit"),       QStringLiteral("view-refresh"));
     addNavButton("Std_ViewHome",      tr("Home"),      QStringLiteral("go-home"));
 
     addSeparator();
 
-    // Standard views
     addNavButton("Std_ViewFront",     tr("Front"),     QStringLiteral("view-front"));
     addNavButton("Std_ViewTop",       tr("Top"),       QStringLiteral("view-top"));
     addNavButton("Std_ViewRight",     tr("Right"),     QStringLiteral("view-right"));
@@ -89,27 +90,17 @@ void FusionNavigationBar::setupActions()
 
     addSeparator();
 
-    // Display style
     addNavButton("Std_DrawStyleAsIs",       tr("Shaded"), QStringLiteral("DrawStyleAsIs"));
     addNavButton("Std_DrawStyleWireFrame",  tr("Wire"),   QStringLiteral("DrawStyleWireFrame"));
 
     addSeparator();
 
-    // Toggle tools
     addNavButton("Std_ToggleVisibility", tr("Show/Hide"), QStringLiteral("Std_ToggleVisibility"));
-    addNavButton("Std_PerspectiveCamera", tr("Persp."),   QStringLiteral("view-perspective"));
+    addNavButton("Std_PerspectiveCamera", tr("Perspective"), QStringLiteral("view-perspective"));
 
-    // Right-side spacer + label
     auto* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     addWidget(spacer);
-
-    // UniCAD branding label on right side
-    auto* brandLabel = new QLabel(QStringLiteral("UniCAD"));
-    brandLabel->setStyleSheet(QStringLiteral(
-        "color: #444444; font-size: 9px; font-weight: bold; padding-right: 8px;"
-    ));
-    addWidget(brandLabel);
 }
 
 void FusionNavigationBar::addNavButton(const char* cmdName, const QString& label,
@@ -119,10 +110,10 @@ void FusionNavigationBar::addNavButton(const char* cmdName, const QString& label
     Command* cmd = mgr.getCommandByName(cmdName);
 
     auto* btn = new QToolButton();
-    btn->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    btn->setToolButtonStyle(Qt::ToolButtonIconOnly);
     btn->setAutoRaise(true);
-    btn->setText(label);
     btn->setIconSize(QSize(18, 18));
+    btn->setFixedSize(28, 28);
 
     if (cmd) {
         const char* pixmap = cmd->getPixmap();
@@ -131,9 +122,24 @@ void FusionNavigationBar::addNavButton(const char* cmdName, const QString& label
             if (!icon.isNull()) {
                 btn->setIcon(icon);
             }
+            else {
+                QPixmap pm = BitmapFactory().pixmap(pixmap);
+                if (!pm.isNull()) {
+                    btn->setIcon(QIcon(pm));
+                }
+            }
+        }
+
+        if (btn->icon().isNull()) {
+            btn->setText(label.left(1));
+            btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
         }
 
         QString tooltip = QString::fromUtf8(cmd->getMenuText());
+        tooltip.remove(QLatin1Char('&'));
+        if (tooltip.isEmpty()) {
+            tooltip = label;
+        }
         QString accel = QString::fromUtf8(cmd->getAccel());
         if (!accel.isEmpty()) {
             tooltip += QStringLiteral(" (") + accel + QStringLiteral(")");
@@ -149,6 +155,8 @@ void FusionNavigationBar::addNavButton(const char* cmdName, const QString& label
     }
     else {
         btn->setToolTip(label);
+        btn->setText(label.left(1));
+        btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
         btn->setEnabled(false);
     }
 

@@ -119,32 +119,35 @@ void FusionSelectionBar::setupUI()
         "    padding: 2px 8px;"
         "}"
         "QToolButton {"
-        "    background: transparent;"
-        "    border: 1px solid transparent;"
-        "    border-radius: 3px;"
-        "    padding: 4px;"
-        "    margin: 1px;"
+        "  background: transparent;"
+        "  color: #CCCCCC;"
+        "  border: none;"
+        "  border-radius: 3px;"
+        "  padding: 2px;"
+        "  font-size: 10px;"
+        "  font-weight: bold;"
         "}"
         "QToolButton:hover {"
-        "    background: #3D3D3D;"
-        "    border: 1px solid #505050;"
-        "}"
-        "QToolButton:checked {"
-        "    background: #0696D7;"
-        "    border: 1px solid #0696D7;"
+        "  background: #3D3D3D;"
+        "  color: #FFFFFF;"
         "}"
         "QToolButton:pressed {"
-        "    background: #0580B8;"
+        "  background: #0696D7;"
+        "  color: #FFFFFF;"
+        "}"
+        "QToolButton:checked {"
+        "  background: #0696D7;"
+        "  color: #FFFFFF;"
         "}"
         "QLabel {"
-        "    color: #B0B0B0;"
-        "    font-size: 11px;"
-        "    padding: 0 8px;"
+        "  color: #B0B0B0;"
+        "  font-size: 11px;"
+        "  padding: 0 8px;"
         "}"
     ));
 
     // Selection label
-    m_selectionLabel = new QLabel(tr("Selection Filter:"), this);
+    m_selectionLabel = new QLabel(tr("Selection:"), this);
     addWidget(m_selectionLabel);
     
     addSeparator();
@@ -153,17 +156,17 @@ void FusionSelectionBar::setupUI()
     m_filterGroup = new QButtonGroup(this);
     m_filterGroup->setExclusive(false);
     
-    // Create filter buttons
-    m_verticesBtn = createFilterButton(QStringLiteral("Constraint_PointOnPoint"),
-                                        tr("Vertices (Points)"), Vertices);
-    m_edgesBtn = createFilterButton(QStringLiteral("Part_Line_Edge"),
-                                     tr("Edges (Lines, Curves)"), Edges);
-    m_facesBtn = createFilterButton(QStringLiteral("Draft_SelectPlane"),
-                                     tr("Faces (Surfaces)"), Faces);
-    m_bodiesBtn = createFilterButton(QStringLiteral("Part_Box"),
-                                      tr("Bodies (Solids)"), Bodies);
-    m_featuresBtn = createFilterButton(QStringLiteral("Tree_Part"),
-                                        tr("Features"), Features);
+    // Create filter buttons — use reliable theme icons + short text fallback
+    m_verticesBtn = createFilterButton(QStringLiteral("Sketcher_CreatePoint"),
+                                        tr("Vertices (Points)"), QStringLiteral("V"), Vertices);
+    m_edgesBtn = createFilterButton(QStringLiteral("Sketcher_CreateLine"),
+                                     tr("Edges (Lines, Curves)"), QStringLiteral("E"), Edges);
+    m_facesBtn = createFilterButton(QStringLiteral("View-isometric"),
+                                     tr("Faces (Surfaces)"), QStringLiteral("F"), Faces);
+    m_bodiesBtn = createFilterButton(QStringLiteral("PartDesign_Body"),
+                                      tr("Bodies (Solids)"), QStringLiteral("B"), Bodies);
+    m_featuresBtn = createFilterButton(QStringLiteral("PartDesign_Pad"),
+                                        tr("Features"), QStringLiteral("Ft"), Features);
     
     // Add buttons to toolbar and group
     addWidget(m_verticesBtn);
@@ -199,26 +202,21 @@ void FusionSelectionBar::setupUI()
 
 QToolButton* FusionSelectionBar::createFilterButton(const QString& iconName,
                                                      const QString& tooltip,
+                                                     const QString& shortLabel,
                                                      FilterType filter)
 {
     Q_UNUSED(filter)
-    
+    Q_UNUSED(iconName)
+
     auto* btn = new QToolButton(this);
     btn->setCheckable(true);
     btn->setAutoRaise(true);
     btn->setToolTip(tooltip);
-    
-    // Try to load icon
-    QIcon icon = BitmapFactory().iconFromTheme(iconName.toLatin1().constData());
-    if (!icon.isNull()) {
-        btn->setIcon(icon);
-        btn->setIconSize(QSize(20, 20));
-    }
-    else {
-        // Fallback to text if icon not found
-        btn->setText(tooltip.left(1));
-    }
-    
+    btn->setFixedSize(28, 28);
+    // Text labels avoid theme "?" placeholders for missing selection icons
+    btn->setText(shortLabel);
+    btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+
     return btn;
 }
 

@@ -1018,6 +1018,9 @@ SET(Navigation_CPP_SRCS
     Navigation/TouchpadNavigationStyle.cpp
     Navigation/GestureNavigationStyle.cpp
     Navigation/FusionNavigationStyle.cpp
+    Navigation/AutodeskInventorNavigationStyle.cpp
+    Navigation/AliasNavigationStyle.cpp
+    Navigation/PowerMillNavigationStyle.cpp
     Navigation/NavigationAnimator.cpp
     Navigation/NavigationAnimation.cpp
 )

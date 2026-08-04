@@ -24,6 +24,7 @@
 #include <QMap>
 #include <QStringList>
 #include <QPushButton>
+#include <QList>
 
 #include <FCGlobal.h>
 
@@ -34,22 +35,34 @@ class CommandManager;
 /**
  * FusionTabToolbar provides a Fusion 360-style unified tabbed toolbar.
  *
- * Based on UniCAD design documents, this widget presents unified tabs:
- * SKETCH, SOLID, SURFACE, SHEET METAL, MESH, INSPECT, TOOLS
- *
- * These tabs aggregate commands from multiple workbenches into logical
- * groups, following the Fusion 360 "grammar of work" philosophy.
- *
- * Features:
- * - Unified tabs that don't change with workbench
- * - Contextual "Finish Sketch" button when in sketch mode
- * - SKETCH tab highlighting during sketch editing
+ * Tabs (SKETCH, SOLID, …) organize commands into labeled panels with a
+ * small set of primary icons and overflow / variant flyout menus —
+ * matching Fusion's CREATE / MODIFY / CONSTRUCT density.
  */
 class GuiExport FusionTabToolbar : public QWidget
 {
     Q_OBJECT
 
 public:
+    /// One visible tool; optional variants appear in a flyout menu.
+    struct ToolItem {
+        QString primary;
+        QStringList variants;
+    };
+
+    /// Named panel with primary tools and overflow menu commands.
+    struct PanelDefinition {
+        QString name;
+        QList<ToolItem> tools;
+        QStringList overflow;
+    };
+
+    /// Tab containing Fusion-style panels.
+    struct TabDefinition {
+        QString name;
+        QList<PanelDefinition> panels;
+    };
+
     explicit FusionTabToolbar(QWidget* parent = nullptr);
     ~FusionTabToolbar() override;
 
@@ -64,12 +77,6 @@ public:
     void setSketchMode(bool inSketch);
     bool isInSketchMode() const { return m_inSketchMode; }
 
-    /// Tab definition structure
-    struct TabDefinition {
-        QString name;
-        QStringList commands;
-    };
-
 Q_SIGNALS:
     void tabChanged(int index);
 
@@ -80,15 +87,19 @@ private Q_SLOTS:
 private:
     void setupStyle();
     void clearTabs();
-    void populateTab(int index);
-    bool addCommandButton(QLayout* layout, const char* cmdName);
-    void addSeparator(QLayout* layout);
-    void addGroupLabel(QLayout* layout, const QString& label);
-
-    /// Build unified tabs (Fusion 360-style)
     void buildUnifiedTabs();
+    void populatePage(QLayout* layout, const TabDefinition& tab);
 
-    /// Tab builders for each category
+    QIcon iconForCommand(const char* cmdName) const;
+    QString tooltipForCommand(const char* cmdName) const;
+    void invokeCommand(const QString& cmdName);
+    bool commandExists(const char* cmdName) const;
+
+    QToolButton* createCommandButton(const char* cmdName);
+    QToolButton* createFlyoutButton(const ToolItem& tool);
+    void addPanel(QLayout* layout, const PanelDefinition& panel);
+    void addSeparator(QLayout* layout);
+
     TabDefinition buildSketchTab() const;
     TabDefinition buildSolidTab() const;
     TabDefinition buildModifyTab() const;
@@ -98,11 +109,10 @@ private:
     TabDefinition buildInspectTab() const;
     TabDefinition buildToolsTab() const;
 
-    /// Legacy methods for compatibility
-    QList<TabDefinition> buildPartDesignTabs() const;
-    QList<TabDefinition> buildPartTabs() const;
-    QList<TabDefinition> buildGenericTabs() const;
+    static ToolItem tool(const QString& primary,
+                         const QStringList& variants = QStringList());
 
+    QToolButton* m_workspaceBtn;
     QTabBar* m_tabBar;
     QStackedWidget* m_stack;
     QList<TabDefinition> m_tabs;

@@ -165,13 +165,15 @@ QToolButton::menu-button {
 FusionTabToolbar {
     background-color: #2D2D2D;
     border-bottom: 1px solid #404040;
+    min-height: 88px;
+    max-height: 96px;
 }
 
 FusionTabToolbar QTabBar::tab {
     background: transparent;
     color: #B0B0B0;
     border: none;
-    padding: 8px 16px;
+    padding: 6px 16px;
     font-weight: 500;
     text-transform: uppercase;
     font-size: 11px;
@@ -192,8 +194,8 @@ FusionTabToolbar QToolButton {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 4px;
-    padding: 6px;
-    margin: 2px;
+    padding: 3px;
+    margin: 1px;
 }
 
 FusionTabToolbar QToolButton:hover {
@@ -205,6 +207,13 @@ FusionTabToolbar QToolButton:pressed,
 FusionTabToolbar QToolButton:checked {
     background-color: #0696D7;
     border: 1px solid #0580B5;
+}
+
+FusionTabToolbar QLabel#FusionPanelLabel {
+    color: #888888;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
 /* === FUSION TIMELINE === */

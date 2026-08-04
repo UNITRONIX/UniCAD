@@ -78,7 +78,8 @@ private Q_SLOTS:
 
 private:
     void setupUI();
-    QToolButton* createFilterButton(const QString& iconName, const QString& tooltip, FilterType filter);
+    QToolButton* createFilterButton(const QString& iconName, const QString& tooltip,
+                                    const QString& shortLabel, FilterType filter);
     void updateFilterState();
     void applySelectionFilter();
 

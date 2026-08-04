@@ -381,7 +381,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="navigationLabel">
         <property name="text">
-         <string>3D navigation</string>
+         <string>Pan, Zoom, Orbit Shortcuts</string>
         </property>
        </widget>
       </item>
@@ -443,7 +443,7 @@ Select a set and then press the button to view said configurations.</string>
          </size>
         </property>
         <property name="toolTip">
-         <string>Navigation settings set</string>
+         <string>Choose pan, zoom and orbit mouse shortcuts to match another CAD platform (Fusion, SolidWorks, Inventor, Alias, PowerMill, etc.).</string>
         </property>
         <property name="currentIndex">
          <number>-1</number>

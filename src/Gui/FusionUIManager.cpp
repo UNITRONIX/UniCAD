@@ -101,7 +101,8 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
     m_tabToolbarWrapper->setObjectName(QStringLiteral("FusionTabsToolbar"));
     m_tabToolbarWrapper->setMovable(false);
     m_tabToolbarWrapper->setFloatable(false);
-    m_tabToolbarWrapper->setMinimumHeight(72);
+    m_tabToolbarWrapper->setMinimumHeight(88);
+    m_tabToolbarWrapper->setMaximumHeight(96);
     m_tabToolbarWrapper->addWidget(m_tabToolbar);
     m_tabToolbarWrapper->setStyleSheet(QStringLiteral("QToolBar#FusionTabsToolbar { border: none; padding: 0; background: #2D2D2D; }"));
     mainWindow->addToolBar(Qt::TopToolBarArea, m_tabToolbarWrapper);

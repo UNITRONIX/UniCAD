@@ -80,6 +80,10 @@ def RePopulateIcons():
     a10.setIcon(QtGui.QIcon(":/icons/NavigationSolidWorks_" + StyleSheetType + ".svg"))
     a11.setIcon(QtGui.QIcon(":/icons/NavigationTinkerCAD_" + StyleSheetType + ".svg"))
     a12.setIcon(QtGui.QIcon(":/icons/NavigationTouchpad_" + StyleSheetType + ".svg"))
+    a13.setIcon(QtGui.QIcon(":/icons/NavigationFusion_" + StyleSheetType + ".svg"))
+    a14.setIcon(QtGui.QIcon(":/icons/NavigationAutodeskInventor_" + StyleSheetType + ".svg"))
+    a15.setIcon(QtGui.QIcon(":/icons/NavigationAlias_" + StyleSheetType + ".svg"))
+    a16.setIcon(QtGui.QIcon(":/icons/NavigationPowerMill_" + StyleSheetType + ".svg"))
 
 
 def retranslateUi():
@@ -650,6 +654,144 @@ def retranslateUi():
         + "</p>"
     )
 
+    global t13
+    t13 = (
+        "<p align='center'><b>Fusion 360</b> "
+        + text06
+        + """</p>
+    <table>
+     <tr>
+      <th><small>"""
+        + text01
+        + """</small></th>
+      <th><small>"""
+        + text02
+        + """</small></th>
+      <th><small>"""
+        + text03
+        + """</small></th>
+      <th><small>"""
+        + text04
+        + """</small></th>
+     </tr>
+     <tr>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Left.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Scroll.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_ShiftMiddle.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Middle.svg'></td>
+     </tr>
+    </table>
+    <b>"""
+        + text08
+        + ":</b> "
+        + text10
+        + "</small></p>"
+    )
+
+    global t14
+    t14 = (
+        "<p align='center'><b>Autodesk Inventor</b> "
+        + text06
+        + """</p>
+    <table>
+     <tr>
+      <th><small>"""
+        + text01
+        + """</small></th>
+      <th><small>"""
+        + text02
+        + """</small></th>
+      <th><small>"""
+        + text03
+        + """</small></th>
+      <th><small>"""
+        + text04
+        + """</small></th>
+     </tr>
+     <tr>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Left.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Scroll.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Left.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Left.svg'></td>
+     </tr>
+     <tr>
+      <td></td>
+      <td align='center'><small>F3+LMB</small></td>
+      <td align='center'><small>F4+LMB</small></td>
+      <td align='center'><small>F2+LMB</small></td>
+     </tr>
+    </table>"""
+    )
+
+    global t15
+    t15 = (
+        "<p align='center'><b>Alias</b> "
+        + text06
+        + """</p>
+    <table>
+     <tr>
+      <th><small>"""
+        + text01
+        + """</small></th>
+      <th><small>"""
+        + text02
+        + """</small></th>
+      <th><small>"""
+        + text03
+        + """</small></th>
+      <th><small>"""
+        + text04
+        + """</small></th>
+     </tr>
+     <tr>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Left.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_AltRight.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_AltLeft.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_AltMiddle.svg'></td>
+     </tr>
+     <tr>
+      <td></td>
+      <td align='center'><small>Shift+Alt</small></td>
+      <td align='center'><small>Shift+Alt</small></td>
+      <td align='center'><small>Shift+Alt</small></td>
+     </tr>
+    </table>"""
+    )
+
+    global t16
+    t16 = (
+        "<p align='center'><b>PowerMill</b> "
+        + text06
+        + """</p>
+    <table>
+     <tr>
+      <th><small>"""
+        + text01
+        + """</small></th>
+      <th><small>"""
+        + text02
+        + """</small></th>
+      <th><small>"""
+        + text03
+        + """</small></th>
+      <th><small>"""
+        + text04
+        + """</small></th>
+     </tr>
+     <tr>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Left.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Scroll.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_Middle.svg'></td>
+      <td align='center'><img src=':/icons/Navigation_Mouse_ShiftMiddle.svg'></td>
+     </tr>
+    </table>
+    <b>"""
+        + text08
+        + ":</b> "
+        + text10
+        + "</small></p>"
+    )
+
     menuSettings.setTitle(translate("NavigationIndicator", "Settings"))
     menuOrbit.setTitle(translate("NavigationIndicator", "Orbit style"))
     aCompact.setText(translate("NavigationIndicator", "Compact"))
@@ -785,6 +927,21 @@ a13.setText("Fusion 360  ")
 a13.setData("Gui::FusionNavigationStyle")
 a13.setObjectName("Indicator_NavigationFusion")
 
+a14 = QtGui.QAction(gStyle)
+a14.setText("Autodesk Inventor  ")
+a14.setData("Gui::AutodeskInventorNavigationStyle")
+a14.setObjectName("Indicator_NavigationAutodeskInventor")
+
+a15 = QtGui.QAction(gStyle)
+a15.setText("Alias  ")
+a15.setData("Gui::AliasNavigationStyle")
+a15.setObjectName("Indicator_NavigationAlias")
+
+a16 = QtGui.QAction(gStyle)
+a16.setText("PowerMill  ")
+a16.setData("Gui::PowerMillNavigationStyle")
+a16.setObjectName("Indicator_NavigationPowerMill")
+
 RePopulateIcons()
 
 menu.addMenu(menuSettings)
@@ -803,6 +960,9 @@ menu.addAction(a10)
 menu.addAction(a11)
 menu.addAction(a12)
 menu.addAction(a13)
+menu.addAction(a14)
+menu.addAction(a15)
+menu.addAction(a16)
 
 pView.Attach(indicator)
 
@@ -845,6 +1005,10 @@ def onTooltip():
         a10.setToolTip(t10)
         a11.setToolTip(t11)
         a12.setToolTip(t12)
+        a13.setToolTip(t13)
+        a14.setToolTip(t14)
+        a15.setToolTip(t15)
+        a16.setToolTip(t16)
         p.SetBool("Tooltip", 1)
     else:
         for i in gStyle.actions():

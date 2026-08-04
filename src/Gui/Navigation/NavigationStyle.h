@@ -575,6 +575,69 @@ private:
     SbBool lockButton1 {false};
 };
 
+/** Autodesk Inventor-style navigation (Fusion preset): F2/F3/F4 + LMB. */
+class GuiExport AutodeskInventorNavigationStyle: public UserNavigationStyle
+{
+    using inherited = UserNavigationStyle;
+
+    TYPESYSTEM_HEADER_WITH_OVERRIDE();
+
+public:
+    AutodeskInventorNavigationStyle();
+    ~AutodeskInventorNavigationStyle() override;
+    const char* mouseButtons(ViewerMode) override;
+    std::string userFriendlyName() const override;
+
+protected:
+    SbBool processSoEvent(const SoEvent* const ev) override;
+
+private:
+    SbBool lockButton1 {false};
+    SbBool f2down {false};
+    SbBool f3down {false};
+    SbBool f4down {false};
+};
+
+/** Alias-style navigation (Fusion preset): Shift+Alt + mouse buttons. */
+class GuiExport AliasNavigationStyle: public UserNavigationStyle
+{
+    using inherited = UserNavigationStyle;
+
+    TYPESYSTEM_HEADER_WITH_OVERRIDE();
+
+public:
+    AliasNavigationStyle();
+    ~AliasNavigationStyle() override;
+    const char* mouseButtons(ViewerMode) override;
+    std::string userFriendlyName() const override;
+
+protected:
+    SbBool processSoEvent(const SoEvent* const ev) override;
+
+private:
+    SbBool lockButton1 {false};
+};
+
+/** PowerMill-style navigation (Fusion preset): MMB orbit, Shift+MMB pan. */
+class GuiExport PowerMillNavigationStyle: public UserNavigationStyle
+{
+    using inherited = UserNavigationStyle;
+
+    TYPESYSTEM_HEADER_WITH_OVERRIDE();
+
+public:
+    PowerMillNavigationStyle();
+    ~PowerMillNavigationStyle() override;
+    const char* mouseButtons(ViewerMode) override;
+    std::string userFriendlyName() const override;
+
+protected:
+    SbBool processSoEvent(const SoEvent* const ev) override;
+
+private:
+    SbBool lockButton1 {false};
+};
+
 }  // namespace Gui
 // NOLINTEND(cppcoreguidelines-avoid*, readability-avoid-const-params-in-decls)
 

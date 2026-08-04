@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: LGPL-2.1-or-later
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /***************************************************************************
  *   Copyright (c) 2026 UniCAD Contributors                            *
  *                                                                         *
@@ -21,17 +21,14 @@
  *                                                                         *
  ***************************************************************************/
 
-// Fusion 360-style navigation (official Autodesk defaults):
-//   MMB drag              = Pan
-//   Shift + MMB drag      = Orbit (rotate around point under cursor)
-//   Scroll wheel          = Zoom at cursor
-//   Ctrl + Shift + MMB    = Zoom (drag)
-//   Double-click MMB      = Fit all
-//   LMB                   = Select
-//   RMB                   = Context menu
+// PowerMill-style navigation (Fusion 360 preset):
+//   MMB drag         = Orbit
+//   Shift + MMB drag = Pan
+//   Scroll wheel     = Zoom
+//   LMB              = Select
+//   RMB              = Context menu
 
 #include <Inventor/nodes/SoCamera.h>
-#include <QApplication>
 
 #include "Navigation/NavigationStyle.h"
 #include "View3DInventorViewer.h"
@@ -41,50 +38,42 @@ using namespace Gui;
 
 // ----------------------------------------------------------------------------------
 
-/* TRANSLATOR Gui::FusionNavigationStyle */
+/* TRANSLATOR Gui::PowerMillNavigationStyle */
 
-TYPESYSTEM_SOURCE(Gui::FusionNavigationStyle, Gui::UserNavigationStyle)
+TYPESYSTEM_SOURCE(Gui::PowerMillNavigationStyle, Gui::UserNavigationStyle)
 
-FusionNavigationStyle::FusionNavigationStyle()
+PowerMillNavigationStyle::PowerMillNavigationStyle()
     : lockButton1(false)
-{
-    // Enable orbit around the scene point at cursor by default (Fusion 360 behavior)
-    setRotationCenterMode(RotationCenterMode::ScenePointAtCursor);
-    setZoomAtCursor(true);
-}
+{}
 
-FusionNavigationStyle::~FusionNavigationStyle() = default;
+PowerMillNavigationStyle::~PowerMillNavigationStyle() = default;
 
-const char* FusionNavigationStyle::mouseButtons(ViewerMode mode)
+const char* PowerMillNavigationStyle::mouseButtons(ViewerMode mode)
 {
     switch (mode) {
         case NavigationStyle::SELECTION:
             return QT_TR_NOOP("Press left mouse button");
         case NavigationStyle::PANNING:
-            return QT_TR_NOOP("Press middle mouse button");
-        case NavigationStyle::DRAGGING:
             return QT_TR_NOOP("Press Shift and middle mouse button");
+        case NavigationStyle::DRAGGING:
+            return QT_TR_NOOP("Press middle mouse button");
         case NavigationStyle::ZOOMING:
-            return QT_TR_NOOP("Scroll middle mouse button or Ctrl+Shift+middle mouse button");
+            return QT_TR_NOOP("Scroll middle mouse button");
         default:
             return "No description";
     }
 }
 
-std::string FusionNavigationStyle::userFriendlyName() const
+std::string PowerMillNavigationStyle::userFriendlyName() const
 {
-    return "Fusion 360";
+    return "PowerMill";
 }
 
-SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
+SbBool PowerMillNavigationStyle::processSoEvent(const SoEvent* const ev)
 {
-    // Events when in "ready-to-seek" mode are ignored, except those
-    // which influence the seek mode itself -- these are handled further
-    // up the inheritance hierarchy.
     if (this->isSeekMode()) {
         return inherited::processSoEvent(ev);
     }
-    // Switch off viewing mode
     if (!this->isSeekMode() && !this->isAnimating() && this->isViewing()) {
         this->setViewing(false);
     }
@@ -103,10 +92,8 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
     const ViewerMode curmode = this->currentmode;
     ViewerMode newmode = curmode;
 
-    // Sync modifier keys
     syncModifierKeys(ev);
 
-    // Give foreground nodes a chance to handle events (e.g. color bar)
     if (!viewer->isEditing()) {
         processed = handleEventInForeground(ev);
         if (processed) {
@@ -114,13 +101,11 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
         }
     }
 
-    // Keyboard handling
     if (type.isDerivedFrom(SoKeyboardEvent::getClassTypeId())) {
         const auto event = static_cast<const SoKeyboardEvent*>(ev);
         processed = processKeyboardEvent(event);
     }
 
-    // Mouse Button handling
     if (type.isDerivedFrom(SoMouseButtonEvent::getClassTypeId())) {
         const auto* const event = (const SoMouseButtonEvent*)ev;
         const int button = event->getButton();
@@ -128,7 +113,6 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
 
         switch (button) {
             case SoMouseButtonEvent::BUTTON1:
-                // Left mouse button = selection
                 this->lockrecenter = true;
                 this->button1down = press;
                 if (press && (this->currentmode == NavigationStyle::SEEK_WAIT_MODE)) {
@@ -156,10 +140,7 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
                 break;
 
             case SoMouseButtonEvent::BUTTON2:
-                // Right mouse button = context menu
                 this->lockrecenter = true;
-
-                // Don't show context menu after dragging/panning/zooming
                 if (!press && (hasDragged || hasPanned || hasZoomed)) {
                     processed = true;
                 }
@@ -176,21 +157,10 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
                 break;
 
             case SoMouseButtonEvent::BUTTON3:
-                // Middle mouse button = pan / orbit (with Shift) / zoom (with Ctrl+Shift)
                 if (press) {
                     this->centerTime = ev->getTime();
                     setupPanningPlane(getCamera());
                     this->lockrecenter = false;
-                }
-                else {
-                    // On release: check for double-click → fit all
-                    SbTime tmp = (ev->getTime() - this->centerTime);
-                    float dci = (float)QApplication::doubleClickInterval() / 1000.0f;
-                    if (tmp.getValue() < dci && !this->lockrecenter) {
-                        // Double-click MMB = Fit All (Fusion 360 behavior)
-                        viewAll();
-                        processed = true;
-                    }
                 }
                 this->button3down = press;
                 break;
@@ -199,7 +169,6 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
         }
     }
 
-    // Mouse Movement handling
     if (type.isDerivedFrom(SoLocation2Event::getClassTypeId())) {
         this->lockrecenter = true;
         const auto* const event = (const SoLocation2Event*)ev;
@@ -226,7 +195,6 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
         }
     }
 
-    // Spaceball & Joystick handling
     if (type.isDerivedFrom(SoMotion3Event::getClassTypeId())) {
         const auto* const event = static_cast<const SoMotion3Event*>(ev);
         if (event) {
@@ -235,13 +203,6 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
         processed = true;
     }
 
-    // Mode switching based on button combination
-    // Fusion 360 mapping (official):
-    //   MMB only              = PANNING
-    //   Shift + MMB           = DRAGGING (orbit)
-    //   Ctrl + Shift + MMB    = ZOOMING
-    //   Scroll                = ZOOMING (handled by wheel event in base class)
-    //   LMB                   = SELECTION
     enum
     {
         BUTTON1DOWN = 1 << 0,
@@ -269,7 +230,6 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
             break;
         case BUTTON1DOWN:
         case CTRLDOWN | BUTTON1DOWN:
-            // LMB = selection
             if (curmode == NavigationStyle::SPINNING
                 || (this->lockButton1 && curmode != NavigationStyle::SELECTION)) {
                 newmode = NavigationStyle::IDLE;
@@ -279,23 +239,17 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
             }
             break;
         case BUTTON3DOWN:
-            // MMB = pan (Fusion 360 default)
-            newmode = NavigationStyle::PANNING;
-            break;
-        case SHIFTDOWN | BUTTON3DOWN:
-            // Shift + MMB = orbit (Fusion 360)
+            // MMB = orbit (PowerMill)
             if (newmode != NavigationStyle::DRAGGING) {
                 saveCursorPosition(ev);
             }
             newmode = NavigationStyle::DRAGGING;
             break;
-        case CTRLDOWN | SHIFTDOWN | BUTTON3DOWN:
-            // Ctrl + Shift + MMB = zoom (Fusion 360)
-            newmode = NavigationStyle::ZOOMING;
+        case SHIFTDOWN | BUTTON3DOWN:
+            // Shift + MMB = pan (PowerMill)
+            newmode = NavigationStyle::PANNING;
             break;
-
         default:
-            // Reset mode when button3 released
             if ((curmode == NavigationStyle::PANNING || curmode == NavigationStyle::ZOOMING
                  || curmode == NavigationStyle::DRAGGING)
                 && !this->button3down) {
@@ -304,20 +258,17 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
             break;
     }
 
-    // If selection button pressed with another button, lock it
     if (this->button1down && (this->button2down || this->button3down)) {
         this->lockButton1 = true;
         processed = true;
     }
 
-    // Prevent interrupting rubber-band selection in sketcher
     if (viewer->isEditing() && curmode == NavigationStyle::SELECTION
         && newmode != NavigationStyle::IDLE) {
         newmode = NavigationStyle::SELECTION;
         processed = false;
     }
 
-    // Reset flags when idle
     if (newmode == IDLE && !button1down && !button2down && !button3down) {
         hasPanned = false;
         hasDragged = false;
@@ -328,7 +279,6 @@ SbBool FusionNavigationStyle::processSoEvent(const SoEvent* const ev)
         this->setViewingMode(newmode);
     }
 
-    // If not handled here, pass upwards
     if (!processed) {
         processed = inherited::processSoEvent(ev);
     }
