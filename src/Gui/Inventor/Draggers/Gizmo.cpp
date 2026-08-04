@@ -34,8 +34,10 @@
 #include <Base/Converter.h>
 #include <Base/Parameter.h>
 #include <Base/Precision.h>
+#include <Base/Quantity.h>
 #include "Base/ServiceProvider.h"
 #include <Base/Tools.h>
+#include <Base/UnitsApi.h>
 #include <Document.h>
 #include <Gui/Inventor/Draggers/GizmoStyleParameters.h>
 #include <Gui/Inventor/So3DAnnotation.h>
@@ -105,7 +107,9 @@ SoInteractionKit* LinearGizmo::initDragger()
         this
     );
 
-    dragger->labelVisible = false;
+    // UniCAD: Fusion-style on-canvas length readout at the arrow tip
+    dragger->labelVisible = true;
+    updateLengthLabel(property->rawValue());
 
     dragger->instantiateBaseGeometry();
 
@@ -174,6 +178,9 @@ void LinearGizmo::setDragLength(double dragLength)
 {
     dragLength = dragLength * multFactor + addFactor;
     dragger->translation = {0, static_cast<float>(dragLength), 0};
+    if (property) {
+        updateLengthLabel(property->value().getValue());
+    }
 }
 
 void LinearGizmo::setGeometryScale(float scale)
@@ -231,10 +238,39 @@ void LinearGizmo::setVisibility(bool visible)
     getDraggerContainer()->visible = visible && !property->hasExpression();
 }
 
+bool LinearGizmo::isDragging() const
+{
+    return dragger && dragger->active.getValue();
+}
+
+double LinearGizmo::getSignedDragValue() const
+{
+    if (!dragger) {
+        return property ? property->value().getValue() : 0.0;
+    }
+    return initialValue + const_cast<LinearGizmo*>(this)->getDragLength();
+}
+
+void LinearGizmo::setDragFinishedCallback(std::function<void()> cb)
+{
+    dragFinishedCallback = std::move(cb);
+}
+
+void LinearGizmo::updateLengthLabel(double length)
+{
+    if (!dragger || !property) {
+        return;
+    }
+    Base::Quantity quantity(std::abs(length), property->value().getUnit());
+    // SoSFString expects UTF-8 / Latin1-compatible text for the frame label
+    dragger->label.setValue(quantity.getUserString().c_str());
+}
+
 void LinearGizmo::draggingStarted()
 {
     initialValue = property->value().getValue();
     dragger->translationIncrementCount.setValue(0);
+    updateLengthLabel(initialValue);
 
     if (isDelayedUpdateEnabled()) {
         property->blockSignals(true);
@@ -248,6 +284,12 @@ void LinearGizmo::draggingFinished()
         property->valueChanged(property->value().getValue());
     }
 
+    updateLengthLabel(property->value().getValue());
+
+    if (dragFinishedCallback) {
+        dragFinishedCallback();
+    }
+
     property->setFocus();
     property->selectAll();
 }
@@ -258,7 +300,10 @@ void LinearGizmo::draggingContinued()
     value = std::clamp(value, property->minimum(), property->maximum());
 
     property->setValue(value);
-    setDragLength(value);
+    // Handlers (e.g. Extrude Join↔Cut) may normalize to abs — sync visual to result
+    const double displayed = std::abs(property->value().getValue());
+    setDragLength(displayed);
+    updateLengthLabel(displayed);
 }
 
 

@@ -43,7 +43,7 @@ DEFINE_STYLE_PARAMETER(PreviewErrorOpacity, Gui::StyleParameters::Numeric(0.1));
 DEFINE_STYLE_PARAMETER(PreviewToolOpacity, Gui::StyleParameters::Numeric(0.08));
 DEFINE_STYLE_PARAMETER(PreviewShapeOpacity, Gui::StyleParameters::Numeric(0.25));      // More visible preview
 
-DEFINE_STYLE_PARAMETER(PreviewLineWidth, Gui::StyleParameters::Numeric(2));
+DEFINE_STYLE_PARAMETER(PreviewLineWidth, Gui::StyleParameters::Numeric(1));
 }  // namespace PartDesignGui::StyleParameters
 
 #endif  // STYLEPARAMETERS_H

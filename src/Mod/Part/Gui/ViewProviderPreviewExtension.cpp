@@ -61,20 +61,14 @@ SoPreviewShape::SoPreviewShape()
     auto* solidLineStyle = new SoDrawStyle();
     solidLineStyle->lineWidth.connectFrom(&lineWidth);
 
-    auto* hiddenLineStyle = new SoDrawStyle();
-    hiddenLineStyle->lineWidth.connectFrom(&lineWidth);
-    hiddenLineStyle->linePattern = 0xF0F0;
-
     auto* solidColorLightModel = new SoLightModel();
     solidColorLightModel->model = SoLightModel::BASE_COLOR;
 
     auto* normalBinding = new SoNormalBinding();
     normalBinding->value = SoNormalBinding::PER_VERTEX_INDEXED;
 
-    // This should be OVERALL but then line pattern does not work correctly
-    // Probably a bug in coin to be investigated.
     auto* materialBinding = new SoMaterialBinding();
-    materialBinding->value = SoMaterialBinding::PER_FACE_INDEXED;
+    materialBinding->value = SoMaterialBinding::OVERALL;
 
     auto* material = new SoMaterial;
     material->diffuseColor.connectFrom(&color);
@@ -97,10 +91,11 @@ SoPreviewShape::SoPreviewShape()
     lineSep->addChild(lineMaterial);
     lineSep->addChild(lineset);
 
+    // Annotation carries faces only so the translucent preview stays visible
+    // through other geometry, without a second (dashed) edge pass that made
+    // outlines thick and overlapping at corners.
     auto* annotation = new Gui::So3DAnnotation;
-    annotation->addChild(hiddenLineStyle);
     annotation->addChild(material);
-    annotation->addChild(lineSep);
     annotation->addChild(polygonOffset);
     annotation->addChild(faceset);
 
@@ -239,24 +234,6 @@ void ViewProviderPreviewExtension::updatePreviewShape(Part::TopoShape shape, SoP
         );
 
         updatePreviewShape(preview, {});
-    }
-
-    // For some reason line patterns are not rendered correctly if material binding is set to
-    // anything other than PER_FACE. PER_FACE material binding seems to require materialIndex per
-    // each distinct edge. Until that is fixed, this code forces each edge to use the first
-    // material.
-    unsigned lineCoordsCount = preview->lineset->coordIndex.getNum();
-    unsigned lineCount = 1;
-
-    for (unsigned i = 0; i < lineCoordsCount; ++i) {
-        if (preview->lineset->coordIndex[i] < 0) {
-            lineCount++;
-        }
-    }
-
-    preview->lineset->materialIndex.setNum(lineCount);
-    for (unsigned i = 0; i < lineCount; ++i) {
-        preview->lineset->materialIndex.set1Value(i, 0);
     }
 }
 

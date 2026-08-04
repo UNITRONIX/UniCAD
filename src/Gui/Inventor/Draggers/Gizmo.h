@@ -25,6 +25,7 @@
 #define GUI_GIZMO_H
 
 #include <initializer_list>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -114,15 +115,24 @@ public:
     void setAddFactor(const double val);
     void setVisibility(bool visible);
 
+    /// True while the linear dragger is being dragged
+    bool isDragging() const;
+    /// Continuous signed value: initialValue + drag delta (can be negative)
+    double getSignedDragValue() const;
+    /// Optional callback after a drag session ends
+    void setDragFinishedCallback(std::function<void()> cb);
+
 private:
     SoLinearDragger* dragger = nullptr;
     SoLinearDraggerContainer* draggerContainer = nullptr;
     QMetaObject::Connection quantityChangedConnection;
     QMetaObject::Connection formulaDialogConnection;
+    std::function<void()> dragFinishedCallback;
 
     void draggingStarted();
     void draggingFinished();
     void draggingContinued();
+    void updateLengthLabel(double length);
 
     using inherited = Gizmo;
 };

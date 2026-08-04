@@ -86,6 +86,8 @@ void TaskUnifiedExtrudeParameters::onOperationChanged(int index)
     }
     extrude->Operation.setValue(index);
     recomputeFeature();
+    // Direction / preview update with Cut normal flip — refresh arrow
+    setGizmoPositions();
 }
 
 void TaskUnifiedExtrudeParameters::onOperationAutoSwitched(int newOpIndex)

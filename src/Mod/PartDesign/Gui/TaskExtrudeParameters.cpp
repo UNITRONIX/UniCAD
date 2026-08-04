@@ -641,66 +641,72 @@ std::vector<std::string> PartDesignGui::TaskExtrudeParameters::getShapeFaces(
 
 void TaskExtrudeParameters::onLengthChanged(double len, Side side)
 {
-    // UniCAD: Negative length = reverse extrusion direction.
-    // The Operation (Join/Cut) stays unchanged; user controls it explicitly.
-    // The sign is passed through to buildExtrusion() which handles dir.Reverse().
-    getSideController(side).Length->setValue(len);
-    setGizmoPositions();
-    if (std::abs(len) >= 0.001) {
-        tryRecomputeFeature();
-    }
-}
-
-#if 0  // Dead code: old auto-Operation-switch on negative drag
-    // UniCAD: Fusion 360-style behavior â€” dragging below zero auto-switches
-    // between Join and Cut operation. Operation=Cut already reverses the
-    // profile normal (like Pocket), so no Reversed flip needed.
-    // State tracking prevents ping-pong toggling during continuous drag.
+    // UniCAD: Fusion 360-style — dragging below zero auto-switches Join↔Cut.
+    // Length is stored as a positive distance; Cut reverses the profile normal.
+    // During an active gizmo drag we must NOT flip the arrow mid-drag (that
+    // caused large jumps). Arrow orientation is refreshed when the drag ends.
     auto extrude = getObject<PartDesign::FeatureExtrude>();
-    if (extrude && len < 0) {
+    const bool dragging
+        = (lengthGizmo1 && lengthGizmo1->isDragging())
+        || (lengthGizmo2 && lengthGizmo2->isDragging());
+
+    Gui::LinearGizmo* activeGizmo = nullptr;
+    if (lengthGizmo1 && lengthGizmo1->isDragging()) {
+        activeGizmo = lengthGizmo1;
+    }
+    else if (lengthGizmo2 && lengthGizmo2->isDragging()) {
+        activeGizmo = lengthGizmo2;
+    }
+
+    if (extrude) {
         auto* opProp = dynamic_cast<App::PropertyEnumeration*>(
             extrude->getPropertyByName("Operation"));
         if (opProp) {
-            if (!_crossedZero) {
-                _crossedZero = true;
-                _originalOp = opProp->getValue();
-                int targetOp = (_originalOp == 0) ? 1 : (_originalOp == 1) ? 0 : _originalOp;
-                if (opProp->getValue() != targetOp) {
-                    opProp->setValue(static_cast<long>(targetOp));
-                    onOperationAutoSwitched(targetOp);
+            const int currentOp = opProp->getValue();
+            // Only auto-switch between Join (0) and Cut (1)
+            if (currentOp == 0 || currentOp == 1) {
+                if (len < 0) {
+                    if (!_crossedZero) {
+                        _crossedZero = true;
+                        _originalOp = currentOp;
+                        const int targetOp = (currentOp == 0) ? 1 : 0;
+                        opProp->setValue(static_cast<long>(targetOp));
+                        onOperationAutoSwitched(targetOp);
+                    }
+                    len = std::abs(len);
+                    {
+                        QSignalBlocker blocker(getSideController(side).lengthEdit);
+                        getSideController(side).lengthEdit->setValue(len);
+                    }
+                }
+                else if (_crossedZero && dragging && activeGizmo) {
+                    // Use continuous signed drag value so property/spinbox
+                    // updates from abs() do not immediately restore the op.
+                    const double signedLen = activeGizmo->getSignedDragValue();
+                    if (signedLen >= 0.0) {
+                        if (opProp->getValue() != _originalOp) {
+                            opProp->setValue(static_cast<long>(_originalOp));
+                            onOperationAutoSwitched(_originalOp);
+                        }
+                        _crossedZero = false;
+                    }
+                }
+                else if (!dragging) {
+                    _crossedZero = false;
                 }
             }
         }
-
-        len = std::abs(len);
-
-        // Update the spinbox to show positive value.
-        // MUST block signals to prevent re-entrant call to onLengthChanged
-        // (setValue emits valueChanged â†’ onLengthChanged(+val) â†’ sees
-        // _crossedZero && len>=0 â†’ immediately restores original op).
-        {
-            QSignalBlocker blocker(getSideController(side).lengthEdit);
-            getSideController(side).lengthEdit->setValue(len);
-        }
-    }
-    else if (_crossedZero && len >= 0) {
-        // Dragged back above zero â€” restore original operation
-        auto* opProp = dynamic_cast<App::PropertyEnumeration*>(
-            extrude->getPropertyByName("Operation"));
-        if (opProp && opProp->getValue() != _originalOp) {
-            opProp->setValue(static_cast<long>(_originalOp));
-            onOperationAutoSwitched(_originalOp);
-        }
-        _crossedZero = false;
     }
 
     getSideController(side).Length->setValue(len);
-    setGizmoPositions();
     if (len >= 0.001) {
         tryRecomputeFeature();
     }
+    // Flipping the gizmo mid-drag jumps the length — defer until drag ends
+    if (!dragging) {
+        setGizmoPositions();
+    }
 }
-#endif  // Dead code: old auto-Operation-switch
 
 void TaskExtrudeParameters::onOffsetChanged(double len, Side side)
 {
@@ -1447,6 +1453,14 @@ void TaskExtrudeParameters::setupGizmos()
     taperAngleGizmo1 = new Gui::RotationGizmo(ui->taperEdit);
     taperAngleGizmo2 = new Gui::RotationGizmo(ui->taperEdit2);
 
+    // After Join↔Cut drag, refresh arrow direction once the drag ends
+    auto refreshGizmoAfterDrag = [this]() {
+        _crossedZero = false;
+        setGizmoPositions();
+    };
+    lengthGizmo1->setDragFinishedCallback(refreshGizmoAfterDrag);
+    lengthGizmo2->setDragFinishedCallback(refreshGizmoAfterDrag);
+
     connect(ui->sidesMode, qOverload<int>(&QComboBox::currentIndexChanged), [this](int) {
         setGizmoPositions();
     });
@@ -1479,16 +1493,30 @@ void TaskExtrudeParameters::setGizmoPositions()
     std::string extrudeType2 = std::string(extrude->Type2.getValueAsString());
     double dir = extrude->Reversed.getValue() ? -1 : 1;
 
-    lengthGizmo1->Gizmo::setDraggerPlacement(center, extrude->Direction.getValue() * dir);
+    // Effective extrusion direction. After recompute, Direction already includes
+    // Cut's reversed profile normal. Before recompute (e.g. right after Operation
+    // change), Direction may still point the old way — align with getProfileNormal().
+    Base::Vector3d dirVec = extrude->Direction.getValue();
+    if (auto* opProp = dynamic_cast<App::PropertyEnumeration*>(
+            extrude->getPropertyByName("Operation"))) {
+        if (strcmp(opProp->getValueAsString(), "Cut") == 0) {
+            Base::Vector3d profileDir = extrude->getProfileNormal();
+            if (dirVec.Dot(profileDir) < 0) {
+                dirVec = profileDir;
+            }
+        }
+    }
+
+    lengthGizmo1->Gizmo::setDraggerPlacement(center, dirVec * dir);
     lengthGizmo1->setVisibility(extrudeType == "Length");
     taperAngleGizmo1->placeOverLinearGizmo(lengthGizmo1);
     taperAngleGizmo1->setVisibility(extrudeType == "Length");
-    lengthGizmo2->Gizmo::setDraggerPlacement(center, -extrude->Direction.getValue() * dir);
+    lengthGizmo2->Gizmo::setDraggerPlacement(center, -dirVec * dir);
     lengthGizmo2->setVisibility(sideType == "Two sides" && extrudeType2 == "Length");
     taperAngleGizmo2->placeOverLinearGizmo(lengthGizmo2);
     taperAngleGizmo2->setVisibility(sideType == "Two sides" && extrudeType2 == "Length");
 
-    Base::Vector3d padDir = extrude->Direction.getValue().Normalized();
+    Base::Vector3d padDir = dirVec.Normalized();
     Base::Vector3d sketchDir = extrude->getProfileNormal().Normalized();
 
     double lengthFactor = padDir.Dot(sketchDir);

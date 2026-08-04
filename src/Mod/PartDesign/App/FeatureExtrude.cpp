@@ -343,8 +343,9 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
                                                                     : 0.0
                                           : 0.0;
 
-    // UniCAD: Negative length = reverse extrusion direction only.
-    // The boolean operation (Fuse/Cut) is determined solely by addSubType.
+    // UniCAD: Negative length = reverse extrusion direction only (fallback when
+    // UI did not already convert it via Join↔Cut auto-switch). The boolean
+    // operation (Fuse/Cut) is determined solely by addSubType / Operation.
     bool isNegativeExtrusion = false;
     if (Sidemethod == "One side" && method == "Length" && L < 0) {
         isNegativeExtrusion = true;
@@ -481,8 +482,9 @@ App::DocumentObjectExecReturn* FeatureExtrude::buildExtrusion(ExtrudeOptions opt
             dir.Reverse();
         }
 
-        // UniCAD: Negative length reverses extrusion direction.
-        // L is already positive; only the geometric direction flips.
+        // UniCAD: Negative length reverses extrusion direction (fallback path).
+        // Prefer UI auto-switch Join↔Cut so L stays positive and Cut uses
+        // getProfileNormal() reverse instead — avoids double-reversing.
         if (isNegativeExtrusion) {
             dir.Reverse();
         }

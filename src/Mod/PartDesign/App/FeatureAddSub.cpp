@@ -92,9 +92,8 @@ void FeatureAddSub::updatePreviewShape()
         TopoShape base = getBaseTopoShape(true).moved(getLocation().Inverted());
 
         if (const TopoShape& addSubShape = AddSubShape.getShape(); !addSubShape.isEmpty()) {
-            // UniCAD: When there's no base solid (first feature in Body, or unified
-            // Extrude auto-switched to Cut with negative Length), skip the Boolean
-            // Common and just use the tool shape directly as the preview.
+            // UniCAD: When there's no base solid (first feature in Body), skip
+            // the Boolean Common and just use the tool shape as the preview.
             if (base.isNull() || !base.hasSubShape(TopAbs_SOLID)) {
                 PreviewShape.setValue(addSubShape);
                 return;

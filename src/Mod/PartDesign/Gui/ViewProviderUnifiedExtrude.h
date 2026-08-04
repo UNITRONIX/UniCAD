@@ -1,5 +1,5 @@
 ﻿// SPDX-License-Identifier: LGPL-2.1-or-later
-// UniCAD by UNITRONIX â€” ViewProvider for unified Extrude feature.
+// UniCAD by UNITRONIX — ViewProvider for unified Extrude feature.
 
 #ifndef PARTGUI_ViewProviderUnifiedExtrude_H
 #define PARTGUI_ViewProviderUnifiedExtrude_H
@@ -18,9 +18,15 @@ public:
     ~ViewProviderUnifiedExtrude() override = default;
 
     void setupContextMenu(QMenu*, QObject*, const char*) override;
+    void attach(App::DocumentObject* pcObject) override;
 
 protected:
     TaskDlgFeatureParameters* getEditDialog() override;
+    void updateData(const App::Property* prop) override;
+    void updatePreview() override;
+
+    /// Sync PreviewColor from Operation (Join=blue, Cut=red, Intersect=orange).
+    void updatePreviewColorFromOperation();
 };
 
 }  // namespace PartDesignGui

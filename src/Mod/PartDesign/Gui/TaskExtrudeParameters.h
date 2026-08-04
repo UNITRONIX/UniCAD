@@ -241,6 +241,7 @@ protected:
     void setDirectionMode(int index);
     void handleLineFaceNameClick(QLineEdit*);
     void handleLineFaceNameNo(QLineEdit*);
+    void setGizmoPositions();
 
 private:
     void setupSideDialog(SideController& side);
@@ -271,11 +272,10 @@ private:
     Gui::RotationGizmo* taperAngleGizmo1 = nullptr;
     Gui::RotationGizmo* taperAngleGizmo2 = nullptr;
     void setupGizmos();
-    void setGizmoPositions();
 
-    // UniCAD: state tracking for drag-through-zero auto-switch
+    // UniCAD: state tracking for drag-through-zero Join↔Cut auto-switch
     bool _crossedZero = false;
-    int _originalOp = 0;  // Operation value before crossing zero
+    int _originalOp = 0;
 
 protected:
     QWidget* proxy;

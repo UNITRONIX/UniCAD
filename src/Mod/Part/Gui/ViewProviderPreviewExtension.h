@@ -55,7 +55,7 @@ class PartGuiExport SoPreviewShape: public SoFCShape
 
 public:
     static constexpr float defaultTransparency = 0.8F;
-    static constexpr float defaultLineWidth = 2.0F;
+    static constexpr float defaultLineWidth = 1.0F;
     static const SbColor defaultColor;
 
     SoPreviewShape();
