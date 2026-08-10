@@ -290,31 +290,6 @@ FusionNavigationBar QToolButton::menu-indicator {
     image: none;
 }
 
-/* === FUSION MARKING MENU === */
-FusionMarkingMenu {
-    background-color: rgba(48, 48, 48, 0.95);
-    border: 1px solid #606060;
-    border-radius: 8px;
-}
-
-FusionMarkingMenu QToolButton {
-    background: transparent;
-    color: #E0E0E0;
-    border: none;
-    padding: 8px 12px;
-    font-size: 12px;
-}
-
-FusionMarkingMenu QToolButton:hover {
-    background: rgba(6, 150, 215, 0.3);
-    border-radius: 4px;
-}
-
-FusionMarkingMenu QToolButton:pressed {
-    background: #0696D7;
-    color: #FFFFFF;
-}
-
 /* === DOCK WIDGETS === */
 QDockWidget {
     color: #E0E0E0;

@@ -16,7 +16,6 @@
 #include "FusionTabToolbar.h"
 #include "FusionTimeline.h"
 #include "FusionNavigationBar.h"
-#include "FusionMarkingMenu.h"
 #include "FusionSelectionBar.h"
 #include "Application.h"
 #include "MainWindow.h"
@@ -69,7 +68,6 @@ FusionUIManager::FusionUIManager()
     , m_tabToolbar(nullptr)
     , m_timeline(nullptr)
     , m_navBar(nullptr)
-    , m_markingMenu(nullptr)
     , m_selectionBar(nullptr)
 {
 }
@@ -77,7 +75,6 @@ FusionUIManager::FusionUIManager()
 FusionUIManager::~FusionUIManager()
 {
     // Widgets are owned by MainWindow and will be deleted with it
-    delete m_markingMenu;
     s_instance = nullptr;
 }
 
@@ -116,9 +113,6 @@ void FusionUIManager::initialize(MainWindow* mainWindow)
     // Create Fusion Navigation Bar - at bottom of window
     m_navBar = new FusionNavigationBar(mainWindow);
     mainWindow->addToolBar(Qt::BottomToolBarArea, m_navBar);
-
-    // Create Marking Menu (not parented to main window - it's a popup)
-    m_markingMenu = new FusionMarkingMenu();
 
     // Create Selection Bar (docked at bottom, above navigation bar)
     m_selectionBar = new FusionSelectionBar(mainWindow);

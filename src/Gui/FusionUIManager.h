@@ -26,7 +26,6 @@ namespace Gui {
 class FusionTabToolbar;
 class FusionTimeline;
 class FusionNavigationBar;
-class FusionMarkingMenu;
 class FusionSelectionBar;
 class MainWindow;
 class ViewProviderDocumentObject;
@@ -36,7 +35,7 @@ class ViewProviderDocumentObject;
  *
  * This singleton manager:
  * - Creates and registers the FusionTabToolbar, FusionTimeline,
- *   FusionNavigationBar and FusionMarkingMenu
+ *   FusionNavigationBar and FusionSelectionBar
  * - Hooks into workbench activation to update the tab toolbar
  * - Hooks into document changes to update the timeline
  * - Configures the NaviCube with Fusion 360 styling
@@ -61,9 +60,6 @@ public:
 
     /// Toggle the Fusion 360 UI mode
     void setEnabled(bool enabled);
-
-    /// Access Fusion marking menu for the 3D view context menu override
-    FusionMarkingMenu* markingMenu() const { return m_markingMenu; }
 
     /// Access Fusion selection bar
     FusionSelectionBar* selectionBar() const { return m_selectionBar; }
@@ -109,7 +105,6 @@ private:
     FusionTabToolbar* m_tabToolbar;
     FusionTimeline* m_timeline;
     FusionNavigationBar* m_navBar;
-    FusionMarkingMenu* m_markingMenu;
     FusionSelectionBar* m_selectionBar;
 };
 

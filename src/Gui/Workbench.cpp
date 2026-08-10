@@ -631,6 +631,16 @@ StdWorkbench::~StdWorkbench() = default;
 void StdWorkbench::setupContextMenu(const char* recipient, MenuItem* item) const
 {
     if (strcmp(recipient, "View") == 0) {
+        if (Gui::Selection().countObjectsOfType<App::DocumentObject>() > 0) {
+            *item << "Std_Properties" << "Separator"
+                  << "Std_Cut" << "Std_Copy" << "Std_Paste" << "Std_DuplicateSelection"
+                  << "Std_Delete" << "Separator"
+                  << "Std_TransformManip" << "Std_Placement" << "Separator"
+                  << "Std_ToggleVisibility" << "Std_ShowSelection" << "Std_HideSelection"
+                  << "Std_ToggleTransparency" << "Std_RandomColor" << "Std_TreeSelection"
+                  << "Separator";
+        }
+
         createLinkMenu(item);
         *item << "Separator";
 
@@ -645,13 +655,6 @@ void StdWorkbench::setupContextMenu(const char* recipient, MenuItem* item) const
         *item << "Std_ViewFitAll" << "Std_ViewFitSelection" << "Std_AlignToSelection"
               << "Std_DrawStyle" << StdViews << "Separator"
               << "Std_ViewDockUndockFullscreen";
-
-        if (Gui::Selection().countObjectsOfType<App::DocumentObject>() > 0) {
-            *item << "Separator" << "Std_ToggleVisibility"
-                  << "Std_ToggleSelectability" << "Std_TreeSelection"
-                  << "Std_RandomColor" << "Std_ToggleTransparency" << "Separator" << "Std_Delete"
-                  << "Std_SendToPythonConsole" << "Std_TransformManip" << "Std_Placement";
-        }
     }
     else if (strcmp(recipient, "Tree") == 0) {
         if (Gui::Selection().countObjectsOfType<App::DocumentObject>() > 0) {

@@ -1252,7 +1252,6 @@ SET(Widget_CPP_SRCS
     FontScaledSVG.cpp
     SplitButton.cpp
     FusionTabToolbar.cpp
-    FusionMarkingMenu.cpp
     FusionTimeline.cpp
     FusionNavigationBar.cpp
     FusionSelectionBar.cpp
@@ -1284,7 +1283,6 @@ SET(Widget_HPP_SRCS
     FontScaledSVG.h
     SplitButton.h
     FusionTabToolbar.h
-    FusionMarkingMenu.h
     FusionTimeline.h
     FusionNavigationBar.h
     FusionSelectionBar.h
