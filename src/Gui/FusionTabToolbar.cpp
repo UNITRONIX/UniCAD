@@ -286,6 +286,7 @@ void FusionTabToolbar::buildUnifiedTabs()
         buildSheetMetalTab(),
         buildMeshTab(),
         buildInspectTab(),
+        buildRenderTab(),
         buildToolsTab()
     };
 
@@ -936,6 +937,45 @@ FusionTabToolbar::TabDefinition FusionTabToolbar::buildInspectTab() const
     };
 
     return {tr("INSPECT"), {measure, analyze}};
+}
+
+FusionTabToolbar::TabDefinition FusionTabToolbar::buildRenderTab() const
+{
+    PanelDefinition studio{
+        tr("STUDIO"),
+        {
+            tool(QStringLiteral("Std_RenderStudioMode")),
+            tool(QStringLiteral("Std_RenderGroundPlane")),
+            tool(QStringLiteral("Std_RenderLighting")),
+        },
+        {}
+    };
+
+    PanelDefinition effects{
+        tr("EFFECTS"),
+        {
+            tool(QStringLiteral("Std_RenderToggleSSAO")),
+            tool(QStringLiteral("Std_RenderToggleOutline")),
+        },
+        {}
+    };
+
+    PanelDefinition appearance{
+        tr("APPEARANCE"),
+        {
+            tool(QStringLiteral("Std_SetAppearance")),
+            tool(QStringLiteral("Std_SetMaterial")),
+            tool(QStringLiteral("Materials_InspectAppearance")),
+            tool(QStringLiteral("Std_ViewportStyle")),
+        },
+        {
+            QStringLiteral("Std_RandomColor"),
+            QStringLiteral("Std_ToggleTransparency"),
+            QStringLiteral("Part_ColorPerFace"),
+        }
+    };
+
+    return {tr("RENDER"), {studio, effects, appearance}};
 }
 
 FusionTabToolbar::TabDefinition FusionTabToolbar::buildToolsTab() const

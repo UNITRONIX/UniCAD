@@ -36,6 +36,7 @@ class GuiExport ViewportStyleManager
 public:
     static constexpr const char* StyleShaprDark = "ShaprDark";
     static constexpr const char* StyleShaprLight = "ShaprLight";
+    static constexpr const char* StyleStudio = "Studio";
 
     static ViewportStyleManager& instance();
 
@@ -61,10 +62,26 @@ public:
     /// Ensure a default style exists and apply it once at startup
     void ensureDefaultApplied();
 
+    /// Render Studio mode: SSAO, outline, ground plane, three-point lights.
+    /// Enabling saves current prefs so disabling can restore them.
+    bool isStudioModeActive() const;
+    void applyStudioMode(bool enable);
+
+    /// Toggle ground plane (opaque XY plane + optional grid) across viewers
+    void setGroundPlaneVisible(bool visible);
+    bool isGroundPlaneVisible() const;
+
+    /// Toggle SSAO / edge outline and push to viewers
+    void setSSAOEnabled(bool enabled);
+    void setEdgeOutlineEnabled(bool enabled);
+
 private:
     ViewportStyleManager() = default;
 
     void writePresetPreferences(const std::string& id) const;
+    void saveStudioBackup() const;
+    void restoreStudioBackup() const;
+    void writeStudioPreferences() const;
 };
 
 }  // namespace Gui

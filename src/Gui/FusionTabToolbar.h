@@ -107,6 +107,7 @@ private:
     TabDefinition buildSheetMetalTab() const;
     TabDefinition buildMeshTab() const;
     TabDefinition buildInspectTab() const;
+    TabDefinition buildRenderTab() const;
     TabDefinition buildToolsTab() const;
 
     static ToolItem tool(const QString& primary,

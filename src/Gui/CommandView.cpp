@@ -84,6 +84,7 @@
 #include "ViewportStyleManager.h"
 #include "ViewProviderGeometryObject.h"
 #include "WaitCursor.h"
+#include "TaskRenderStudio.h"
 
 using namespace Gui;
 using Gui::Dialog::DlgSettingsImageImp;
@@ -779,6 +780,151 @@ void StdCmdViewportStyle::activated(int iMsg)
 }
 
 bool StdCmdViewportStyle::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// Std_RenderStudioMode
+//===========================================================================
+DEF_STD_CMD_A(StdCmdRenderStudioMode)
+
+StdCmdRenderStudioMode::StdCmdRenderStudioMode()
+    : Command("Std_RenderStudioMode")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Studio Mode");
+    sToolTipText = QT_TR_NOOP("Toggle enhanced lighting, SSAO, outline and ground plane");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_RenderStudioMode";
+    sPixmap = "preferences-display";
+    eType = Alter3DView;
+}
+
+void StdCmdRenderStudioMode::activated(int)
+{
+    auto& mgr = ViewportStyleManager::instance();
+    mgr.applyStudioMode(!mgr.isStudioModeActive());
+}
+
+bool StdCmdRenderStudioMode::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// Std_RenderGroundPlane
+//===========================================================================
+DEF_STD_CMD_A(StdCmdRenderGroundPlane)
+
+StdCmdRenderGroundPlane::StdCmdRenderGroundPlane()
+    : Command("Std_RenderGroundPlane")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Ground Plane");
+    sToolTipText = QT_TR_NOOP("Show or hide the ground plane under the model");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_RenderGroundPlane";
+    sPixmap = "Std_Plane";
+    eType = Alter3DView;
+}
+
+void StdCmdRenderGroundPlane::activated(int)
+{
+    auto& mgr = ViewportStyleManager::instance();
+    mgr.setGroundPlaneVisible(!mgr.isGroundPlaneVisible());
+}
+
+bool StdCmdRenderGroundPlane::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// Std_RenderLighting
+//===========================================================================
+DEF_STD_CMD_A(StdCmdRenderLighting)
+
+StdCmdRenderLighting::StdCmdRenderLighting()
+    : Command("Std_RenderLighting")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Lighting");
+    sToolTipText = QT_TR_NOOP("Adjust light angle, intensity and ground placement");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_RenderLighting";
+    sPixmap = "bulb";
+    eType = Alter3DView;
+}
+
+void StdCmdRenderLighting::activated(int)
+{
+    Gui::Control().showDialog(new Gui::TaskRenderStudio());
+}
+
+bool StdCmdRenderLighting::isActive()
+{
+    return hasActiveDocument() && !Gui::Control().activeDialog();
+}
+
+//===========================================================================
+// Std_RenderToggleSSAO
+//===========================================================================
+DEF_STD_CMD_A(StdCmdRenderToggleSSAO)
+
+StdCmdRenderToggleSSAO::StdCmdRenderToggleSSAO()
+    : Command("Std_RenderToggleSSAO")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Ambient Occlusion");
+    sToolTipText = QT_TR_NOOP("Toggle screen-space ambient occlusion (SSAO)");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_RenderToggleSSAO";
+    sPixmap = "view-isometric";
+    eType = Alter3DView;
+}
+
+void StdCmdRenderToggleSSAO::activated(int)
+{
+    auto hGrp = App::GetApplication().GetParameterGroupByPath(
+        "User parameter:BaseApp/Preferences/View"
+    );
+    const bool on = !hGrp->GetBool("EnableSSAO", true);
+    ViewportStyleManager::instance().setSSAOEnabled(on);
+}
+
+bool StdCmdRenderToggleSSAO::isActive()
+{
+    return hasActiveDocument();
+}
+
+//===========================================================================
+// Std_RenderToggleOutline
+//===========================================================================
+DEF_STD_CMD_A(StdCmdRenderToggleOutline)
+
+StdCmdRenderToggleOutline::StdCmdRenderToggleOutline()
+    : Command("Std_RenderToggleOutline")
+{
+    sGroup = "Standard-View";
+    sMenuText = QT_TR_NOOP("Edge Outline");
+    sToolTipText = QT_TR_NOOP("Toggle screen-space edge outline");
+    sStatusTip = sToolTipText;
+    sWhatsThis = "Std_RenderToggleOutline";
+    sPixmap = "DrawStyleFlatLines";
+    eType = Alter3DView;
+}
+
+void StdCmdRenderToggleOutline::activated(int)
+{
+    auto hGrp = App::GetApplication().GetParameterGroupByPath(
+        "User parameter:BaseApp/Preferences/View"
+    );
+    const bool on = !hGrp->GetBool("EnableEdgeOutline", true);
+    ViewportStyleManager::instance().setEdgeOutlineEnabled(on);
+}
+
+bool StdCmdRenderToggleOutline::isActive()
 {
     return hasActiveDocument();
 }
@@ -4512,6 +4658,11 @@ void CreateViewStdCommands()
     rcCmdMgr.addCommand(new StdCmdToggleClipPlane());
     rcCmdMgr.addCommand(new StdCmdDrawStyle());
     rcCmdMgr.addCommand(new StdCmdViewportStyle());
+    rcCmdMgr.addCommand(new StdCmdRenderStudioMode());
+    rcCmdMgr.addCommand(new StdCmdRenderGroundPlane());
+    rcCmdMgr.addCommand(new StdCmdRenderLighting());
+    rcCmdMgr.addCommand(new StdCmdRenderToggleSSAO());
+    rcCmdMgr.addCommand(new StdCmdRenderToggleOutline());
     rcCmdMgr.addCommand(new StdCmdViewSaveCamera());
     rcCmdMgr.addCommand(new StdCmdViewRestoreCamera());
     rcCmdMgr.addCommand(new StdCmdFreezeViews());

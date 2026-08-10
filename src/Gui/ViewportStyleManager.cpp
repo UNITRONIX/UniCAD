@@ -110,7 +110,7 @@ ViewportStyleManager& ViewportStyleManager::instance()
 
 std::vector<std::string> ViewportStyleManager::availablePresets()
 {
-    return {StyleShaprDark, StyleShaprLight};
+    return {StyleShaprDark, StyleShaprLight, StyleStudio};
 }
 
 const char* ViewportStyleManager::presetLabel(const std::string& id)
@@ -118,13 +118,16 @@ const char* ViewportStyleManager::presetLabel(const std::string& id)
     if (id == StyleShaprLight) {
         return "Shapr Light";
     }
+    if (id == StyleStudio) {
+        return "Render Studio";
+    }
     return "Shapr Dark (recommended)";
 }
 
 std::string ViewportStyleManager::activePreset() const
 {
     std::string id = viewGroup()->GetASCII("ViewportStyle", StyleShaprDark);
-    if (id != StyleShaprDark && id != StyleShaprLight) {
+    if (id != StyleShaprDark && id != StyleShaprLight && id != StyleStudio) {
         return StyleShaprDark;
     }
     return id;
@@ -151,8 +154,22 @@ void ViewportStyleManager::ensureDefaultApplied()
 
 void ViewportStyleManager::applyPreset(const std::string& id)
 {
-    const std::string preset = (id == StyleShaprLight) ? StyleShaprLight : StyleShaprDark;
-    writePresetPreferences(preset);
+    std::string preset = StyleShaprDark;
+    if (id == StyleShaprLight) {
+        preset = StyleShaprLight;
+    }
+    else if (id == StyleStudio) {
+        preset = StyleStudio;
+    }
+
+    if (preset == StyleStudio) {
+        writeStudioPreferences();
+    }
+    else {
+        writePresetPreferences(preset);
+        viewGroup()->SetBool("StudioModeActive", false);
+        viewGroup()->SetBool("ShowRenderGroundPlane", false);
+    }
     viewGroup()->SetASCII("ViewportStyle", preset);
 
     // Refresh cached ViewParams
@@ -213,6 +230,7 @@ void ViewportStyleManager::writePresetPreferences(const std::string& id) const
         hGrp->SetBool("EnableSSAO", true);
         hGrp->SetBool("EnableEdgeOutline", true);
         hGrp->SetBool("ShowUniversalGrid", true);
+        hGrp->SetBool("ShowRenderGroundPlane", false);
         hGrp->SetUnsigned("UniversalGridColor", packRGB(70, 70, 74));
         hGrp->SetUnsigned("UniversalSubGridColor", packRGB(50, 50, 54));
         hGrp->SetUnsigned("EdgeOutlineColor", packRGB(8, 8, 10));
@@ -260,11 +278,171 @@ void ViewportStyleManager::writePresetPreferences(const std::string& id) const
         hGrp->SetBool("EnableSSAO", true);
         hGrp->SetBool("EnableEdgeOutline", true);
         hGrp->SetBool("ShowUniversalGrid", true);
+        hGrp->SetBool("ShowRenderGroundPlane", false);
         hGrp->SetUnsigned("UniversalGridColor", packRGB(185, 188, 195));
         hGrp->SetUnsigned("UniversalSubGridColor", packRGB(210, 212, 218));
         hGrp->SetUnsigned("EdgeOutlineColor", packRGB(25, 25, 28));
         hGrp->SetFloat("EdgeOutlineThreshold", 0.018);
     }
+}
+
+void ViewportStyleManager::writeStudioPreferences() const
+{
+    // Studio builds on Shapr Dark with stronger three-point lights + ground plane
+    writePresetPreferences(StyleShaprDark);
+
+    auto hGrp = viewGroup();
+    auto hLight = lightGroup();
+
+    hLight->SetBool("EnableHeadlight", true);
+    hLight->SetInt("HeadlightIntensity", 95);
+    hLight->SetBool("EnableBacklight", true);
+    hLight->SetInt("BacklightIntensity", 55);
+    hLight->SetBool("EnableFillLight", true);
+    hLight->SetInt("FillLightIntensity", 45);
+    hLight->SetInt("AmbientLightIntensity", 12);
+
+    hGrp->SetBool("EnableSSAO", true);
+    hGrp->SetBool("EnableEdgeOutline", true);
+    hGrp->SetBool("ShowUniversalGrid", true);
+    hGrp->SetBool("ShowRenderGroundPlane", true);
+    hGrp->SetBool("StudioModeActive", true);
+}
+
+namespace
+{
+
+void copyBool(ParameterGrp::handle from, ParameterGrp::handle to, const char* key, bool def)
+{
+    to->SetBool(key, from->GetBool(key, def));
+}
+
+void copyInt(ParameterGrp::handle from, ParameterGrp::handle to, const char* key, int def)
+{
+    to->SetInt(key, from->GetInt(key, def));
+}
+
+void copyUnsigned(ParameterGrp::handle from, ParameterGrp::handle to, const char* key, unsigned long def)
+{
+    to->SetUnsigned(key, from->GetUnsigned(key, def));
+}
+
+void copyAscii(ParameterGrp::handle from, ParameterGrp::handle to, const char* key, const char* def)
+{
+    to->SetASCII(key, from->GetASCII(key, def).c_str());
+}
+
+void copyFloat(ParameterGrp::handle from, ParameterGrp::handle to, const char* key, double def)
+{
+    to->SetFloat(key, from->GetFloat(key, def));
+}
+
+void snapshotStudioRelevantPrefs(ParameterGrp::handle fromView, ParameterGrp::handle fromLight,
+                                 ParameterGrp::handle toView, ParameterGrp::handle toLight)
+{
+    copyBool(fromView, toView, "EnableSSAO", true);
+    copyBool(fromView, toView, "EnableEdgeOutline", true);
+    copyBool(fromView, toView, "ShowUniversalGrid", true);
+    copyBool(fromView, toView, "ShowRenderGroundPlane", false);
+    copyUnsigned(fromView, toView, "UniversalGridColor", packRGB(70, 70, 74));
+    copyUnsigned(fromView, toView, "UniversalSubGridColor", packRGB(50, 50, 54));
+    copyUnsigned(fromView, toView, "EdgeOutlineColor", packRGB(8, 8, 10));
+    copyFloat(fromView, toView, "EdgeOutlineThreshold", 0.018);
+    copyAscii(fromView, toView, "ViewportStyle", ViewportStyleManager::StyleShaprDark);
+
+    copyBool(fromLight, toLight, "EnableHeadlight", true);
+    copyBool(fromLight, toLight, "EnableBacklight", true);
+    copyBool(fromLight, toLight, "EnableFillLight", true);
+    copyInt(fromLight, toLight, "HeadlightIntensity", 90);
+    copyInt(fromLight, toLight, "BacklightIntensity", 45);
+    copyInt(fromLight, toLight, "FillLightIntensity", 35);
+    copyInt(fromLight, toLight, "AmbientLightIntensity", 20);
+    copyUnsigned(fromLight, toLight, "HeadlightColor", packRGBA(255, 255, 255));
+    copyUnsigned(fromLight, toLight, "BacklightColor", packRGBA(230, 230, 235));
+    copyUnsigned(fromLight, toLight, "FillLightColor", packRGBA(220, 235, 245));
+    copyUnsigned(fromLight, toLight, "AmbientLightColor", packRGBA(255, 255, 255));
+    copyAscii(fromLight, toLight, "HeadlightDirection", View3DSettings::defaultHeadLightDirection);
+    copyAscii(fromLight, toLight, "BacklightDirection", View3DSettings::defaultBackLightDirection);
+    copyAscii(fromLight, toLight, "FillLightDirection", View3DSettings::defaultFillLightDirection);
+}
+
+}  // namespace
+
+bool ViewportStyleManager::isStudioModeActive() const
+{
+    return viewGroup()->GetBool("StudioModeActive", false);
+}
+
+void ViewportStyleManager::saveStudioBackup() const
+{
+    auto hView = viewGroup();
+    auto hLight = lightGroup();
+    auto hBackupView = hView->GetGroup("StudioBackup");
+    auto hBackupLight = hBackupView->GetGroup("LightSources");
+    snapshotStudioRelevantPrefs(hView, hLight, hBackupView, hBackupLight);
+}
+
+void ViewportStyleManager::restoreStudioBackup() const
+{
+    auto hView = viewGroup();
+    auto hLight = lightGroup();
+    auto hBackupView = hView->GetGroup("StudioBackup");
+    auto hBackupLight = hBackupView->GetGroup("LightSources");
+    snapshotStudioRelevantPrefs(hBackupView, hBackupLight, hView, hLight);
+    hView->SetBool("StudioModeActive", false);
+}
+
+void ViewportStyleManager::applyStudioMode(bool enable)
+{
+    auto hView = viewGroup();
+    if (enable) {
+        if (!isStudioModeActive()) {
+            saveStudioBackup();
+        }
+        writeStudioPreferences();
+        hView->SetASCII("ViewportStyle", StyleStudio);
+        ViewParams::instance()->getHandle()->NotifyAll();
+        applyPreferencesToViewers();
+        Base::Console().log("Render Studio mode enabled\n");
+    }
+    else if (isStudioModeActive()) {
+        restoreStudioBackup();
+        ViewParams::instance()->getHandle()->NotifyAll();
+        applyPreferencesToViewers();
+        Base::Console().log("Render Studio mode disabled (prefs restored)\n");
+    }
+}
+
+void ViewportStyleManager::setGroundPlaneVisible(bool visible)
+{
+    viewGroup()->SetBool("ShowRenderGroundPlane", visible);
+    // Keep grid in sync when enabling ground for a "on floor" look
+    if (visible) {
+        viewGroup()->SetBool("ShowUniversalGrid", true);
+    }
+    applyPreferencesToViewers();
+}
+
+bool ViewportStyleManager::isGroundPlaneVisible() const
+{
+    return viewGroup()->GetBool("ShowRenderGroundPlane", false);
+}
+
+void ViewportStyleManager::setSSAOEnabled(bool enabled)
+{
+    auto hGrp = viewGroup();
+    hGrp->SetBool("EnableSSAO", enabled);
+    hGrp->SetBool(
+        "EnableEdgeOutline",
+        hGrp->GetBool("EnableEdgeOutline", true)
+    );
+    applyPreferencesToViewers();
+}
+
+void ViewportStyleManager::setEdgeOutlineEnabled(bool enabled)
+{
+    viewGroup()->SetBool("EnableEdgeOutline", enabled);
+    applyPreferencesToViewers();
 }
 
 void ViewportStyleManager::applyPreferencesToViewers() const
@@ -319,6 +497,8 @@ void ViewportStyleManager::applyToViewer(View3DInventorViewer* viewer) const
         b = ((sc >> 8) & 0xff) / 255.0f;
         grid->setSubGridColor(SbColor(r, g, b));
     }
+
+    viewer->setGroundPlaneVisible(hGrp->GetBool("ShowRenderGroundPlane", false));
 
     viewer->setPostProcessEnabled(
         hGrp->GetBool("EnableSSAO", true) || hGrp->GetBool("EnableEdgeOutline", true)

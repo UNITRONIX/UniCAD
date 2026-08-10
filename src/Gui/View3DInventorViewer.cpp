@@ -59,17 +59,22 @@
 #include <Inventor/nodes/SoAnnotation.h>
 #include <Inventor/nodes/SoBaseColor.h>
 #include <Inventor/nodes/SoCallback.h>
+#include <Inventor/nodes/SoCoordinate3.h>
 #include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoDirectionalLight.h>
 #include <Inventor/nodes/SoEventCallback.h>
+#include <Inventor/nodes/SoFaceSet.h>
 #include <Inventor/nodes/SoLightModel.h>
 #include <Inventor/nodes/SoMaterial.h>
+#include <Inventor/nodes/SoNormal.h>
+#include <Inventor/nodes/SoNormalBinding.h>
 #include <Inventor/nodes/SoOrthographicCamera.h>
 #include <Inventor/nodes/SoPerspectiveCamera.h>
 #include <Inventor/nodes/SoPickStyle.h>
 #include <Inventor/nodes/SoScale.h>
 #include <Inventor/nodes/SoSelection.h>
 #include <Inventor/nodes/SoSeparator.h>
+#include <Inventor/nodes/SoShapeHints.h>
 #include <Inventor/nodes/SoSphere.h>
 #include <Inventor/nodes/SoSwitch.h>
 #include <Inventor/nodes/SoTransform.h>
@@ -510,6 +515,57 @@ void View3DInventorViewer::init()
     pcUniversalGrid = new SoFCUniversalGrid;
     pcUniversalGrid->ref();
 
+    // Opaque ground plane for Render Studio (unpickable, under grid)
+    {
+        pcGroundPlaneSwitch = new SoSwitch;
+        pcGroundPlaneSwitch->ref();
+        pcGroundPlaneSwitch->whichChild = SO_SWITCH_NONE;
+
+        auto* skipBBox = new SoSkipBoundingGroup;
+        skipBBox->mode = SoSkipBoundingGroup::EXCLUDE_BBOX;
+
+        auto* groundSep = new SoSeparator;
+        auto* pickStyle = new SoPickStyle;
+        pickStyle->style = SoPickStyle::UNPICKABLE;
+
+        auto* hints = new SoShapeHints;
+        hints->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
+        hints->shapeType = SoShapeHints::UNKNOWN_SHAPE_TYPE;
+        hints->faceType = SoShapeHints::CONVEX;
+
+        auto* mat = new SoMaterial;
+        mat->diffuseColor.setValue(0.35F, 0.35F, 0.37F);
+        mat->ambientColor.setValue(0.18F, 0.18F, 0.19F);
+        mat->specularColor.setValue(0.05F, 0.05F, 0.05F);
+        mat->shininess.setValue(0.05F);
+        mat->transparency.setValue(0.15F);
+
+        auto* normals = new SoNormal;
+        normals->vector.setValue(0.0F, 0.0F, 1.0F);
+        auto* normalBinding = new SoNormalBinding;
+        normalBinding->value = SoNormalBinding::OVERALL;
+
+        pcGroundPlaneCoords = new SoCoordinate3;
+        constexpr float half = 500.0F;
+        pcGroundPlaneCoords->point.set1Value(0, -half, -half, 0.0F);
+        pcGroundPlaneCoords->point.set1Value(1, half, -half, 0.0F);
+        pcGroundPlaneCoords->point.set1Value(2, half, half, 0.0F);
+        pcGroundPlaneCoords->point.set1Value(3, -half, half, 0.0F);
+
+        auto* faces = new SoFaceSet;
+        faces->numVertices.setValue(4);
+
+        groundSep->addChild(pickStyle);
+        groundSep->addChild(hints);
+        groundSep->addChild(mat);
+        groundSep->addChild(normalBinding);
+        groundSep->addChild(normals);
+        groundSep->addChild(pcGroundPlaneCoords);
+        groundSep->addChild(faces);
+        skipBBox->addChild(groundSep);
+        pcGroundPlaneSwitch->addChild(skipBBox);
+    }
+
     // Set up foreground, overlaid scenegraph.
     this->foregroundroot = new SoSeparator;
     this->foregroundroot->ref();
@@ -554,6 +610,9 @@ void View3DInventorViewer::init()
     pcViewProviderRoot->addChild(threePointLightingSeparator);
     pcViewProviderRoot->addChild(environment);
     
+    // Ground plane under grid (Render Studio)
+    pcViewProviderRoot->addChild(pcGroundPlaneSwitch);
+
     // Add universal grid (Fusion 360-style ground plane grid)
     pcViewProviderRoot->addChild(pcUniversalGrid);
 
@@ -729,6 +788,11 @@ View3DInventorViewer::~View3DInventorViewer()
     this->pcBackGround = nullptr;
     this->pcUniversalGrid->unref();
     this->pcUniversalGrid = nullptr;
+    if (this->pcGroundPlaneSwitch) {
+        this->pcGroundPlaneSwitch->unref();
+        this->pcGroundPlaneSwitch = nullptr;
+        this->pcGroundPlaneCoords = nullptr;
+    }
 
     setSceneGraph(nullptr);
     this->pEventCallback->unref();
@@ -1440,6 +1504,29 @@ bool View3DInventorViewer::isUniversalGridOriginVisible() const
 SoFCUniversalGrid* View3DInventorViewer::getUniversalGrid() const
 {
     return pcUniversalGrid;
+}
+
+void View3DInventorViewer::setGroundPlaneVisible(bool on)
+{
+    if (pcGroundPlaneSwitch) {
+        pcGroundPlaneSwitch->whichChild = on ? 0 : SO_SWITCH_NONE;
+    }
+}
+
+bool View3DInventorViewer::isGroundPlaneVisible() const
+{
+    return pcGroundPlaneSwitch && pcGroundPlaneSwitch->whichChild.getValue() == 0;
+}
+
+void View3DInventorViewer::setGroundPlaneSize(float halfExtent)
+{
+    if (!pcGroundPlaneCoords || halfExtent <= 0.0F) {
+        return;
+    }
+    pcGroundPlaneCoords->point.set1Value(0, -halfExtent, -halfExtent, 0.0F);
+    pcGroundPlaneCoords->point.set1Value(1, halfExtent, -halfExtent, 0.0F);
+    pcGroundPlaneCoords->point.set1Value(2, halfExtent, halfExtent, 0.0F);
+    pcGroundPlaneCoords->point.set1Value(3, -halfExtent, halfExtent, 0.0F);
 }
 
 void View3DInventorViewer::setPostProcessEnabled(bool on)

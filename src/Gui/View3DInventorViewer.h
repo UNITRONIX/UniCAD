@@ -70,6 +70,7 @@ class SoText2;
 class SoSeparator;
 class SoShapeHints;
 class SoMaterial;
+class SoCoordinate3;
 class SoRotationXYZ;
 class SbSphereSheetProjector;
 class SoEventCallback;  // NOLINT
@@ -494,6 +495,11 @@ public:
     bool isUniversalGridOriginVisible() const;
     SoFCUniversalGrid* getUniversalGrid() const;
 
+    // Opaque ground plane under the model (Render Studio)
+    void setGroundPlaneVisible(bool on);
+    bool isGroundPlaneVisible() const;
+    void setGroundPlaneSize(float halfExtent);
+
     // Shapr-style post-process (SSAO + outline)
     void setPostProcessEnabled(bool on);
     bool isPostProcessEnabled() const;
@@ -583,6 +589,8 @@ private:
     ViewProvider* editViewProvider;
     SoFCBackgroundGradient* pcBackGround;
     SoFCUniversalGrid* pcUniversalGrid;
+    SoSwitch* pcGroundPlaneSwitch = nullptr;
+    SoCoordinate3* pcGroundPlaneCoords = nullptr;
     SoSeparator* backgroundroot;
     SoSeparator* foregroundroot;
 

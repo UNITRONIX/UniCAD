@@ -581,6 +581,7 @@ SET(Dialog_CPP_SRCS
     Dialogs/DlgThemeEditor.cpp
     Dialogs/DlgVersionMigrator.cpp
     TaskDlgRelocation.cpp
+    TaskRenderStudio.cpp
     Dialogs/DlgCheckableMessageBox.cpp
     TaskTransform.cpp
     Dialogs/DlgUndoRedo.cpp
@@ -624,6 +625,7 @@ SET(Dialog_HPP_SRCS
     Dialogs/DlgThemeEditor.h
     Dialogs/DlgVersionMigrator.h
     TaskDlgRelocation.h
+    TaskRenderStudio.h
     TaskTransform.h
     Dialogs/DlgUndoRedo.h
     InputVector.h
