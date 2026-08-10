@@ -107,6 +107,24 @@ void printPreselectionInfo(
     float z,
     double precision
 );
+
+/// Runtime check — avoid linking FreeCADGui against Sketcher.
+bool isSketchDocumentObject(const App::DocumentObject* obj)
+{
+    if (!obj) {
+        return false;
+    }
+    static Base::Type sketchType;
+    if (sketchType.isBad()) {
+        sketchType = Base::Type::fromName("Sketcher::SketchObject");
+    }
+    return !sketchType.isBad() && obj->isDerivedFrom(sketchType);
+}
+
+bool isSketchViewProvider(const ViewProviderDocumentObject* vpd)
+{
+    return vpd && isSketchDocumentObject(vpd->getObject());
+}
 }
 
 SoFullPath* Gui::SoFCUnifiedSelection::currentHighlightPath = nullptr;
@@ -346,10 +364,19 @@ std::vector<SoFCUnifiedSelection::PickedInfo> SoFCUnifiedSelection::getPickedLis
             if (curIsInternal && !pickedIsInternal) {
                 itPicked = it;
                 picked_prio = cur_prio;
+                last_vpd = info.vpd;
                 continue;
             }
         }
         if (picked_pt.equals(cur_pt, 0.5F)) {
+            // UniCAD: Prefer Sketch VP over Body/Pad at the same click location so
+            // clicking a sketch on a solid selects the sketch, not the underlying face.
+            if (isSketchViewProvider(info.vpd) && !isSketchViewProvider(itPicked->vpd)) {
+                itPicked = it;
+                picked_prio = cur_prio;
+                last_vpd = info.vpd;
+                continue;
+            }
             // Original same-VP priority logic
             if (last_vpd == info.vpd && (cur_prio > picked_prio)) {
                 itPicked = it;
@@ -821,53 +848,78 @@ bool SoFCUnifiedSelection::setSelection(const std::vector<PickedInfo>& infos, bo
         // and the user is clicking the box again.  So we shall go up one level,
         // and select 'link.link2.'
         //
+        // UniCAD: Do not climb from a SketchObject to its parent Body/Pad. Repeated
+        // clicks on a sketch on a solid should keep the sketch selected.
+        const bool skipHierarchyAscent = isSketchViewProvider(vpd);
 
+        if (!skipHierarchyAscent) {
+            // We need to convert the short name in the selection to a full element path to look it up
+            // Ex:  Body.Pad.Face9  to Body.Pad.;g3;SKT;:H12dc,E;FAC;:H12dc:4,F;:G0;XTR;:H12dc:8,F.Face9
+            getFullSubElementName(subName);
+            const char* subSelected
+                = Gui::Selection().getSelectedElement(vpd->getObject(), subName.c_str());
 
-        // We need to convert the short name in the selection to a full element path to look it up
-        // Ex:  Body.Pad.Face9  to Body.Pad.;g3;SKT;:H12dc,E;FAC;:H12dc:4,F;:G0;XTR;:H12dc:8,F.Face9
-        getFullSubElementName(subName);
-        const char* subSelected
-            = Gui::Selection().getSelectedElement(vpd->getObject(), subName.c_str());
-
-        FC_TRACE(
-            "select " << (subSelected ? subSelected : "'null'") << ", " << objectName << ", " << subName
-        );
-        std::string newElement;
-        if (subSelected) {
-            newElement = Data::newElementName(subSelected);
-            subSelected = newElement.c_str();
-            std::string nextsub;
-            const char* next = strrchr(subSelected, '.');
-            if (next && next != subSelected) {
-                if (next[1] == 0) {
-                    // The convention of dot separated SubName demands a mandatory
-                    // ending dot for every object name reference inside SubName.
-                    // The non-object sub-element, however, must not end with a dot.
-                    // So, next[1]==0 here means current selection is a whole object
-                    // selection (because no sub-element), so we shall search
-                    // upwards for the second last dot, which is the end of the
-                    // parent name of the current selected object
-                    for (--next; next != subSelected; --next) {
-                        if (*next == '.') {
-                            break;
+            FC_TRACE(
+                "select " << (subSelected ? subSelected : "'null'") << ", " << objectName << ", "
+                          << subName
+            );
+            std::string newElement;
+            if (subSelected) {
+                newElement = Data::newElementName(subSelected);
+                subSelected = newElement.c_str();
+                std::string nextsub;
+                const char* next = strrchr(subSelected, '.');
+                if (next && next != subSelected) {
+                    if (next[1] == 0) {
+                        // The convention of dot separated SubName demands a mandatory
+                        // ending dot for every object name reference inside SubName.
+                        // The non-object sub-element, however, must not end with a dot.
+                        // So, next[1]==0 here means current selection is a whole object
+                        // selection (because no sub-element), so we shall search
+                        // upwards for the second last dot, which is the end of the
+                        // parent name of the current selected object
+                        for (--next; next != subSelected; --next) {
+                            if (*next == '.') {
+                                break;
+                            }
                         }
                     }
+                    if (*next == '.') {
+                        nextsub = std::string(subSelected, next - subSelected + 1);
+                    }
                 }
-                if (*next == '.') {
-                    nextsub = std::string(subSelected, next - subSelected + 1);
+                if (nextsub.length() || *subSelected != 0) {
+                    hasNext = true;
+                    subName = nextsub;
+                    detailPath->truncate(0);
+                    if (vpd->getDetailPath(subName.c_str(), detailPath, true, detNext)
+                        && detailPath->getLength()) {
+                        pPath = detailPath;
+                        det = detNext;
+                        FC_TRACE("select next " << objectName << ", " << subName);
+                    }
                 }
             }
-            if (nextsub.length() || *subSelected != 0) {
-                hasNext = true;
-                subName = nextsub;
-                detailPath->truncate(0);
-                if (vpd->getDetailPath(subName.c_str(), detailPath, true, detNext)
-                    && detailPath->getLength()) {
-                    pPath = detailPath;
-                    det = detNext;
-                    FC_TRACE("select next " << objectName << ", " << subName);
+        }
+        else {
+            FC_TRACE("skip hierarchy ascent for sketch " << objectName << ", " << subName);
+        }
+
+        // UniCAD: Whole-sketch selection must use All + object detail path, otherwise the
+        // ray's face detail would paint only the profile while the tree shows the sketch.
+        if (skipHierarchyAscent && subName.empty()) {
+            detailPath->truncate(0);
+            SoDetail* detWhole = nullptr;
+            if (vpd->getDetailPath(subName.c_str(), detailPath, true, detWhole)
+                && detailPath->getLength()) {
+                pPath = detailPath;
+                if (detNext) {
+                    delete detNext;
                 }
+                detNext = detWhole;
+                det = detNext;
             }
+            hasNext = true;
         }
 
         FC_TRACE("clearing selection");

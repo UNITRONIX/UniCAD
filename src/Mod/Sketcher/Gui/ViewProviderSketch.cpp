@@ -3576,15 +3576,22 @@ bool ViewProviderSketch::getElementPicked(const SoPickedPoint* pp, std::string& 
 {
     FLOG_DEBUG("Pick", "VPSketch::getElementPicked: containsSketchFaces={}, isEditMode={}\n",
         pp->getPath()->containsNode(pcSketchFaces) ? 1 : 0, isInEditMode() ? 1 : 0);
-    // UniCAD: Face picking only outside edit mode.
-    // In edit mode the user works with sketch geometry (lines, arcs, constraints).
-    // Outside edit mode, clicking on sketch faces selects them for Extrude/Pad.
+    // UniCAD: Outside edit mode, a plain click on sketch faces selects the whole sketch
+    // object (user intent: work with that sketch). Ctrl+click selects InternalFaceN for
+    // multi-profile Extrude/Pad. In edit mode the user works with geometry, not faces.
     if (pp->getPath()->containsNode(pcSketchFaces) && !isInEditMode()) {
-        // UniCAD: Extract individual face detail from pcSketchFaces
         const SoDetail* detail = pp->getDetail(pcSketchFaces->faceset);
         if (detail && detail->isOfType(SoFaceDetail::getClassTypeId())) {
-            int faceIndex = static_cast<const SoFaceDetail*>(detail)->getPartIndex();
-            subname = std::string(SketchObject::internalPrefix()) + "Face" + std::to_string(faceIndex + 1);
+            const bool profilePick =
+                (QApplication::keyboardModifiers() & Qt::ControlModifier) != 0;
+            if (profilePick) {
+                int faceIndex = static_cast<const SoFaceDetail*>(detail)->getPartIndex();
+                subname = std::string(SketchObject::internalPrefix()) + "Face"
+                    + std::to_string(faceIndex + 1);
+                return true;
+            }
+            // Default: whole sketch object
+            subname.clear();
             return true;
         }
 
