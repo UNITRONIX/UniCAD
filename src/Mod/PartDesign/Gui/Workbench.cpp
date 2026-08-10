@@ -28,6 +28,8 @@
 #include <Gui/Command.h>
 #include <Gui/Control.h>
 #include <Gui/MDIView.h>
+#include <Gui/MenuManager.h>
+#include <Gui/Selection/SelectionFilter.h>
 #include <Mod/Sketcher/Gui/Workbench.h>
 #include <Mod/PartDesign/App/Body.h>
 #include <Mod/PartDesign/App/FeatureMultiTransform.h>
@@ -38,6 +40,111 @@
 
 using namespace PartDesignGui;
 namespace sp = std::placeholders;
+
+namespace
+{
+/** Append commands when the current selection matches the filter (same filters as TaskWatchers). */
+bool appendIfMatch(Gui::MenuItem* item, const char* filter, const char* const cmds[])
+{
+    Gui::SelectionFilter selFilter(filter);
+    if (!selFilter.match()) {
+        return false;
+    }
+    for (const char* const* cmd = cmds; *cmd; ++cmd) {
+        *item << *cmd;
+    }
+    return true;
+}
+
+bool appendSelectionIntentCommands(Gui::MenuItem* item)
+{
+    static const char* const edgeCmds[] = {
+        "PartDesign_Fillet",
+        "PartDesign_Chamfer",
+        "Part_DatumPoint",
+        "Part_DatumLine",
+        "Part_DatumPlane",
+        "Part_CoordinateSystem",
+        nullptr
+    };
+    static const char* const faceOneCmds[] = {
+        "PartDesign_Extrude",
+        "PartDesign_NewSketch",
+        "PartDesign_Fillet",
+        "PartDesign_Chamfer",
+        "PartDesign_Draft",
+        "PartDesign_Thickness",
+        "Part_ClearanceVolume",
+        "Part_QuickPortCutout",
+        "PartDesign_OffsetFace",
+        "PartDesign_DeleteFace",
+        "PartDesign_ReplaceFace",
+        "PartDesign_SplitFace",
+        "PartDesign_MoveFace",
+        "Part_DatumPoint",
+        "Part_DatumLine",
+        "Part_DatumPlane",
+        "Part_CoordinateSystem",
+        nullptr
+    };
+    static const char* const faceManyCmds[] = {
+        "PartDesign_Extrude",
+        "PartDesign_Fillet",
+        "PartDesign_Chamfer",
+        "PartDesign_Draft",
+        "PartDesign_Thickness",
+        "Part_ClearanceVolume",
+        "PartDesign_OffsetFace",
+        "PartDesign_DeleteFace",
+        "PartDesign_ReplaceFace",
+        "PartDesign_SplitFace",
+        "PartDesign_MoveFace",
+        nullptr
+    };
+    static const char* const vertexCmds[] = {
+        "Part_DatumPoint",
+        "Part_DatumLine",
+        "Part_DatumPlane",
+        "Part_CoordinateSystem",
+        nullptr
+    };
+    static const char* const sketchOneCmds[] = {
+        "PartDesign_NewSketch",
+        "PartDesign_Extrude",
+        "PartDesign_Revolve",
+        "PartDesign_Sweep",
+        "PartDesign_Loft",
+        "PartDesign_Hole",
+        nullptr
+    };
+    static const char* const sketchManyCmds[] = {
+        "PartDesign_Loft",
+        "PartDesign_Sweep",
+        nullptr
+    };
+
+    // Mutually exclusive: first matching selection intent wins (mirrors TaskWatcher priority).
+    if (appendIfMatch(item, "SELECT Part::Feature SUBELEMENT Edge COUNT 1..", edgeCmds)) {
+        return true;
+    }
+    if (appendIfMatch(item, "SELECT Part::Feature SUBELEMENT Face COUNT 1", faceOneCmds)) {
+        return true;
+    }
+    if (appendIfMatch(item, "SELECT Part::Feature SUBELEMENT Face COUNT 2..", faceManyCmds)) {
+        return true;
+    }
+    if (appendIfMatch(item, "SELECT Part::Feature SUBELEMENT Vertex COUNT 1..", vertexCmds)) {
+        return true;
+    }
+    if (appendIfMatch(item, "SELECT Sketcher::SketchObject COUNT 1", sketchOneCmds)) {
+        return true;
+    }
+    if (appendIfMatch(item, "SELECT Sketcher::SketchObject COUNT 2..", sketchManyCmds)) {
+        return true;
+    }
+    return false;
+}
+}  // namespace
 
 #if 0  // needed for Qt's lupdate utility
     qApp->translate("Workbench", "&Sketch");
@@ -78,6 +185,12 @@ Workbench::~Workbench()
 
 void Workbench::setupContextMenu(const char* recipient, Gui::MenuItem* item) const
 {
+    if (strcmp(recipient, "View") == 0) {
+        if (appendSelectionIntentCommands(item)) {
+            *item << "Separator";
+        }
+    }
+
     auto selection = Gui::Selection().getSelection();
     // Add move Tip Command
     if (!selection.empty()) {
